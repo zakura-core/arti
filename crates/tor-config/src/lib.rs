@@ -54,6 +54,8 @@ pub mod derive;
 mod err;
 #[macro_use]
 pub mod extend_builder;
+#[cfg(feature = "file-watcher")]
+#[cfg_attr(docsrs, doc(cfg(feature = "file-watcher")))]
 pub mod file_watcher;
 mod flatten;
 pub mod list_builder;

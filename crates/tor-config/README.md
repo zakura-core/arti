@@ -11,6 +11,13 @@ implement [Tor](https://www.torproject.org/) in Rust.
 It provides types for handling configuration values,
 and general machinery for configuration management.
 
+## Cargo features
+
+The default `file-watcher` feature enables [`file_watcher`] and its asynchronous
+runtime and filesystem notification dependencies. Disable default features to
+use configuration builders and parsing without file watching. The `full` feature
+also enables file watching.
+
 ## Configuration in Arti
 
 The configuration for the `arti` command line program,

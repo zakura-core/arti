@@ -26,7 +26,7 @@ opentelemetry-otlp = { version = "0.33.1", optional = true }
 # TODO: Figure out why this feature is needed, and how it interacts with non-tokio runtimes.
 opentelemetry_sdk = { version = "0.33.1", features = ["rt-tokio"], optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
-tor-config = { path = "../tor-config", version = "0.47.0" }
+tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
 tor-config-path = { path = "../tor-config-path", version = "0.47.0" }
 
 [package.metadata.docs.rs]

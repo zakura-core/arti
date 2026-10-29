@@ -104,7 +104,7 @@ tor-async-utils = { version = "0.47.0", path = "../tor-async-utils" }
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-checkable = { path = "../tor-checkable", version = "0.47.0" }
 tor-circmgr = { path = "../tor-circmgr", version = "0.47.0" }
-tor-config = { path = "../tor-config", version = "0.47.0" }
+tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
 tor-consdiff = { path = "../tor-consdiff", version = "0.47.0" }
 tor-dirclient = { path = "../tor-dirclient", version = "0.47.0", default-features = false }
 tor-dircommon = { path = "../tor-dircommon", version = "0.47.0" }

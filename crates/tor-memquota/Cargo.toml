@@ -29,7 +29,7 @@ sysinfo = { version = "0.38.4", default-features = false, features = ["system"] 
 thiserror = "2"
 tor-async-utils = { path = "../tor-async-utils", version = "0.47.0" }
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0", features = ["serde"] }
-tor-config = { path = "../tor-config", version = "0.47.0" }
+tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
 tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
 tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0" }
 tor-memquota-cost = { path = "../tor-memquota-cost", version = "0.47.0" }

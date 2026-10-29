@@ -78,7 +78,7 @@ tor-bytes = { path = "../tor-bytes", version = "0.47.0" }
 tor-cell = { path = "../tor-cell", version = "0.47.0", features = ["hs"] }
 tor-checkable = { path = "../tor-checkable", version = "0.47.0" }
 tor-circmgr = { version = "0.47.0", path = "../tor-circmgr", features = ["hs-client", "send-control-msg"] }
-tor-config = { path = "../tor-config", version = "0.47.0" }
+tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
 tor-dirclient = { path = "../tor-dirclient", version = "0.47.0", default-features = false, features = ["hs-client"] }
 tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
 tor-hscrypto = { version = "0.47.0", path = "../tor-hscrypto" }
