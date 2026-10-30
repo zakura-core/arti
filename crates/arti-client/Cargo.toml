@@ -113,7 +113,7 @@ accel-openssl = ["tor-llcrypto/with-openssl", "__is_nonadditive"]
 
 onion-service-client = ["tor-hsclient", "tor-hscrypto"]
 
-onion-service-cli-extra = ["tor-keymgr/onion-service-cli-extra", "__is_experimental"]
+onion-service-cli-extra = ["keymgr", "tor-keymgr/onion-service-cli-extra", "__is_experimental"]
 onion-service-service = ["tor-hsservice", "tor-hscrypto", "tor-persist/state-dir", "keymgr"]
 keymgr = ["tor-keymgr/keymgr", "tor-hsclient/keymgr"]
 vanguards = ["tor-guardmgr/vanguards", "tor-circmgr/vanguards"]
@@ -153,7 +153,7 @@ experimental = [
 # feature voids your "semver warrantee".
 experimental-api = ["__is_experimental"]
 dirfilter = ["tor-dirmgr/dirfilter", "__is_experimental"]
-ephemeral-keystore = ["tor-keymgr/ephemeral-keystore", "__is_experimental"]
+ephemeral-keystore = ["keymgr", "tor-keymgr/ephemeral-keystore", "__is_experimental"]
 error_detail = ["__is_experimental"]
 geoip = ["tor-circmgr/geoip", "tor-dirmgr/geoip", "tor-geoip", "__is_experimental"]
 hsc-negotiate-extensions = ["tor-hsclient?/negotiate-extensions", "__is_experimental"]
