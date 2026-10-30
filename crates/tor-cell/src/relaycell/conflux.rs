@@ -2,7 +2,7 @@
 
 use super::msg::{Body, empty_body};
 
-use amplify::Getters;
+use amplify_derive::Getters;
 use caret::caret_int;
 use derive_deftly::Deftly;
 use rand::{CryptoRng, Rng, RngExt};

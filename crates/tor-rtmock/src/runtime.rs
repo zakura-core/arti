@@ -5,7 +5,7 @@
 use std::fmt::{Debug, Display};
 use std::ops::ControlFlow;
 
-use amplify::Getters;
+use amplify_derive::Getters;
 use futures::FutureExt as _;
 use itertools::chain;
 use strum::IntoEnumIterator as _;

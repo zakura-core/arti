@@ -3,7 +3,7 @@
 pub use tor_config::{ConfigBuildError, ConfigurationSource, Reconfigure};
 pub use tor_config_path::{CfgPath, CfgPathError};
 
-use amplify::Getters;
+use amplify_derive::Getters;
 use derive_deftly::Deftly;
 use serde::{Deserialize, Serialize};
 use tor_config::derive::prelude::*;

@@ -11,7 +11,7 @@ use tor_units::Percentage;
 
 /// Fixed window parameters that are for the SENDME v0 world of fixed congestion window.
 #[non_exhaustive]
-#[derive(Builder, Copy, Clone, Debug, amplify::Getters)]
+#[derive(Builder, Copy, Clone, Debug, amplify_derive::Getters)]
 #[builder(build_fn(error = "ConfigBuildError"))]
 pub struct FixedWindowParams {
     /// Circuit window starting point. From the "circwindow" param.
@@ -41,7 +41,7 @@ impl FixedWindowParams {
 /// Vegas queuing parameters taken from the consensus only which are different depending if the
 /// circuit is an onion service one, an exit or used for SBWS.
 #[non_exhaustive]
-#[derive(Copy, Clone, Debug, amplify::Getters)]
+#[derive(Copy, Clone, Debug, amplify_derive::Getters)]
 pub struct VegasQueueParams {
     /// Alpha parameter is used to know when to increase the window.
     #[getter(as_copy)]
@@ -79,7 +79,7 @@ impl From<(u32, u32, u32, u32, u32)> for VegasQueueParams {
 
 /// Vegas algorithm parameters taken from the consensus.
 #[non_exhaustive]
-#[derive(Builder, Copy, Clone, Debug, amplify::Getters)]
+#[derive(Builder, Copy, Clone, Debug, amplify_derive::Getters)]
 #[builder(build_fn(error = "ConfigBuildError"))]
 pub struct VegasParams {
     /// The amount of queued cells that Vegas can tolerate before reacting.
@@ -160,7 +160,7 @@ caret_int! {
 /// The round trip estimator parameters taken from consensus and used to estimate the round trip
 /// time on a circuit.
 #[non_exhaustive]
-#[derive(Builder, Clone, Debug, amplify::Getters)]
+#[derive(Builder, Clone, Debug, amplify_derive::Getters)]
 #[builder(build_fn(error = "ConfigBuildError"))]
 pub struct RoundTripEstimatorParams {
     /// The "N" parameter in N-EWMA smoothing of RTT and/or bandwidth estimation, specified as a
@@ -199,7 +199,7 @@ impl RoundTripEstimatorParams {
 /// The parameters of what constitute a congestion window. This is used by all congestion control
 /// algorithms as in it is not specific to an algorithm.
 #[non_exhaustive]
-#[derive(Builder, Clone, Copy, Debug, amplify::Getters)]
+#[derive(Builder, Clone, Copy, Debug, amplify_derive::Getters)]
 #[builder(build_fn(error = "ConfigBuildError"))]
 pub struct CongestionWindowParams {
     /// Initial size of the congestion window.
@@ -253,7 +253,7 @@ impl CongestionWindowParams {
 
 /// Global congestion control parameters taken from consensus. These are per-circuit.
 #[non_exhaustive]
-#[derive(Builder, Clone, Debug, amplify::Getters)]
+#[derive(Builder, Clone, Debug, amplify_derive::Getters)]
 #[builder(build_fn(error = "ConfigBuildError"))]
 pub struct CongestionControlParams {
     /// The congestion control algorithm to use.

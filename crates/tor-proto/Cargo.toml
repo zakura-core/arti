@@ -89,7 +89,7 @@ __is_experimental = []
 
 [dependencies]
 aes = { version = "0.9" }
-amplify = { version = "4", default-features = false, features = ["derive"] }
+amplify_derive = "4.0.1"
 async-trait = "0.1.92"
 asynchronous-codec = "0.7.0"
 bitvec = "1.1.1"

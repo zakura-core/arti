@@ -66,7 +66,7 @@ pub struct KeyMgr {
 /// or removed, using [`KeyMgr::remove_entry`].
 ///
 /// Returned from [`KeyMgr::list_matching`].
-#[derive(Clone, Debug, PartialEq, amplify::Getters)]
+#[derive(Clone, Debug, PartialEq, amplify_derive::Getters)]
 pub struct KeystoreEntry<'a> {
     /// The [`KeyPath`] of the key.
     key_path: KeyPath,

@@ -132,7 +132,7 @@ pub struct UnknownKeyTypeError {
 }
 
 /// An unrecognized keystore entry.
-#[derive(Clone, Debug, amplify::Getters, thiserror::Error)]
+#[derive(Clone, Debug, amplify_derive::Getters, thiserror::Error)]
 #[error("Unrecognized keystore entry")]
 pub struct UnrecognizedEntryError {
     /// An identifier of the entry that caused the error.
@@ -162,7 +162,7 @@ impl UnrecognizedEntryError {
 }
 
 /// The opaque identifier of an unrecognized key inside a [`Keystore`](crate::Keystore).
-#[derive(Debug, Clone, PartialEq, amplify::Getters)]
+#[derive(Debug, Clone, PartialEq, amplify_derive::Getters)]
 pub struct UnrecognizedEntry {
     /// The [`RawEntryId`] of the key, an identifier used in `arti raw` operations.
     #[cfg_attr(not(feature = "onion-service-cli-extra"), getter(skip))]

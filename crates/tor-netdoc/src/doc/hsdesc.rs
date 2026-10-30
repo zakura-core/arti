@@ -131,7 +131,7 @@ pub enum IntroAuthType {
 
 /// Information in an onion service descriptor about a single
 /// introduction point.
-#[derive(Debug, Clone, amplify::Getters, Builder)]
+#[derive(Debug, Clone, amplify_derive::Getters, Builder)]
 #[builder(pattern = "owned")] // mirrors HsDescBuilder
 pub struct IntroPointDesc {
     /// The list of link specifiers needed to extend a circuit to the introduction point.
@@ -300,7 +300,7 @@ impl HsDesc {
     ///
     /// Accessor function.
     //
-    // TODO: We'd like to derive this, but amplify::Getters  would give us &Vec<>,
+    // TODO: We'd like to derive this, but amplify_derive::Getters  would give us &Vec<>,
     // not &[].
     //
     // Perhaps someday we can use derive_deftly, or add as_ref() support?

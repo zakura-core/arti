@@ -154,7 +154,7 @@ pub struct ParseOptions {
 }
 
 /// Input to a network document top-level parsing operation
-#[derive(Debug, Clone, amplify::Getters)]
+#[derive(Debug, Clone, amplify_derive::Getters)]
 pub struct ParseInput<'s> {
     /// The actual document text
     #[getter(as_copy)]

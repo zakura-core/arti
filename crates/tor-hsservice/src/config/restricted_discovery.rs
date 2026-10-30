@@ -105,7 +105,7 @@ use derive_more::From;
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 
-use amplify::Getters;
+use amplify_derive::Getters;
 use derive_more::{Display, Into};
 
 use tor_config::derive::prelude::*;
