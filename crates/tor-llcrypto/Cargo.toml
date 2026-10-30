@@ -52,7 +52,7 @@ base64ct = "1.8.3"
 cipher = { version = "0.5.2", optional = true, features = ["zeroize"] }
 ctr = { version = "0.10", features = ["zeroize"] }
 curve25519-dalek = "4.1"
-der-parser = { version = "10", features = ["serialize"] }
+der-parser = "10"
 derive-deftly = { version = "~1.14.0" }
 derive_more = { version = "2.1.1", features = ["full"] }
 digest = "0.10.7"
