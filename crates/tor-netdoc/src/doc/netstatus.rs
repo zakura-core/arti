@@ -2730,6 +2730,15 @@ mod test {
         let ip6 = "[::1]:5002".parse::<SocketAddr>().unwrap();
         assert!(r0.addrs().any(|a| a == ip4));
         assert!(r0.addrs().any(|a| a == ip6));
+        assert!(r0.ed25519_id_is_usable());
+        assert!(r0.is_flagged_exit());
+        assert!(r0.is_flagged_guard());
+        assert!(r0.is_flagged_fast());
+        assert!(r0.is_flagged_stable());
+        assert!(r0.is_flagged_hsdir());
+        assert!(r0.is_flagged_v2dir());
+        assert!(!r0.is_flagged_bad_exit());
+        assert!(!r0.is_flagged_middle_only());
 
         Ok(())
     }
