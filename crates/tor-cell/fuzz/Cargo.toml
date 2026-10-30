@@ -16,10 +16,12 @@ libfuzzer-sys = "0.4"
 path = ".."
 features = ["hs", "experimental"]
 
+package = "zakura-tor-cell"
 [dependencies.tor-bytes]
 path = "../../tor-bytes"
 
 # Prevent this from interfering with workspaces
+package = "zakura-tor-bytes"
 [workspace]
 members = ["."]
 

@@ -15,6 +15,7 @@ path = ".."
 features = ["arbitrary"]
 
 # Prevent this from interfering with workspaces
+package = "zakura-tor-general-addr"
 [workspace]
 members = ["."]
 

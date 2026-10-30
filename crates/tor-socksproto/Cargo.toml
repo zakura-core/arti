@@ -1,6 +1,6 @@
 [package]
-name = "tor-socksproto"
-version = "0.47.0"
+name = "zakura-tor-socksproto"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Encode and decode the SOCKS protocol, as extended in Tor"
 keywords = ["tor", "arti", "socks"]
 categories = ["network-programming"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = ["proxy-handshake"]
@@ -28,17 +28,20 @@ full = [
 
 [dependencies]
 arbitrary = { version = "1.5.0", optional = true, features = ["derive"] }
-caret = { path = "../caret", version = "0.11.0" }
+caret = { path = "../caret", version = "0.11.0-zakura.1", package = "zakura-caret" }
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 educe = "0.4.23"
-safelog = { path = "../safelog", version = "0.10.0" }
+safelog = { path = "../safelog", version = "0.10.0-zakura.1", package = "zakura-safelog" }
 subtle = "2"
 thiserror = "2"
-tor-bytes = { path = "../tor-bytes", version = "0.47.0", default-features = false }
-tor-error = { path = "../tor-error", version = "0.47.0", default-features = false }
+tor-bytes = { path = "../tor-bytes", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-bytes" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-error" }
 
 [dev-dependencies]
 anyhow = "1.0.104"
 hex-literal = "1.1"
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_socksproto"

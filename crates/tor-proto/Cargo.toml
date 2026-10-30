@@ -1,6 +1,6 @@
 [package]
-name = "tor-proto"
-version = "0.47.0"
+name = "zakura-tor-proto"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Asynchronous client-side implementation of the central Tor network protocols"
 keywords = ["tor", "arti", "networking", "anonymity"]
 categories = ["network-programming", "cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -90,7 +90,7 @@ async-trait = "0.1.92"
 asynchronous-codec = "0.7.0"
 bitvec = "1.1.1"
 bytes = "1"
-caret = { path = "../caret", version = "0.11.0" }
+caret = { path = "../caret", version = "0.11.0-zakura.1", package = "zakura-caret" }
 cfg-if = "1.0.5"
 cipher = { version = "0.5.2", features = ["zeroize"] }
 coarsetime = "0.1.38"
@@ -107,14 +107,14 @@ hkdf = "0.12.4"
 hmac = "0.12.1"
 itertools = "0.15.0"
 maybenot = { version = "2.2.2", optional = true }
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
+oneshot-fused-workaround = { package = "zakura-oneshot-fused-workaround", path = "../oneshot-fused-workaround", version = "0.8.0-zakura.1" }
 pin-project = "1"
 polyval = { version = "0.7" }
 rand = "0.10.3"
 rand09 = { package = "rand", version = "0.9", optional = true }
 rand_core = "0.10.1"
-safelog = { path = "../safelog", version = "0.10.0" }
-slotmap-careful = { path = "../slotmap-careful", version = "0.9.0" }
+safelog = { path = "../safelog", version = "0.10.0-zakura.1", package = "zakura-safelog" }
+slotmap-careful = { path = "../slotmap-careful", version = "0.9.0-zakura.1", package = "zakura-slotmap-careful" }
 smallvec = { version = "1.16", features = ["const_generics"] }
 static_assertions = "1"
 strum = { version = "0.28.0", features = ["derive"] }
@@ -122,29 +122,29 @@ subtle = "2"
 thiserror = "2"
 tokio-crate = { package = "tokio", version = "1.54.1", optional = true }
 tokio-util = { version = "0.7.20", features = ["compat"], optional = true }
-tor-async-utils = { path = "../tor-async-utils", version = "0.47.0" }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-bytes = { path = "../tor-bytes", version = "0.47.0" }
-tor-cell = { path = "../tor-cell", version = "0.47.0", features = ["relay"] }
-tor-cert = { path = "../tor-cert", version = "0.47.0" }
-tor-checkable = { path = "../tor-checkable", version = "0.47.0" }
-tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0", features = ["memquota-memcost"], optional = true }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0", features = ["memquota-memcost"] }
-tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0" }
-tor-memquota = { version = "0.47.0", path = "../tor-memquota", default-features = false }
-tor-protover = { version = "0.47.0", path = "../tor-protover" }
-tor-relay-crypto = { version = "0.47.0", path = "../tor-relay-crypto", optional = true }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0" }
-tor-rtmock = { path = "../tor-rtmock", version = "0.47.0", optional = true }
-tor-units = { path = "../tor-units", version = "0.47.0", features = ["memquota-memcost"] }
+tor-async-utils = { path = "../tor-async-utils", version = "0.47.0-zakura.1", package = "zakura-tor-async-utils" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-bytes = { path = "../tor-bytes", version = "0.47.0-zakura.1", package = "zakura-tor-bytes" }
+tor-cell = { path = "../tor-cell", version = "0.47.0-zakura.1", features = ["relay"], package = "zakura-tor-cell" }
+tor-cert = { path = "../tor-cert", version = "0.47.0-zakura.1", package = "zakura-tor-cert" }
+tor-checkable = { path = "../tor-checkable", version = "0.47.0-zakura.1", package = "zakura-tor-checkable" }
+tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
+tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"], optional = true, package = "zakura-tor-hscrypto" }
+tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
+tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"], package = "zakura-tor-llcrypto" }
+tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0-zakura.1", package = "zakura-tor-log-ratelim" }
+tor-memquota = { version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false, package = "zakura-tor-memquota" }
+tor-protover = { version = "0.47.0-zakura.1", path = "../tor-protover", package = "zakura-tor-protover" }
+tor-relay-crypto = { version = "0.47.0-zakura.1", path = "../tor-relay-crypto", optional = true, package = "zakura-tor-relay-crypto" }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", package = "zakura-tor-rtcompat" }
+tor-rtmock = { path = "../tor-rtmock", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-rtmock" }
+tor-units = { path = "../tor-units", version = "0.47.0-zakura.1", features = ["memquota-memcost"], package = "zakura-tor-units" }
 tracing = "0.1.44"
 typenum = "1.20"
 visibility = { version = "0.1.1" }
 void = "1"
-web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
+web-time-compat = { path = "../web-time-compat", version = "0.3.0-zakura.1", package = "zakura-web-time-compat" }
 zeroize = "1"
 
 [dev-dependencies]
@@ -157,10 +157,10 @@ itertools = "0.15.0"
 regex = { version = "1", default-features = false, features = ["std"] }
 statrs = { version = "0.19.1", default-features = false }
 tokio-crate = { package = "tokio", version = "1.54.1", features = ["full"] }
-tor-key-forge = { path = "../tor-key-forge", version = "0.47.0" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0", features = ["testing"] }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "rustls"] }
-tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
+tor-key-forge = { package = "zakura-tor-key-forge", path = "../tor-key-forge", version = "0.47.0-zakura.1" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["testing"] }
+tor-rtcompat = { package = "zakura-tor-rtcompat", path = "../tor-rtcompat", version = "0.47.0-zakura.1", features = ["tokio", "rustls"] }
+tor-rtmock = { package = "zakura-tor-rtmock", path = "../tor-rtmock", version = "0.47.0-zakura.1" }
 tracing-test = "0.2.6"
 
 [target.'cfg(any(target_arch = "x86", target_arch = "x86_64"))'.dev-dependencies]
@@ -205,3 +205,6 @@ required-features = ["bench"]
 name = "tor1_set_digest"
 harness = false
 required-features = ["bench"]
+
+[lib]
+name = "tor_proto"

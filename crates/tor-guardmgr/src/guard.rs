@@ -977,7 +977,7 @@ mod test {
     #[test]
     fn crate_id() {
         let id = CrateId::this_crate().unwrap();
-        assert_eq!(&id.crate_name, "tor-guardmgr");
+        assert_eq!(&id.crate_name, "zakura-tor-guardmgr");
         assert_eq!(Some(id.version.as_ref()), option_env!("CARGO_PKG_VERSION"));
     }
 
