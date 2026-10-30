@@ -437,7 +437,7 @@ impl KeyMgr {
             };
 
             // Found it! Now try to downcast it to the right type (this should _not_ fail)...
-            let key: K = key
+            let key: K = (key as Box<dyn std::any::Any>)
                 .downcast::<K>()
                 .map(|k| *k)
                 .map_err(|_| internal!("failed to downcast key to requested type"))?;
@@ -1116,7 +1116,9 @@ mod tests {
         }
 
         fn insert(&self, key: &dyn EncodableItem, key_spec: &dyn KeySpecifier) -> Result<()> {
-            let key = key.downcast_ref::<TestItem>().unwrap();
+            let key = (key as &dyn std::any::Any)
+                .downcast_ref::<TestItem>()
+                .unwrap();
 
             let item = key.as_keystore_item()?;
             let item_type = item.item_type()?;

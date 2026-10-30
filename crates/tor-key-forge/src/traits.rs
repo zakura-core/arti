@@ -1,12 +1,12 @@
 //! All the traits of this crate.
 
-use downcast_rs::{Downcast, impl_downcast};
 use rand::{CryptoRng, Rng};
 use ssh_key::{
     Algorithm, AlgorithmName,
     private::{Ed25519Keypair, Ed25519PrivateKey, KeypairData, OpaqueKeypair},
     public::{Ed25519PublicKey, KeyData, OpaquePublicKey},
 };
+use std::any::Any;
 use tor_error::internal;
 use tor_llcrypto::{
     pk::{curve25519, ed25519, rsa},
@@ -36,13 +36,14 @@ pub trait Keygen {
 }
 
 /// A trait for getting the type of an item.
-pub trait ItemType: Downcast {
+///
+/// Upcast a trait object to [`Any`] for checked concrete downcasts.
+pub trait ItemType: Any {
     /// The type of the key.
     fn item_type() -> KeystoreItemType
     where
         Self: Sized;
 }
-impl_downcast!(ItemType);
 
 /// A key that can be serialized to, and deserialized from.
 //
@@ -50,11 +51,10 @@ impl_downcast!(ItemType);
 // [`SshKeyData::into_erased`](crate::SshKeyData::into_erased) to
 // return the corresponding concrete type implementing `EncodableItem`
 // (as a `dyn EncodableItem`).
-pub trait EncodableItem: ItemType + Downcast {
+pub trait EncodableItem: ItemType {
     /// Return the key as a [`KeystoreItem`].
     fn as_keystore_item(&self) -> Result<KeystoreItem>;
 }
-impl_downcast!(EncodableItem);
 
 /// A public key, keypair, or key certificate.
 #[derive(Debug, Clone, derive_more::From)]
@@ -384,5 +384,49 @@ impl EncodableItem for rsa::PublicKey {
 
         SshKeyData::try_from_key_data(ssh_key::public::KeyData::Rsa(key_data))
             .map(KeystoreItem::from)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+
+    #[test]
+    fn failed_owned_downcast_preserves_the_erased_item() {
+        struct OwnedItem {
+            bytes: Vec<u8>,
+            drops: Arc<AtomicUsize>,
+        }
+        impl ItemType for OwnedItem {
+            fn item_type() -> KeystoreItemType {
+                KeystoreItemType::Key(KeyType::Ed25519Keypair)
+            }
+        }
+        impl Drop for OwnedItem {
+            fn drop(&mut self) {
+                self.drops.fetch_add(1, Ordering::Relaxed);
+            }
+        }
+
+        let drops = Arc::new(AtomicUsize::new(0));
+        let erased: crate::ErasedKey = Box::new(OwnedItem {
+            bytes: b"owned item contents".to_vec(),
+            drops: Arc::clone(&drops),
+        });
+        let erased: Box<dyn Any> = erased;
+        let Err(erased) = erased.downcast::<String>() else {
+            panic!("an item must not downcast to an unrelated concrete type");
+        };
+        assert_eq!(drops.load(Ordering::Relaxed), 0);
+        let Ok(recovered) = erased.downcast::<OwnedItem>() else {
+            panic!("failed downcasting must retain the original concrete item");
+        };
+        assert_eq!(recovered.bytes, b"owned item contents");
+        drop(recovered);
+        assert_eq!(drops.load(Ordering::Relaxed), 1);
     }
 }

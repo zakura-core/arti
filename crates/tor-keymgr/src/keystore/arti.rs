@@ -630,7 +630,8 @@ mod tests {
                 .parse_ssh_format_erased(&KeyType::Ed25519Keypair)
                 .unwrap();
 
-            let Ok(key) = erased_kp.downcast::<ed25519::Keypair>() else {
+            let Ok(key) = (erased_kp as Box<dyn std::any::Any>).downcast::<ed25519::Keypair>()
+            else {
                 panic!("failed to downcast key to ed25519::Keypair")
             };
 
@@ -683,7 +684,8 @@ mod tests {
                 .parse_ssh_format_erased(&KeyType::Ed25519Keypair)
                 .unwrap();
 
-            let Ok(key) = erased_kp.downcast::<ed25519::Keypair>() else {
+            let Ok(key) = (erased_kp as Box<dyn std::any::Any>).downcast::<ed25519::Keypair>()
+            else {
                 panic!("failed to downcast key to ed25519::Keypair")
             };
 
@@ -746,7 +748,8 @@ mod tests {
                 .parse_ssh_format_erased(&KeyType::Ed25519Keypair)
                 .unwrap();
 
-            let Ok(key) = erased_kp.downcast::<ed25519::Keypair>() else {
+            let Ok(key) = (erased_kp as Box<dyn std::any::Any>).downcast::<ed25519::Keypair>()
+            else {
                 panic!("failed to downcast key to ed25519::Keypair")
             };
 
@@ -820,7 +823,9 @@ mod tests {
             .get(&cert_spec, &CertType::Ed25519TorCert.into())
             .unwrap()
             .unwrap();
-        let Ok(found_cert) = erased_cert.downcast::<ParsedEd25519Cert>() else {
+        let Ok(found_cert) =
+            (erased_cert as Box<dyn std::any::Any>).downcast::<ParsedEd25519Cert>()
+        else {
             panic!("failed to downcast cert to KewUnknownCert")
         };
 

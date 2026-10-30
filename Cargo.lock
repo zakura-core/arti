@@ -4926,7 +4926,6 @@ dependencies = [
  "derive-deftly",
  "derive_builder_fork_arti",
  "derive_more",
- "downcast-rs",
  "dyn-clone",
  "educe",
  "futures",
@@ -5389,7 +5388,6 @@ version = "0.47.0"
 dependencies = [
  "derive-deftly",
  "derive_more",
- "downcast-rs",
  "paste",
  "rand 0.10.3",
  "rsa",
@@ -5415,7 +5413,6 @@ dependencies = [
  "derive-deftly",
  "derive_builder_fork_arti",
  "derive_more",
- "downcast-rs",
  "dyn-clone",
  "fs-mistrust",
  "glob-match",

@@ -275,7 +275,11 @@ mod tests {
             .unwrap();
 
         // Ensure the returned key is of the right type
-        assert!(key.downcast::<ed25519::Keypair>().is_ok());
+        assert!(
+            (key as Box<dyn std::any::Any>)
+                .downcast::<ed25519::Keypair>()
+                .is_ok()
+        );
 
         // verify receiving a key of a different type results in the appropriate error
         key_store.remove(key_spec().as_ref(), &key_type()).unwrap();
