@@ -70,6 +70,7 @@ experimental-api = ["testing", "__is_experimental"]
 __is_experimental = []
 
 [dependencies]
+arrayvec = "0.7.8"
 amplify = { version = "4", default-features = false, features = ["derive"] }
 base64ct = { version = "1.8.3", features = ["alloc"] }
 cipher = { version = "0.5.2", features = ["zeroize"] }
@@ -103,7 +104,6 @@ strum = { version = "0.28.0", features = ["derive"] }
 subtle = "2"
 thiserror = "2"
 time = { version = "0.3.55", features = ["std", "parsing", "macros", "formatting"] }
-tinystr = "0.8.5"
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-bytes = { path = "../tor-bytes", version = "0.47.0" }
 tor-cell = { path = "../tor-cell", version = "0.47.0" }
