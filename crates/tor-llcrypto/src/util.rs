@@ -3,8 +3,10 @@
 //! For now, this module is just contains a couple of workarounds for the
 //! limitations of other libraries.
 
-use der_parser::ber::{BerObject, BerObjectContent};
-use der_parser::der::parse_der;
+use rsa::pkcs8::der::{
+    Reader, SliceReader, Tag, Tagged,
+    asn1::{AnyRef, ObjectIdentifier},
+};
 pub mod ct;
 pub mod rng;
 
@@ -12,65 +14,55 @@ pub mod rng;
 /// is an RSA key.
 ///
 /// WARNING: Does not validate the X.509 certificate at all!
+///
+/// Only the certificate's outer field structure, RSA algorithm identifier and
+/// public-key encoding are checked. Unrelated field contents, the signature,
+/// validity dates and extensions are not interpreted. Bytes after the first
+/// certificate are ignored.
 //
 // TODO(nickm): This is a massive kludge.
-pub fn x509_extract_rsa_subject_kludge(der: &[u8]) -> Option<crate::pk::rsa::PublicKey> {
-    let (_, obj) = parse_der(der).ok()?;
-    let block = Asn1(&obj);
-    // TBSCertificate
-    let tbs_cert: Asn1<'_> = block.into_seq()?.first()?.into();
-    // SubjectPublicKeyInfo
-    let spki: Asn1<'_> = tbs_cert.into_seq()?.get(6)?.into();
-    let spki_members = spki.into_seq()?;
-    // Is it an RSA key?
-    let algid: Asn1<'_> = spki_members.first()?.into();
-    let oid: Asn1<'_> = algid.into_seq()?.first()?.into();
-    oid.must_be_rsa_oid()?;
-
-    // try to get the RSA key.
-    let key: Asn1<'_> = spki_members.get(1)?.into();
-    crate::pk::rsa::PublicKey::from_der(key.to_bitstr()?)
+pub fn x509_extract_rsa_subject_kludge(encoded: &[u8]) -> Option<crate::pk::rsa::PublicKey> {
+    let mut reader = SliceReader::new(encoded).ok()?;
+    let certificate = reader.decode::<AnyRef<'_>>().ok()?;
+    let tbs_certificate = sequence_member(certificate, 0)?;
+    let subject_public_key_info = sequence_member(tbs_certificate, 6)?;
+    let algorithm = sequence_member(subject_public_key_info, 0)?;
+    let oid = sequence_member(algorithm, 0)?
+        .decode_as::<ObjectIdentifier>()
+        .ok()?;
+    if oid != rsa::pkcs1::ALGORITHM_OID {
+        return None;
+    }
+    let public_key = sequence_member(subject_public_key_info, 1)?;
+    if public_key.tag() != Tag::BitString {
+        return None;
+    }
+    // Preserve the existing extractor's treatment of the unused-bit count:
+    // it is discarded, and the complete remaining bytes are decoded as PKCS#1.
+    let (_, key_bytes) = public_key.value().split_first()?;
+    crate::pk::rsa::PublicKey::from_der(key_bytes)
 }
 
-/// Helper to wrap a simple_asn1::Asn1Block and add more methods to it.
-struct Asn1<'a>(&'a BerObject<'a>);
-impl<'a> From<&'a BerObject<'a>> for Asn1<'a> {
-    fn from(b: &'a BerObject) -> Asn1<'a> {
-        Asn1(b)
+/// Read one field of a sequence, checking the bounds of all of its fields.
+///
+/// The fields' contents stay opaque: this is key extraction, not certificate
+/// validation. Reading does not recurse into unrelated values or allocate a
+/// tree proportional to the size of the certificate.
+fn sequence_member<'a>(sequence: AnyRef<'a>, index: usize) -> Option<AnyRef<'a>> {
+    if sequence.tag() != Tag::Sequence {
+        return None;
     }
-}
-impl<'a> Asn1<'a> {
-    /// If this block is a sequence, return a reference to its members.
-    fn into_seq(self) -> Option<&'a [BerObject<'a>]> {
-        match self.0.content {
-            BerObjectContent::Sequence(ref s) => Some(s.as_slice()),
-            _ => None,
+    let mut reader = SliceReader::new(sequence.value()).ok()?;
+    let mut selected = None;
+    let mut position = 0;
+    while !reader.is_finished() {
+        let value = reader.decode::<AnyRef<'_>>().ok()?;
+        if position == index {
+            selected = Some(value);
         }
+        position += 1;
     }
-    /// If this block is the OID for the RSA cipher, return Some(()); else
-    /// return None.
-    ///
-    /// (It's not a great API, but it lets us use the ? operator
-    /// easily above.)
-    fn must_be_rsa_oid(self) -> Option<()> {
-        let oid = match self.0.content {
-            BerObjectContent::OID(ref oid) => Some(oid),
-            _ => None,
-        }?;
-        if oid.as_bytes() == der_parser::oid!(raw 1.2.840.113549.1.1.1) {
-            Some(())
-        } else {
-            None
-        }
-    }
-    /// If this block is a BitString, return its bitstring value as a
-    /// slice of bytes.
-    fn to_bitstr(&self) -> Option<&[u8]> {
-        match self.0.content {
-            BerObjectContent::BitString(_, ref v) => Some(v.data),
-            _ => None,
-        }
-    }
+    selected
 }
 
 #[cfg(test)]
@@ -106,5 +98,133 @@ mod tests {
         );
 
         assert!(x509_extract_rsa_subject_kludge("hello world".as_bytes()).is_none());
+    }
+
+    fn tlv(tag: u8, value: &[u8]) -> Vec<u8> {
+        let mut encoded = vec![tag];
+        if value.len() < 128 {
+            encoded.push(value.len() as u8);
+        } else {
+            let length = u16::try_from(value.len()).unwrap();
+            if length < 256 {
+                encoded.extend_from_slice(&[0x81, length as u8]);
+            } else {
+                encoded.push(0x82);
+                encoded.extend_from_slice(&length.to_be_bytes());
+            }
+        }
+        encoded.extend_from_slice(value);
+        encoded
+    }
+
+    fn sequence(fields: &[Vec<u8>]) -> Vec<u8> {
+        tlv(0x30, &fields.concat())
+    }
+
+    fn rsa_algorithm() -> Vec<u8> {
+        use rsa::pkcs8::der::Encode;
+        sequence(&[rsa::pkcs1::ALGORITHM_OID.to_der().unwrap(), tlv(0x05, &[])])
+    }
+
+    fn key_bits(unused_bits: u8) -> Vec<u8> {
+        let key = super::x509_extract_rsa_subject_kludge(CHUTNEY_CERT).unwrap();
+        let mut bits = vec![unused_bits];
+        bits.extend_from_slice(&key.to_der());
+        tlv(0x03, &bits)
+    }
+
+    fn certificate_with_fields(fields: &[Vec<u8>]) -> Vec<u8> {
+        sequence(&[sequence(fields), rsa_algorithm(), tlv(0x03, &[0, 0])])
+    }
+
+    fn certificate_fields(spki: Vec<u8>) -> Vec<Vec<u8>> {
+        vec![
+            tlv(0xa0, &tlv(0x02, &[2])),
+            tlv(0x02, &[1]),
+            rsa_algorithm(),
+            sequence(&[]),
+            sequence(&[tlv(0x17, b"200101000000Z"), tlv(0x17, b"300101000000Z")]),
+            sequence(&[]),
+            spki,
+        ]
+    }
+
+    #[test]
+    fn extraction_structure_and_bounds() {
+        use super::x509_extract_rsa_subject_kludge as extract;
+        let spki = sequence(&[rsa_algorithm(), key_bits(0)]);
+        let certificate = certificate_with_fields(&certificate_fields(spki.clone()));
+        let expected = extract(CHUTNEY_CERT).unwrap().to_der();
+        assert_eq!(extract(&certificate).unwrap().to_der(), expected);
+        for length in 0..certificate.len() {
+            assert!(extract(&certificate[..length]).is_none());
+        }
+        let mut with_trailing_bytes = certificate.clone();
+        with_trailing_bytes.extend_from_slice(b"ignored after the certificate");
+        assert_eq!(extract(&with_trailing_bytes).unwrap().to_der(), expected);
+
+        // The helper has always selected the seventh TBSCertificate member.
+        let mut fields = certificate_fields(spki);
+        fields.remove(0);
+        assert!(extract(&certificate_with_fields(&fields)).is_none());
+
+        for invalid_length in [
+            &[0x30, 0x80][..],
+            &[0x30, 0x82, 0xff, 0xff][..],
+            &[0x30, 0x84, 0xff, 0xff, 0xff, 0xff][..],
+        ] {
+            assert!(extract(invalid_length).is_none());
+        }
+    }
+
+    #[test]
+    fn extraction_checks_rsa_algorithm_and_bit_string() {
+        use super::x509_extract_rsa_subject_kludge as extract;
+        use rsa::pkcs8::der::Encode;
+        let mut other_oid = rsa::pkcs1::ALGORITHM_OID.to_der().unwrap();
+        *other_oid.last_mut().unwrap() = 2;
+        let other_algorithm = sequence(&[other_oid, tlv(0x05, &[])]);
+        for spki in [
+            sequence(&[other_algorithm, key_bits(0)]),
+            sequence(&[tlv(0x05, &[]), key_bits(0)]),
+            sequence(&[rsa_algorithm(), tlv(0x04, b"not a bit string")]),
+            sequence(&[rsa_algorithm(), tlv(0x03, &[])]),
+            sequence(&[rsa_algorithm(), tlv(0x03, &[0, 0x30, 0])]),
+        ] {
+            assert!(extract(&certificate_with_fields(&certificate_fields(spki))).is_none());
+        }
+        // The old extractor discarded this byte even when it was not a valid
+        // unused-bit count. Keep extracting the same complete RSA key bytes.
+        let expected = extract(CHUTNEY_CERT).unwrap().to_der();
+        for unused_bits in 0..=255 {
+            let spki = sequence(&[rsa_algorithm(), key_bits(unused_bits)]);
+            let certificate = certificate_with_fields(&certificate_fields(spki));
+            assert_eq!(extract(&certificate).unwrap().to_der(), expected);
+        }
+    }
+
+    #[test]
+    fn extraction_does_not_authenticate_other_fields() {
+        use super::x509_extract_rsa_subject_kludge as extract;
+        let expected = extract(CHUTNEY_CERT).unwrap().to_der();
+        let spki = sequence(&[rsa_algorithm(), key_bits(0)]);
+        let mut fields = certificate_fields(spki);
+        // Neither names nor validity are authenticated by this extractor.
+        fields[3] = sequence(&[tlv(0x0c, &[0xff])]);
+        fields[4] = tlv(0x05, &[]);
+        // Context-specific extensions stay opaque, including unknown critical
+        // extensions; authenticating relays is the handshake's responsibility.
+        fields.push(tlv(0xa3, b"opaque extension contents"));
+        let certificate = certificate_with_fields(&fields);
+        assert_eq!(extract(&certificate).unwrap().to_der(), expected);
+    }
+
+    #[test]
+    fn extraction_requires_canonical_field_lengths() {
+        use super::x509_extract_rsa_subject_kludge as extract;
+        let spki = sequence(&[rsa_algorithm(), key_bits(0)]);
+        let mut fields = certificate_fields(spki);
+        fields[1] = vec![0x02, 0x81, 0x01, 0x01];
+        assert!(extract(&certificate_with_fields(&fields)).is_none());
     }
 }
