@@ -207,6 +207,9 @@ use async_trait::async_trait;
 use futures::Future;
 use std::any::Any;
 use std::io::Result as IoResult;
+use std::pin::Pin;
+use std::sync::Arc;
+use std::task::{Context, Poll};
 use std::time::Duration;
 #[cfg(unix)]
 use tor_general_addr::unix;
@@ -319,8 +322,16 @@ impl crate::traits::UdpProvider for TokioRuntimeHandle {
 
 /// Create and return a new Tokio multithreaded runtime.
 pub(crate) fn create_runtime() -> IoResult<TokioRuntimeHandle> {
-    let runtime = async_executors::exec::TokioTp::new().map_err(std::io::Error::other)?;
-    Ok(runtime.into())
+    let runtime = tokio_crate::runtime::Builder::new_multi_thread()
+        .enable_io()
+        .enable_time()
+        .build()
+        .map_err(std::io::Error::other)?;
+    let handle = runtime.block_on(async { tokio_crate::runtime::Handle::current() });
+    Ok(TokioRuntimeHandle {
+        owned: Some(Arc::new(runtime)),
+        handle,
+    })
 }
 
 /// Wrapper around a Handle to a tokio runtime.
@@ -342,7 +353,7 @@ pub struct TokioRuntimeHandle {
     /// We never access this directly; only through `handle`.  We keep it here
     /// so that our Runtime types can be agnostic about whether they own the
     /// executor.
-    owned: Option<async_executors::TokioTp>,
+    owned: Option<Arc<tokio_crate::runtime::Runtime>>,
     /// The underlying Handle.
     handle: tokio_crate::runtime::Handle,
 }
@@ -374,16 +385,6 @@ impl From<tokio_crate::runtime::Handle> for TokioRuntimeHandle {
     }
 }
 
-impl From<async_executors::TokioTp> for TokioRuntimeHandle {
-    fn from(owner: async_executors::TokioTp) -> TokioRuntimeHandle {
-        let handle = owner.block_on(async { tokio_crate::runtime::Handle::current() });
-        Self {
-            owned: Some(owner),
-            handle,
-        }
-    }
-}
-
 impl ToplevelBlockOn for TokioRuntimeHandle {
     #[track_caller]
     fn block_on<F: Future>(&self, f: F) -> F::Output {
@@ -391,16 +392,42 @@ impl ToplevelBlockOn for TokioRuntimeHandle {
     }
 }
 
+/// The opaque blocking-task future used by the Tokio runtimes.
+///
+/// Dropping this future detaches its task. A task panic or cancellation causes
+/// polling the future to panic, as required by [`Blocking`].
+pub struct TokioBlockingHandle<T>(tokio_crate::task::JoinHandle<T>);
+
+impl<T: std::fmt::Debug> std::fmt::Debug for TokioBlockingHandle<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("BlockingHandle(InnerBh)")
+    }
+}
+
+impl<T: 'static> Future for TokioBlockingHandle<T> {
+    type Output = T;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<T> {
+        match futures::ready!(Pin::new(&mut self.get_mut().0).poll(cx)) {
+            Ok(value) => Poll::Ready(value),
+            Err(error) => panic!(
+                "Task has been canceled or has panicked. \
+                 Are you dropping the executor to early? Error: {error}"
+            ),
+        }
+    }
+}
+
 impl Blocking for TokioRuntimeHandle {
-    type ThreadHandle<T: Send + 'static> = async_executors::BlockingHandle<T>;
+    type ThreadHandle<T: Send + 'static> = TokioBlockingHandle<T>;
 
     #[track_caller]
-    fn spawn_blocking<F, T>(&self, f: F) -> async_executors::BlockingHandle<T>
+    fn spawn_blocking<F, T>(&self, f: F) -> Self::ThreadHandle<T>
     where
         F: FnOnce() -> T + Send + 'static,
         T: Send + 'static,
     {
-        async_executors::BlockingHandle::tokio(self.handle.spawn_blocking(f))
+        TokioBlockingHandle(self.handle.spawn_blocking(f))
     }
 
     #[track_caller]
@@ -465,5 +492,202 @@ impl JoinSetProvider for TokioRuntimeHandle {
         T: Send + Sync + 'static,
     {
         tokio_crate::task::JoinSet::new()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use futures::FutureExt as _;
+    use std::panic::AssertUnwindSafe;
+    use std::sync::mpsc;
+
+    /// Bound synchronization failures without leaving a blocking worker stuck.
+    const TEST_TIMEOUT: Duration = Duration::from_secs(5);
+
+    /// Notify a test when runtime shutdown drops an unfinished async task.
+    struct TaskDropped(mpsc::Sender<()>);
+
+    impl Drop for TaskDropped {
+        fn drop(&mut self) {
+            let _ = self.0.send(());
+        }
+    }
+
+    /// Launch a task that remains pending until its runtime is shut down.
+    fn pending_task(runtime: &TokioRuntimeHandle) -> mpsc::Receiver<()> {
+        let (dropped_tx, dropped_rx) = mpsc::channel();
+        let (started_tx, started_rx) = futures::channel::oneshot::channel();
+        futures::task::SpawnExt::spawn(runtime, async move {
+            let guard = TaskDropped(dropped_tx);
+            let _ = started_tx.send(());
+            std::future::pending::<()>().await;
+            drop(guard);
+        })
+        .expect("spawn pending task");
+        runtime
+            .block_on(async {
+                tokio_crate::time::timeout(TEST_TIMEOUT, started_rx)
+                    .await
+                    .expect("task starts before deadline")
+            })
+            .expect("task started");
+        dropped_rx
+    }
+
+    #[test]
+    fn owned_runtime_lives_until_last_clone() {
+        let runtime = create_runtime().expect("create runtime");
+        assert!(runtime.is_owned());
+        let clone = runtime.clone();
+        let dropped = pending_task(&runtime);
+        drop(runtime);
+        assert!(matches!(dropped.try_recv(), Err(mpsc::TryRecvError::Empty)));
+        clone.block_on(async {
+            tokio_crate::time::sleep(Duration::from_millis(1)).await;
+        });
+        drop(clone);
+        dropped
+            .recv_timeout(TEST_TIMEOUT)
+            .expect("last owner shuts down pending tasks");
+    }
+
+    #[test]
+    fn borrowed_runtime_does_not_own_executor() {
+        let owner = tokio_crate::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("create caller-owned runtime");
+        let runtime = TokioRuntimeHandle::new(owner.handle().clone());
+        assert!(!runtime.is_owned());
+        let dropped = pending_task(&runtime);
+        drop(runtime);
+        assert!(matches!(dropped.try_recv(), Err(mpsc::TryRecvError::Empty)));
+        owner.block_on(async {
+            tokio_crate::time::sleep(Duration::from_millis(1)).await;
+        });
+        drop(owner);
+        dropped
+            .recv_timeout(TEST_TIMEOUT)
+            .expect("caller owner shuts down pending tasks");
+    }
+
+    #[test]
+    fn blocking_result_and_reentry() {
+        /// A result that must not acquire an unnecessary `Debug` bound.
+        struct NoDebug(u8);
+
+        /// Preserve handle auto-traits even when the result is not `Sync`.
+        fn assert_handle_traits<F: Future + Send + Sync + Unpin>() {}
+        assert_handle_traits::<<TokioRuntimeHandle as Blocking>::ThreadHandle<std::cell::Cell<u8>>>(
+        );
+
+        let runtime = create_runtime().expect("create runtime");
+        let reentry = runtime.clone();
+        runtime.block_on(async {
+            let result = runtime
+                .spawn_blocking(move || {
+                    reentry.reenter_block_on(async {
+                        tokio_crate::time::sleep(Duration::from_millis(1)).await;
+                        NoDebug(17)
+                    })
+                })
+                .await;
+            assert_eq!(result.0, 17);
+            let handle = runtime.spawn_blocking(|| 23_u8);
+            assert_eq!(format!("{handle:?}"), "BlockingHandle(InnerBh)");
+            assert_eq!(handle.await, 23);
+        });
+    }
+
+    #[test]
+    fn dropped_blocking_handle_detaches() {
+        let runtime = create_runtime().expect("create runtime");
+        runtime.block_on(async {
+            let (started_tx, started_rx) = futures::channel::oneshot::channel();
+            let (finished_tx, finished_rx) = futures::channel::oneshot::channel();
+            let (release_tx, release_rx) = mpsc::channel();
+            let handle = runtime.spawn_blocking(move || {
+                let _ = started_tx.send(());
+                release_rx
+                    .recv_timeout(TEST_TIMEOUT)
+                    .expect("release worker");
+                let _ = finished_tx.send(29);
+            });
+            started_rx.await.expect("blocking callback started");
+            drop(handle);
+            release_tx.send(()).expect("release detached callback");
+            assert_eq!(finished_rx.await.expect("detached callback finished"), 29);
+        });
+    }
+
+    #[test]
+    fn blocking_panic_is_reported_when_polled() {
+        let runtime = create_runtime().expect("create runtime");
+        let handle = runtime.spawn_blocking(|| -> u8 { panic!("blocking panic vector") });
+        let panic = runtime
+            .block_on(AssertUnwindSafe(handle).catch_unwind())
+            .expect_err("awaiting a panicked callback panics");
+        let message = panic.downcast_ref::<String>().expect("panic message");
+        assert!(message.contains("blocking panic vector"));
+    }
+
+    #[test]
+    fn queued_blocking_cancellation_is_reported_when_polled() {
+        let owner = tokio_crate::runtime::Builder::new_multi_thread()
+            .max_blocking_threads(1)
+            .build()
+            .expect("create bounded blocking pool");
+        let runtime = TokioRuntimeHandle::new(owner.handle().clone());
+        let (started_tx, started_rx) = mpsc::channel();
+        let (release_tx, release_rx) = mpsc::channel();
+        let blocker = owner.spawn_blocking(move || {
+            started_tx.send(()).expect("notify blocked worker");
+            let _ = release_rx.recv_timeout(TEST_TIMEOUT);
+        });
+        started_rx
+            .recv_timeout(TEST_TIMEOUT)
+            .expect("worker started");
+        let called = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let callback_called = Arc::clone(&called);
+        let queued = runtime.spawn_blocking(move || {
+            callback_called.store(true, std::sync::atomic::Ordering::SeqCst);
+        });
+        queued.0.abort();
+        release_tx.send(()).expect("release blocking pool");
+        let result = runtime.block_on(AssertUnwindSafe(queued).catch_unwind());
+        owner.block_on(blocker).expect("worker finished");
+        assert!(result.is_err());
+        assert!(!called.load(std::sync::atomic::Ordering::SeqCst));
+    }
+
+    #[test]
+    fn last_owner_drop_in_async_context() {
+        /// Use a child process so an unexpected double panic cannot abort tests.
+        const CHILD_ENV: &str = "ARTI_TEST_LAST_RUNTIME_DROP";
+        if std::env::var_os(CHILD_ENV).is_some() {
+            let runtime = create_runtime().expect("create owned runtime");
+            let caller = tokio_crate::runtime::Builder::new_current_thread()
+                .build()
+                .expect("create caller runtime");
+            caller.block_on(async move { drop(runtime) });
+            return;
+        }
+        let (_, module) = module_path!().split_once("::").expect("test module path");
+        let output = std::process::Command::new(std::env::current_exe().expect("test binary"))
+            .args([
+                "--exact",
+                &format!("{module}::last_owner_drop_in_async_context"),
+                "--nocapture",
+            ])
+            .env(CHILD_ENV, "1")
+            .output()
+            .expect("run runtime-drop child test");
+        assert!(!output.status.success());
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("Cannot drop a runtime"),
+            "{}",
+            String::from_utf8_lossy(&output.stderr),
+        );
     }
 }

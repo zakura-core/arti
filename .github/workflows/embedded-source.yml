@@ -35,12 +35,16 @@ jobs:
           cargo fmt --all -- --check
       - name: Check the retained library workspace
         run: cargo check --workspace --locked
-      - name: Run cryptography, keystore and persistence tests
+      - name: Run core library tests
         run: |
           cargo test --locked --manifest-path crates/tor-llcrypto/Cargo.toml
           cargo test --locked --manifest-path crates/tor-keymgr/Cargo.toml --no-default-features
           cargo test --locked --manifest-path crates/tor-keymgr/Cargo.toml --all-features
           cargo test --locked --manifest-path crates/tor-persist/Cargo.toml --all-features
+          cargo test --locked --manifest-path crates/tor-rtcompat/Cargo.toml \
+            --no-default-features --features tokio,rustls,tls-server,testing
+          cargo test --locked --manifest-path crates/tor-rtcompat/Cargo.toml \
+            --no-default-features --features tokio,async-std,native-tls,rustls,tls-server,testing
       - name: Test configuration feature boundaries
         run: |
           cargo test --locked --manifest-path crates/tor-config/Cargo.toml --no-default-features
@@ -60,7 +64,7 @@ jobs:
       - name: Check fresh wallet feature graph
         run: |
           python3 maint/zakura/check-client-graph.py \
-            --forbid sysinfo url idna idna_adapter figment toml serde_ignored pear uncased --forbid-icu
+            --forbid sysinfo url idna idna_adapter figment toml serde_ignored pear uncased async_executors blanket --forbid-icu
       - name: Exercise the public Tor network
         if: matrix.os == 'ubuntu-24.04' && github.event_name != 'pull_request'
         run: |
