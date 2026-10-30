@@ -119,13 +119,20 @@ pub(crate) mod test {
         assert_eq!(Fruit::from_str("pear"), UNRECOGNIZED);
         assert_eq!(Fruit::from_str("@tasty"), ANN_TASTY);
         assert_eq!(Fruit::from_str("@tastier"), ANN_UNRECOGNIZED);
-        for unknown in ["", "Apple", "apple\0", " apple", "apple ", "applé", "cherry/plum"] {
+        for unknown in [
+            "",
+            "Apple",
+            "apple\0",
+            " apple",
+            "apple ",
+            "applé",
+            "cherry/plum",
+        ] {
             assert_eq!(Fruit::from_str(unknown), UNRECOGNIZED);
         }
         for unknown in ["@", "@@tasty", "@tasty\0", "@tasty "] {
             assert_eq!(Fruit::from_str(unknown), ANN_UNRECOGNIZED);
         }
-
 
         assert_eq!(APPLE.idx(), 0);
         assert_eq!(ORANGE.idx(), 1);
