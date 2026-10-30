@@ -8,7 +8,7 @@ use web_time_compat::{Duration, Instant, SystemTime};
 define_derive_deftly! {
     /// Derive getters for struct fields.
     ///
-    /// Like `amplify_derive::Getters` but `pub(crate)`.
+    /// Like [`amplify_derive::Getters`] but `pub(crate)`.
     ///
     /// TODO add this feature to `amplify`.
     CrateGetters:
