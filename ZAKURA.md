@@ -8,7 +8,7 @@ preserved. Dependency reductions are reviewed as separate pull requests, with
 compatibility tests for affected behavior.
 
 Published fork packages have a `zakura-` prefix and an initial `-zakura.1`
-prerelease version. Rust library names, dependency aliases and binary names stay
+prerelease version. Rust library names and dependency aliases stay
 the same, so source code can retain imports such as `arti_client` and
 `tor_rtcompat`. The fork and upstream packages are distinct Rust type identities;
 applications that pass Arti or runtime types across crate boundaries must use one
@@ -35,3 +35,6 @@ cargo test --locked -p zakura-tor-config
 cargo check --locked -p zakura-arti-client --no-default-features \
   --features tokio,rustls,onion-service-client
 ```
+
+The package namespace applies to the retained embedded workspace described in
+[EMBEDDED.md](EMBEDDED.md). Standalone application packages are omitted.
