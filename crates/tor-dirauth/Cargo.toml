@@ -1,6 +1,6 @@
 [package]
-name = "tor-dirauth"
-version = "0.47.0"
+name = "zakura-tor-dirauth"
+version = "0.47.0-zakura.1"
 authors = [
     "The Tor Project, Inc.",
     "Ian Jackson <iwj@torproject.org>",
@@ -14,7 +14,7 @@ description = "Tor Directory Authority - core algoirithms"
 keywords = ["tor", "arti"]
 # We must put *something* here and this will do
 categories = ["network-programming"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -42,15 +42,18 @@ paste = "1.0.15"
 rangemap = "1.8"
 static_assertions = "1"
 thiserror = "2"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-checkable = { path = "../tor-checkable", version = "0.47.0" }
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-netdoc = { version = "0.47.0", path = "../tor-netdoc", features = ["full", "retain-unknown"] }
-tor-protover = { version = "0.47.0", path = "../tor-protover" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-checkable = { path = "../tor-checkable", version = "0.47.0-zakura.1", package = "zakura-tor-checkable" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
+tor-netdoc = { version = "0.47.0-zakura.1", path = "../tor-netdoc", features = ["full", "retain-unknown"], package = "zakura-tor-netdoc" }
+tor-protover = { version = "0.47.0-zakura.1", path = "../tor-protover", package = "zakura-tor-protover" }
 tracing = "0.1.44"
 typed-index-collections = "3.5.0"
 
 [dev-dependencies]
 anyhow = "1.0.104"
-tor-netdoc = { version = "0.47.0", path = "../tor-netdoc", features = ["full", "testing"] }
+tor-netdoc = { version = "0.47.0-zakura.1", path = "../tor-netdoc", features = ["full", "testing"], package = "zakura-tor-netdoc" }
 tracing-test = "0.2.6"
+
+[lib]
+name = "tor_dirauth"

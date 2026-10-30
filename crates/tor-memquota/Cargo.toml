@@ -1,6 +1,6 @@
 [package]
-name = "tor-memquota"
-version = "0.47.0"
+name = "zakura-tor-memquota"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Ian Jackson <iwj@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Memory use tracking and quota utilities, used by Tor software"
 keywords = ["tor", "arti"]
 categories = ["memory-management"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [dependencies]
 cfg-if = "1.0.5"
@@ -23,28 +23,28 @@ itertools = "0.15.0"
 paste = "1.0.15"
 pin-project = "1"
 serde = { version = "1.0.229", features = ["derive"] }
-slotmap-careful = { path = "../slotmap-careful", version = "0.9.0" }
+slotmap-careful = { path = "../slotmap-careful", version = "0.9.0-zakura.1", package = "zakura-slotmap-careful" }
 static_assertions = "1"
 sysinfo = { version = "0.38.4", default-features = false, features = ["system"] }
 thiserror = "2"
-tor-async-utils = { path = "../tor-async-utils", version = "0.47.0" }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0", features = ["serde"] }
-tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
-tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
-tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0" }
-tor-memquota-cost = { path = "../tor-memquota-cost", version = "0.47.0" }
-tor-rtcompat = { version = "0.47.0", path = "../tor-rtcompat" }
+tor-async-utils = { path = "../tor-async-utils", version = "0.47.0-zakura.1", package = "zakura-tor-async-utils" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["serde"], package = "zakura-tor-basic-utils" }
+tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", features = ["tracing"], package = "zakura-tor-error" }
+tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0-zakura.1", package = "zakura-tor-log-ratelim" }
+tor-memquota-cost = { path = "../tor-memquota-cost", version = "0.47.0-zakura.1", package = "zakura-tor-memquota-cost" }
+tor-rtcompat = { version = "0.47.0-zakura.1", path = "../tor-rtcompat", package = "zakura-tor-rtcompat" }
 tracing = "0.1.44"
 visibility = { version = "0.1.1", optional = true }
 void = "1"
 
 [dev-dependencies]
 rand = "0.10.3"
-safelog = { path = "../safelog", version = "0.10.0" }
+safelog = { path = "../safelog", version = "0.10.0-zakura.1", package = "zakura-safelog" }
 serde_json = "1.0.154"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-rtcompat = { version = "0.47.0", path = "../tor-rtcompat", features = ["tokio", "native-tls"] }
-tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-rtcompat = { version = "0.47.0-zakura.1", path = "../tor-rtcompat", features = ["tokio", "native-tls"], package = "zakura-tor-rtcompat" }
+tor-rtmock = { path = "../tor-rtmock", version = "0.47.0-zakura.1", package = "zakura-tor-rtmock" }
 tracing-test = "0.2.6"
 
 [features]
@@ -67,3 +67,6 @@ __is_experimental = []
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_memquota"

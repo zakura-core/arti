@@ -1,6 +1,6 @@
 [package]
-name = "tor-config"
-version = "0.47.0"
+name = "zakura-tor-config"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Low-level configuration for the Arti Tor implementation"
 keywords = ["tor", "arti"]
 categories = ["config"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = ["file-watcher"]
@@ -55,7 +55,7 @@ educe = "0.4.23"
 either = "1"
 extend = "1.2.0"
 figment = { version = "0.10.19", features = ["toml"] }
-fs-mistrust = { path = "../fs-mistrust", version = "0.16.0" }
+fs-mistrust = { path = "../fs-mistrust", version = "0.16.0-zakura.1", package = "zakura-fs-mistrust" }
 futures = { version = "0.3.34", optional = true }
 humantime-serde = "1.1.1"
 itertools = "0.15.0"
@@ -69,9 +69,9 @@ serde_ignored = "0.1.14"
 strum = { version = "0.28.0", features = ["derive"] }
 thiserror = "2"
 toml = "1.1.8"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", optional = true }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-rtcompat" }
 tracing = "0.1.44"
 void = "1"
 
@@ -79,10 +79,13 @@ void = "1"
 assert_matches = "1.5.0"
 serde_json = "1.0.154"
 tempfile = "3"
-test-temp-dir = { version = "0.9.0", path = "../test-temp-dir" }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0", features = ["serde"] }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "native-tls"] }
+test-temp-dir = { version = "0.9.0-zakura.1", path = "../test-temp-dir", package = "zakura-test-temp-dir" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["serde"], package = "zakura-tor-basic-utils" }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", features = ["tokio", "native-tls"], package = "zakura-tor-rtcompat" }
 tracing-test = "0.2.6"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_config"

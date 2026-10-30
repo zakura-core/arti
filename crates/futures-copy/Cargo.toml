@@ -1,6 +1,6 @@
 [package]
-name = "futures-copy"
-version = "0.5.0"
+name = "zakura-futures-copy"
+version = "0.5.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -10,7 +10,7 @@ description = "Copy data between AsyncRead and AsyncWrite, with bidirectional an
 keywords = ["futures", "tor", "arti"]
 # We must put *something* here and this will do
 categories = ["rust-patterns", "network-programming"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 full = []
@@ -22,9 +22,9 @@ pin-project = "1"
 
 [dev-dependencies]
 tokio = { version = "1.54.1", features = ["macros", "net", "rt", "rt-multi-thread", "time"] }
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-rtcompat = { version = "0.47.0", path = "../tor-rtcompat" }
-tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
+tor-rtcompat = { version = "0.47.0-zakura.1", path = "../tor-rtcompat", package = "zakura-tor-rtcompat" }
+tor-rtmock = { path = "../tor-rtmock", version = "0.47.0-zakura.1", package = "zakura-tor-rtmock" }
 
 [package.metadata.docs.rs]
 all-features = true
@@ -34,3 +34,6 @@ libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = ["Win32_Networking_WinSock"] }
+
+[lib]
+name = "futures_copy"

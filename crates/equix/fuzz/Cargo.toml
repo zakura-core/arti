@@ -17,6 +17,7 @@ path = ".."
 features = ["bucket-array"]
 
 # Prevent this from interfering with workspaces
+package = "zakura-equix"
 [workspace]
 members = ["."]
 

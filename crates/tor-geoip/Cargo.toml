@@ -1,6 +1,6 @@
 [package]
-name = "tor-geoip"
-version = "0.47.0"
+name = "zakura-tor-geoip"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "eta <eta@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "A crate to parse C Tor GeoIP CSV files."
 keywords = ["tor", "arti"]
 categories = ["parser-implementations", "network-programming"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [dependencies]
 derive_more = { version = "2.1.1", features = ["full"] }
@@ -38,3 +38,6 @@ path = "bin/convert.rs"
 test = false
 bench = false
 required-features = ["export"]
+
+[lib]
+name = "tor_geoip"

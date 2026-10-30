@@ -1,6 +1,6 @@
 [package]
-name = "tor-hscrypto"
-version = "0.47.0"
+name = "zakura-tor-hscrypto"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Basic onion service cryptography types used by Aerti"
 keywords = ["tor", "arti", "cryptography"]
 categories = ["cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = []
@@ -49,31 +49,31 @@ data-encoding = "2.11.1"                                                        
 derive-deftly = { version = "~1.14.0" }
 derive_more = { version = "2.1.1", features = ["full"] }
 digest = "0.10.7"
-equix = { path = "../equix", version = "0.8.0", optional = true }
+equix = { path = "../equix", version = "0.8.0-zakura.1", optional = true, package = "zakura-equix" }
 hex = "0.4"
 humantime = "2"
 itertools = "0.15.0"
 paste = "1.0.15"
 rand = "0.10.3"
-safelog = { path = "../safelog", version = "0.10.0" }
+safelog = { path = "../safelog", version = "0.10.0-zakura.1", package = "zakura-safelog" }
 serde = { version = "1.0.229", features = ["derive"] }
 signature = "2"
 subtle = "2"
 thiserror = "2"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-bytes = { version = "0.47.0", path = "../tor-bytes" }
-tor-error = { version = "0.47.0", path = "../tor-error" }
-tor-key-forge = { version = "0.47.0", path = "../tor-key-forge" }
-tor-llcrypto = { version = "0.47.0", path = "../tor-llcrypto", features = ["hsv3-client", "hsv3-service"] }
-tor-memquota = { version = "0.47.0", path = "../tor-memquota", default-features = false, optional = true }
-tor-units = { path = "../tor-units", version = "0.47.0" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-bytes = { version = "0.47.0-zakura.1", path = "../tor-bytes", package = "zakura-tor-bytes" }
+tor-error = { version = "0.47.0-zakura.1", path = "../tor-error", package = "zakura-tor-error" }
+tor-key-forge = { version = "0.47.0-zakura.1", path = "../tor-key-forge", package = "zakura-tor-key-forge" }
+tor-llcrypto = { version = "0.47.0-zakura.1", path = "../tor-llcrypto", features = ["hsv3-client", "hsv3-service"], package = "zakura-tor-llcrypto" }
+tor-memquota = { version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false, optional = true, package = "zakura-tor-memquota" }
+tor-units = { path = "../tor-units", version = "0.47.0-zakura.1", package = "zakura-tor-units" }
 void = "1"
-web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
+web-time-compat = { path = "../web-time-compat", version = "0.3.0-zakura.1", package = "zakura-web-time-compat" }
 zeroize = { version = "1", optional = true }
 
 [dev-dependencies]
 hex-literal = "1.1"
-tor-basic-utils = { version = "0.47.0", path = "../tor-basic-utils" }
+tor-basic-utils = { version = "0.47.0-zakura.1", path = "../tor-basic-utils", package = "zakura-tor-basic-utils" }
 
 [[test]]
 name = "pow_v1_vectors"
@@ -81,3 +81,6 @@ required-features = ["hs-pow-full"]
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_hscrypto"

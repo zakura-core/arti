@@ -1,6 +1,6 @@
 [package]
-name = "tor-relay-selection"
-version = "0.47.0"
+name = "zakura-tor-relay-selection"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Logic to select Tor relays for specific purposes"
 keywords = ["tor", "arti"]
 categories = ["network-programming"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = []
@@ -31,16 +31,19 @@ __is_experimental = []
 [dependencies]
 rand = "0.10.3"
 serde = { version = "1.0.229", features = ["derive"] }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-geoip = { path = "../tor-geoip", version = "0.47.0", optional = true }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
-tor-netdir = { path = "../tor-netdir", version = "0.47.0" }
-tor-netdoc = { path = "../tor-netdoc", version = "0.47.0" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-geoip = { path = "../tor-geoip", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-geoip" }
+tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
+tor-netdir = { path = "../tor-netdir", version = "0.47.0-zakura.1", package = "zakura-tor-netdir" }
+tor-netdoc = { path = "../tor-netdoc", version = "0.47.0-zakura.1", package = "zakura-tor-netdoc" }
 
 [dev-dependencies]
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47" }
-tor-netdir = { path = "../tor-netdir", version = "0.47.0", features = ["testing"] }
-tor-netdoc = { path = "../tor-netdoc", version = "0.47.0", features = ["testing"] }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-netdir = { path = "../tor-netdir", version = "0.47.0-zakura.1", features = ["testing"], package = "zakura-tor-netdir" }
+tor-netdoc = { path = "../tor-netdoc", version = "0.47.0-zakura.1", features = ["testing"], package = "zakura-tor-netdoc" }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_relay_selection"

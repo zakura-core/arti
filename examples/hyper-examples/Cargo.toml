@@ -18,17 +18,17 @@ full = [
 
 [dependencies]
 anyhow = "1.0.104"
-arti-client = { path = "../../crates/arti-client", version = "0.47", features = ["onion-service-service"] }
+arti-client = { path = "../../crates/arti-client", version = "0.47.0-zakura.1", features = ["onion-service-service"], package = "zakura-arti-client" }
 futures = "0.3.34"
 http = "1.5.0"
 http-body-util = "0.1.5"
 hyper = { version = "1.12", features = ["http1", "client", "server"] }
 hyper-util = { version = "0.1.21", features = ["tokio"] }
-safelog = { path = "../../crates/safelog", version = "0.10" }
+safelog = { path = "../../crates/safelog", version = "0.10.0-zakura.1", package = "zakura-safelog" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 tokio-native-tls = "0.3.1"
 tokio-util = "0.7.20"
-tor-cell = { path = "../../crates/tor-cell", version = "0.47" }
-tor-hsservice = { path = "../../crates/tor-hsservice", version = "0.47" }
-tor-proto = { path = "../../crates/tor-proto", version = "0.47" }
+tor-cell = { path = "../../crates/tor-cell", version = "0.47.0-zakura.1", package = "zakura-tor-cell" }
+tor-hsservice = { path = "../../crates/tor-hsservice", version = "0.47.0-zakura.1", package = "zakura-tor-hsservice" }
+tor-proto = { path = "../../crates/tor-proto", version = "0.47.0-zakura.1", package = "zakura-tor-proto" }
 tracing-subscriber = "0.3.23"

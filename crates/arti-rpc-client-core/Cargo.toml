@@ -1,6 +1,6 @@
 [package]
-name = "arti-rpc-client-core"
-version = "0.47.0"
+name = "zakura-arti-rpc-client-core"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -10,18 +10,19 @@ description = "Client library for Arti RPC"
 keywords = ["tor", "arti"]
 # We must put *something* here and this will do
 categories = ["network-programming", "cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [lib]
+name = "arti_rpc_client_core"
 crate-type = ["cdylib", "lib", "staticlib"] # staticlib needed for iOS + macOS
 
 [dependencies]
 
-caret = { path = "../caret", version = "0.11.0" }
+caret = { path = "../caret", version = "0.11.0-zakura.1", package = "zakura-caret" }
 cfg-if = "1.0.5"
 derive_more = { version = "2.1.1", features = ["full"] }
 educe = "0.4.23"
-fs-mistrust = { version = "0.16.0", path = "../fs-mistrust" }
+fs-mistrust = { version = "0.16.0-zakura.1", path = "../fs-mistrust", package = "zakura-fs-mistrust" }
 memchr = "2.8"
 mio = { version = "1.2.4", features = ["net", "os-poll"] }
 paste = { version = "1.0.15", optional = true }
@@ -32,10 +33,10 @@ rustix = { version = ">=1", features = ["time"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 thiserror = "2"
-tor-config-path = { version = "0.47.0", path = "../tor-config-path", features = ["arti-client"] }
-tor-error = { version = "0.47.0", path = "../tor-error", default-features = false }
-tor-rpc-connect = { version = "0.47.0", path = "../tor-rpc-connect", features = ["rpc-client"] }
-tor-socksproto = { path = "../tor-socksproto", version = "0.47.0", default-features = false, features = [
+tor-config-path = { version = "0.47.0-zakura.1", path = "../tor-config-path", features = ["arti-client"], package = "zakura-tor-config-path" }
+tor-error = { version = "0.47.0-zakura.1", path = "../tor-error", default-features = false, package = "zakura-tor-error" }
+tor-rpc-connect = { version = "0.47.0-zakura.1", path = "../tor-rpc-connect", features = ["rpc-client"], package = "zakura-tor-rpc-connect" }
+tor-socksproto = { package = "zakura-tor-socksproto", path = "../tor-socksproto", version = "0.47.0-zakura.1", default-features = false, features = [
     "client-handshake",
 ] }
 void = "1"
@@ -44,7 +45,7 @@ void = "1"
 assert_matches = "1.5.0"
 rand = "0.10.3"
 rand_chacha = "0.10.0"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
 
 [features]
 full = [

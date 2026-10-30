@@ -1,6 +1,6 @@
 [package]
-name = "tor-ptmgr"
-version = "0.47.0"
+name = "zakura-tor-ptmgr"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Manage a set of pluggable transports to circumvent censorship"
 keywords = ["tor", "arti", "censorship"]
 categories = ["network-programming", "cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = ["managed-pts", "tor-channel-factory"]
@@ -42,30 +42,30 @@ async-trait = "0.1.92"
 cfg-if = "1.0.5"
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_builder = { version = "0.11.2", package = "derive_builder_fork_arti" }
-fs-mistrust = { version = "0.16.0", path = "../fs-mistrust" }
+fs-mistrust = { version = "0.16.0-zakura.1", path = "../fs-mistrust", package = "zakura-fs-mistrust" }
 futures = "0.3.34"
 itertools = "0.15.0"
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
+oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0-zakura.1", package = "zakura-oneshot-fused-workaround" }
 serde = { version = "1.0.229", features = ["derive"] }
 thiserror = "2"
-tor-async-utils = { version = "0.47.0", path = "../tor-async-utils" }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-chanmgr = { version = "0.47.0", path = "../tor-chanmgr", features = ["pt-client"] }
-tor-config = { version = "0.47.0", path = "../tor-config", default-features = false }
-tor-config-path = { version = "0.47.0", path = "../tor-config-path" }
-tor-error = { version = "0.47.0", path = "../tor-error", features = ["tracing"] }
-tor-linkspec = { version = "0.47.0", path = "../tor-linkspec", features = ["pt-client"] }
-tor-proto = { version = "0.47.0", path = "../tor-proto" }
-tor-rtcompat = { version = "0.47.0", path = "../tor-rtcompat" }
-tor-socksproto = { version = "0.47.0", path = "../tor-socksproto" }
+tor-async-utils = { version = "0.47.0-zakura.1", path = "../tor-async-utils", package = "zakura-tor-async-utils" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-chanmgr = { version = "0.47.0-zakura.1", path = "../tor-chanmgr", features = ["pt-client"], package = "zakura-tor-chanmgr" }
+tor-config = { version = "0.47.0-zakura.1", path = "../tor-config", default-features = false, package = "zakura-tor-config" }
+tor-config-path = { version = "0.47.0-zakura.1", path = "../tor-config-path", package = "zakura-tor-config-path" }
+tor-error = { version = "0.47.0-zakura.1", path = "../tor-error", features = ["tracing"], package = "zakura-tor-error" }
+tor-linkspec = { version = "0.47.0-zakura.1", path = "../tor-linkspec", features = ["pt-client"], package = "zakura-tor-linkspec" }
+tor-proto = { version = "0.47.0-zakura.1", path = "../tor-proto", package = "zakura-tor-proto" }
+tor-rtcompat = { version = "0.47.0-zakura.1", path = "../tor-rtcompat", package = "zakura-tor-rtcompat" }
+tor-socksproto = { version = "0.47.0-zakura.1", path = "../tor-socksproto", package = "zakura-tor-socksproto" }
 tracing = "0.1.44"
 visibility = { version = "0.1.1", optional = true }
-web-time-compat = { version = "0.3.0", path = "../web-time-compat" }
+web-time-compat = { version = "0.3.0-zakura.1", path = "../web-time-compat", package = "zakura-web-time-compat" }
 
 [dev-dependencies]
 anyhow = "1.0.104"
 tokio = { version = "1.54.1", features = ["rt", "rt-multi-thread", "io-util", "net", "time", "macros"] }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "native-tls"] }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", features = ["tokio", "native-tls"], package = "zakura-tor-rtcompat" }
 tracing-subscriber = "0.3.23"
 
 [[example]]
@@ -74,3 +74,6 @@ required-features = ["experimental-api"]
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_ptmgr"

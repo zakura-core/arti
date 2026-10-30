@@ -1,6 +1,6 @@
 [package]
-name = "tor-bin-common"
-version = "0.47.0"
+name = "zakura-tor-bin-common"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Functionality shared among high-level arti binaries "
 keywords = ["tor", "arti", "privacy", "anonymity"]
 categories = ["network-programming"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -27,3 +27,6 @@ __is_experimental = []
 [dependencies]
 secmem-proc = { version = "0.3.8", optional = true }
 thiserror = "2"
+
+[lib]
+name = "tor_bin_common"

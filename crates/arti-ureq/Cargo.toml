@@ -1,6 +1,6 @@
 [package]
-name = "arti-ureq"
-version = "0.47.0"
+name = "zakura-arti-ureq"
+version = "0.47.0-zakura.1"
 edition = "2024"
 rust-version = "1.92"
 authors = ["The Tor Project, Inc.", "Niel Duysters"]
@@ -8,18 +8,18 @@ license = "MIT OR Apache-2.0"
 description = "Library to use Arti in the ureq http client"
 keywords = ["ureq", "http", "client"]
 categories = ["network-programming"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [dependencies]
-arti-client = { path = "../arti-client", version = "0.47.0" }
+arti-client = { path = "../arti-client", version = "0.47.0-zakura.1", package = "zakura-arti-client" }
 async-std = { version = "1.13.2", optional = true }
 educe = "0.4.23"
 futures = "0.3.34"
 thiserror = "2"
 tokio = { version = "1.54.1", optional = true }
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-proto = { path = "../tor-proto", features = [ "stream-ctrl" ], version = "0.47.0" }
-tor-rtcompat = { path = "../tor-rtcompat", default-features = false, version = "0.47.0" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
+tor-proto = { path = "../tor-proto", features = [ "stream-ctrl" ], version = "0.47.0-zakura.1", package = "zakura-tor-proto" }
+tor-rtcompat = { path = "../tor-rtcompat", default-features = false, version = "0.47.0-zakura.1", package = "zakura-tor-rtcompat" }
 # We rely on some of the APIs in ureq::unversioned, which are allowed to have semver
 # breaks between minor releases of ureq.  Therefore, we use a tilde here, so that
 # we will only get patchlevel updates.
@@ -29,7 +29,7 @@ ureq = { version = "~3.5.0", default-features = false, features = ["rustls-no-pr
 
 [dev-dependencies]
 serde_json = "1.0.154"
-test-temp-dir = { version = "0.9.0", path = "../test-temp-dir" }
+test-temp-dir = { version = "0.9.0-zakura.1", path = "../test-temp-dir", package = "zakura-test-temp-dir" }
 
 [features]
 default = ["native-tls", "tokio"]
@@ -56,3 +56,6 @@ __is_nonadditive = []
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "arti_ureq"

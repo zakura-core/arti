@@ -14,7 +14,7 @@ harness = false
 
 [dev-dependencies]
 criterion = "0.7.0"
-hashx = { path = "../" }
+hashx = { path = "../", package = "zakura-hashx" }
 iai = "0.1.1"
 rand = "0.9"
 tor-c-equix = { git = "https://gitlab.torproject.org/tpo/core/tor.git" }

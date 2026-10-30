@@ -1,6 +1,6 @@
 [package]
-name = "arti-dirauth"
-version = "0.47.0"
+name = "zakura-arti-dirauth"
+version = "0.47.0-zakura.1"
 authors = [
     "The Tor Project, Inc.",
     "Ian Jackson <iwj@torproject.org>",
@@ -13,7 +13,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Tor Directory Authority"
 keywords = ["tor", "arti", "privacy", "anonymity", "networking"]
 categories = ["network-programming", "cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -42,12 +42,15 @@ derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 digest = "0.10.7"
 educe = "0.4.23"
 thiserror = "2"
-tor-checkable = { path = "../tor-checkable", version = "0.47.0" }
-tor-dirauth = { path = "../tor-dirauth", version = "0.47.0" }
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-llcrypto = { version = "0.47.0", path = "../tor-llcrypto" }
-tor-netdoc = { path = "../tor-netdoc", version = "0.47.0", features = ["full", "retain-unknown"] }
+tor-checkable = { path = "../tor-checkable", version = "0.47.0-zakura.1", package = "zakura-tor-checkable" }
+tor-dirauth = { path = "../tor-dirauth", version = "0.47.0-zakura.1", package = "zakura-tor-dirauth" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
+tor-llcrypto = { version = "0.47.0-zakura.1", path = "../tor-llcrypto", package = "zakura-tor-llcrypto" }
+tor-netdoc = { path = "../tor-netdoc", version = "0.47.0-zakura.1", features = ["full", "retain-unknown"], package = "zakura-tor-netdoc" }
 
 [dev-dependencies]
-test-temp-dir = { version = "0.9.0", path = "../test-temp-dir" }
-tor-netdoc = { path = "../tor-netdoc", version = "0.47.0", features = ["testing"] }
+test-temp-dir = { version = "0.9.0-zakura.1", path = "../test-temp-dir", package = "zakura-test-temp-dir" }
+tor-netdoc = { path = "../tor-netdoc", version = "0.47.0-zakura.1", features = ["testing"], package = "zakura-tor-netdoc" }
+
+[lib]
+name = "arti_dirauth"

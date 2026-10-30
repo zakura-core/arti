@@ -1,0 +1,422 @@
+{
+  "crates/arti": {
+    "upstream_name": "arti",
+    "name": "zakura-arti",
+    "upstream_version": "2.7.0",
+    "version": "2.7.0-zakura.1"
+  },
+  "crates/arti-client": {
+    "upstream_name": "arti-client",
+    "name": "zakura-arti-client",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/arti-dirauth": {
+    "upstream_name": "arti-dirauth",
+    "name": "zakura-arti-dirauth",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/arti-relay": {
+    "upstream_name": "arti-relay",
+    "name": "zakura-arti-relay",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/arti-rpc-client-core": {
+    "upstream_name": "arti-rpc-client-core",
+    "name": "zakura-arti-rpc-client-core",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/arti-rpcserver": {
+    "upstream_name": "arti-rpcserver",
+    "name": "zakura-arti-rpcserver",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/arti-ureq": {
+    "upstream_name": "arti-ureq",
+    "name": "zakura-arti-ureq",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/caret": {
+    "upstream_name": "caret",
+    "name": "zakura-caret",
+    "upstream_version": "0.11.0",
+    "version": "0.11.0-zakura.1"
+  },
+  "crates/equix": {
+    "upstream_name": "equix",
+    "name": "zakura-equix",
+    "upstream_version": "0.8.0",
+    "version": "0.8.0-zakura.1"
+  },
+  "crates/fs-mistrust": {
+    "upstream_name": "fs-mistrust",
+    "name": "zakura-fs-mistrust",
+    "upstream_version": "0.16.0",
+    "version": "0.16.0-zakura.1"
+  },
+  "crates/fslock-guard": {
+    "upstream_name": "fslock-guard",
+    "name": "zakura-fslock-guard",
+    "upstream_version": "0.9.0",
+    "version": "0.9.0-zakura.1"
+  },
+  "crates/futures-copy": {
+    "upstream_name": "futures-copy",
+    "name": "zakura-futures-copy",
+    "upstream_version": "0.5.0",
+    "version": "0.5.0-zakura.1"
+  },
+  "crates/hashx": {
+    "upstream_name": "hashx",
+    "name": "zakura-hashx",
+    "upstream_version": "0.10.0",
+    "version": "0.10.0-zakura.1"
+  },
+  "crates/oneshot-fused-workaround": {
+    "upstream_name": "oneshot-fused-workaround",
+    "name": "zakura-oneshot-fused-workaround",
+    "upstream_version": "0.8.0",
+    "version": "0.8.0-zakura.1"
+  },
+  "crates/otlp-file-exporter": {
+    "upstream_name": "otlp-file-exporter",
+    "name": "zakura-otlp-file-exporter",
+    "upstream_version": "0.2.0",
+    "version": "0.2.0-zakura.1"
+  },
+  "crates/retry-error": {
+    "upstream_name": "retry-error",
+    "name": "zakura-retry-error",
+    "upstream_version": "0.14.0",
+    "version": "0.14.0-zakura.1"
+  },
+  "crates/safelog": {
+    "upstream_name": "safelog",
+    "name": "zakura-safelog",
+    "upstream_version": "0.10.0",
+    "version": "0.10.0-zakura.1"
+  },
+  "crates/saturating-time": {
+    "upstream_name": "saturating-time",
+    "name": "zakura-saturating-time",
+    "upstream_version": "0.5.0",
+    "version": "0.5.0-zakura.1"
+  },
+  "crates/slotmap-careful": {
+    "upstream_name": "slotmap-careful",
+    "name": "zakura-slotmap-careful",
+    "upstream_version": "0.9.0",
+    "version": "0.9.0-zakura.1"
+  },
+  "crates/test-temp-dir": {
+    "upstream_name": "test-temp-dir",
+    "name": "zakura-test-temp-dir",
+    "upstream_version": "0.9.0",
+    "version": "0.9.0-zakura.1"
+  },
+  "crates/tor-async-utils": {
+    "upstream_name": "tor-async-utils",
+    "name": "zakura-tor-async-utils",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-basic-utils": {
+    "upstream_name": "tor-basic-utils",
+    "name": "zakura-tor-basic-utils",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-bin-common": {
+    "upstream_name": "tor-bin-common",
+    "name": "zakura-tor-bin-common",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-bytes": {
+    "upstream_name": "tor-bytes",
+    "name": "zakura-tor-bytes",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-cell": {
+    "upstream_name": "tor-cell",
+    "name": "zakura-tor-cell",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-cert": {
+    "upstream_name": "tor-cert",
+    "name": "zakura-tor-cert",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-cert-x509": {
+    "upstream_name": "tor-cert-x509",
+    "name": "zakura-tor-cert-x509",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-chanmgr": {
+    "upstream_name": "tor-chanmgr",
+    "name": "zakura-tor-chanmgr",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-checkable": {
+    "upstream_name": "tor-checkable",
+    "name": "zakura-tor-checkable",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-circmgr": {
+    "upstream_name": "tor-circmgr",
+    "name": "zakura-tor-circmgr",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-config": {
+    "upstream_name": "tor-config",
+    "name": "zakura-tor-config",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-config-path": {
+    "upstream_name": "tor-config-path",
+    "name": "zakura-tor-config-path",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-config-shared": {
+    "upstream_name": "tor-config-shared",
+    "name": "zakura-tor-config-shared",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-consdiff": {
+    "upstream_name": "tor-consdiff",
+    "name": "zakura-tor-consdiff",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-dirauth": {
+    "upstream_name": "tor-dirauth",
+    "name": "zakura-tor-dirauth",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-dirclient": {
+    "upstream_name": "tor-dirclient",
+    "name": "zakura-tor-dirclient",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-dircommon": {
+    "upstream_name": "tor-dircommon",
+    "name": "zakura-tor-dircommon",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-dirmgr": {
+    "upstream_name": "tor-dirmgr",
+    "name": "zakura-tor-dirmgr",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-dirpublish": {
+    "upstream_name": "tor-dirpublish",
+    "name": "zakura-tor-dirpublish",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-dirserver": {
+    "upstream_name": "tor-dirserver",
+    "name": "zakura-tor-dirserver",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-error": {
+    "upstream_name": "tor-error",
+    "name": "zakura-tor-error",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-general-addr": {
+    "upstream_name": "tor-general-addr",
+    "name": "zakura-tor-general-addr",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-geoip": {
+    "upstream_name": "tor-geoip",
+    "name": "zakura-tor-geoip",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-guardmgr": {
+    "upstream_name": "tor-guardmgr",
+    "name": "zakura-tor-guardmgr",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-hsclient": {
+    "upstream_name": "tor-hsclient",
+    "name": "zakura-tor-hsclient",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-hscrypto": {
+    "upstream_name": "tor-hscrypto",
+    "name": "zakura-tor-hscrypto",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-hsrproxy": {
+    "upstream_name": "tor-hsrproxy",
+    "name": "zakura-tor-hsrproxy",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-hsservice": {
+    "upstream_name": "tor-hsservice",
+    "name": "zakura-tor-hsservice",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-key-forge": {
+    "upstream_name": "tor-key-forge",
+    "name": "zakura-tor-key-forge",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-keymgr": {
+    "upstream_name": "tor-keymgr",
+    "name": "zakura-tor-keymgr",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-linkspec": {
+    "upstream_name": "tor-linkspec",
+    "name": "zakura-tor-linkspec",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-llcrypto": {
+    "upstream_name": "tor-llcrypto",
+    "name": "zakura-tor-llcrypto",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-log-ratelim": {
+    "upstream_name": "tor-log-ratelim",
+    "name": "zakura-tor-log-ratelim",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-memquota": {
+    "upstream_name": "tor-memquota",
+    "name": "zakura-tor-memquota",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-memquota-cost": {
+    "upstream_name": "tor-memquota-cost",
+    "name": "zakura-tor-memquota-cost",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-netdir": {
+    "upstream_name": "tor-netdir",
+    "name": "zakura-tor-netdir",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-netdoc": {
+    "upstream_name": "tor-netdoc",
+    "name": "zakura-tor-netdoc",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-persist": {
+    "upstream_name": "tor-persist",
+    "name": "zakura-tor-persist",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-proto": {
+    "upstream_name": "tor-proto",
+    "name": "zakura-tor-proto",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-protover": {
+    "upstream_name": "tor-protover",
+    "name": "zakura-tor-protover",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-ptmgr": {
+    "upstream_name": "tor-ptmgr",
+    "name": "zakura-tor-ptmgr",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-relay-crypto": {
+    "upstream_name": "tor-relay-crypto",
+    "name": "zakura-tor-relay-crypto",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-relay-selection": {
+    "upstream_name": "tor-relay-selection",
+    "name": "zakura-tor-relay-selection",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-rpc-connect": {
+    "upstream_name": "tor-rpc-connect",
+    "name": "zakura-tor-rpc-connect",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-rpcbase": {
+    "upstream_name": "tor-rpcbase",
+    "name": "zakura-tor-rpcbase",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-rtcompat": {
+    "upstream_name": "tor-rtcompat",
+    "name": "zakura-tor-rtcompat",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-rtmock": {
+    "upstream_name": "tor-rtmock",
+    "name": "zakura-tor-rtmock",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-socksproto": {
+    "upstream_name": "tor-socksproto",
+    "name": "zakura-tor-socksproto",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/tor-units": {
+    "upstream_name": "tor-units",
+    "name": "zakura-tor-units",
+    "upstream_version": "0.47.0",
+    "version": "0.47.0-zakura.1"
+  },
+  "crates/web-time-compat": {
+    "upstream_name": "web-time-compat",
+    "name": "zakura-web-time-compat",
+    "upstream_version": "0.3.0",
+    "version": "0.3.0-zakura.1"
+  }
+}

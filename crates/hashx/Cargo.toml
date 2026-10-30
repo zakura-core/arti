@@ -1,6 +1,6 @@
 [package]
-name = "hashx"
-version = "0.10.0"
+name = "zakura-hashx"
+version = "0.10.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Micah Elizabeth Scott <beth@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -8,7 +8,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Hash function family designed for ASIC-resistant client puzzles"
 keywords = ["cryptography"]
 categories = ["cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 # This crate is a new implementation of algorithms developed and implemented
 # by tevador here: https://github.com/tevador/equix/. The original is
@@ -39,3 +39,6 @@ hex-literal = "1.1.0"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "hashx"

@@ -1,6 +1,6 @@
 [package]
-name = "tor-hsrproxy"
-version = "0.47.0"
+name = "zakura-tor-hsrproxy"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Reverse proxy to build an onion service that connects to local servers."
 keywords = ["tor", "arti", "cryptography"]
 categories = ["cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = []
@@ -41,25 +41,25 @@ __is_experimental = []
 [dependencies]
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 futures = "0.3.34"
-futures-copy = { version = "0.5.0", path = "../futures-copy" }
+futures-copy = { version = "0.5.0-zakura.1", path = "../futures-copy", package = "zakura-futures-copy" }
 # postage = { version = "0.5.0", default-features = false, features = ["futures-traits"] }
 itertools = "0.15.0"
 metrics = { version = "0.24.6", optional = true }
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
+oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0-zakura.1", package = "zakura-oneshot-fused-workaround" }
 rangemap = "1.8"
-safelog = { version = "0.10.0", path = "../safelog" }
+safelog = { version = "0.10.0-zakura.1", path = "../safelog", package = "zakura-safelog" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_with = "3.24.0"
 strum = { version = "0.28.0", features = ["derive"] }
 thiserror = "2"
-tor-async-utils = { version = "0.47.0", path = "../tor-async-utils" }
-tor-cell = { version = "0.47.0", path = "../tor-cell" }
-tor-config = { version = "0.47.0", path = "../tor-config", default-features = false }
-tor-error = { version = "0.47.0", path = "../tor-error" }
-tor-hsservice = { path = "../tor-hsservice", version = "0.47.0" }
-tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0" }
-tor-proto = { version = "0.47.0", path = "../tor-proto", features = ["hs-service"] }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0" }
+tor-async-utils = { version = "0.47.0-zakura.1", path = "../tor-async-utils", package = "zakura-tor-async-utils" }
+tor-cell = { version = "0.47.0-zakura.1", path = "../tor-cell", package = "zakura-tor-cell" }
+tor-config = { version = "0.47.0-zakura.1", path = "../tor-config", default-features = false, package = "zakura-tor-config" }
+tor-error = { version = "0.47.0-zakura.1", path = "../tor-error", package = "zakura-tor-error" }
+tor-hsservice = { path = "../tor-hsservice", version = "0.47.0-zakura.1", package = "zakura-tor-hsservice" }
+tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0-zakura.1", package = "zakura-tor-log-ratelim" }
+tor-proto = { version = "0.47.0-zakura.1", path = "../tor-proto", features = ["hs-service"], package = "zakura-tor-proto" }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", package = "zakura-tor-rtcompat" }
 tracing = "0.1.44"
 void = "1"
 
@@ -69,3 +69,6 @@ toml = "1.1.8"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_hsrproxy"

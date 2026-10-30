@@ -1,6 +1,6 @@
 [package]
-name = "tor-config-shared"
-version = "0.47.0"
+name = "zakura-tor-config-shared"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Wesley Aptekar-Cassels <wesleyac@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Configuration information that is shared between arti, arti-relay, and other Arti projects."
 keywords = ["tor", "arti"]
 categories = ["config"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = []
@@ -26,8 +26,11 @@ opentelemetry-otlp = { version = "0.33.1", optional = true }
 # TODO: Figure out why this feature is needed, and how it interacts with non-tokio runtimes.
 opentelemetry_sdk = { version = "0.33.1", features = ["rt-tokio"], optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
-tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
-tor-config-path = { path = "../tor-config-path", version = "0.47.0" }
+tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
+tor-config-path = { path = "../tor-config-path", version = "0.47.0-zakura.1", package = "zakura-tor-config-path" }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_config_shared"

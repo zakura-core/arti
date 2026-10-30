@@ -1,6 +1,6 @@
 [package]
-name = "tor-dirpublish"
-version = "0.47.0"
+name = "zakura-tor-dirpublish"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Publish documents to Tor directory servers."
 keywords = ["tor", "arti", "download", "async"]
 categories = ["network-programming", "cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -33,15 +33,18 @@ event-listener = "5"
 futures = "0.3.34"
 postage = { version = "0.5.0", default-features = false, features = ["futures-traits"] }
 rand = "0.10.3"
-safelog = { path = "../safelog", version = "0.10.0" }
+safelog = { path = "../safelog", version = "0.10.0-zakura.1", package = "zakura-safelog" }
 thiserror = "2"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-dirclient = { path = "../tor-dirclient", version = "0.47.0", default-features = false }
-tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-dirclient = { path = "../tor-dirclient", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-dirclient" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", features = ["tracing"], package = "zakura-tor-error" }
+tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", package = "zakura-tor-rtcompat" }
 tracing = "0.1.44"
-web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
+web-time-compat = { path = "../web-time-compat", version = "0.3.0-zakura.1", package = "zakura-web-time-compat" }
 
 [dev-dependencies]
-tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
+tor-rtmock = { path = "../tor-rtmock", version = "0.47.0-zakura.1", package = "zakura-tor-rtmock" }
+
+[lib]
+name = "tor_dirpublish"

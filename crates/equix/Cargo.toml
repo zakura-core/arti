@@ -1,6 +1,6 @@
 [package]
-name = "equix"
-version = "0.8.0"
+name = "zakura-equix"
+version = "0.8.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Micah Elizabeth Scott <beth@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -8,7 +8,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Asymmetric function for client puzzle protocols"
 keywords = ["cryptography"]
 categories = ["cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 # This crate is a new implementation of algorithms developed and implemented
 # by tevador here: https://github.com/tevador/equix/. The original is
@@ -31,7 +31,7 @@ __is_experimental = []
 
 [dependencies]
 arrayvec = "0.7.8"
-hashx = { path = "../hashx", version = "0.10.0", default-features = false }
+hashx = { path = "../hashx", version = "0.10.0-zakura.1", default-features = false, package = "zakura-hashx" }
 num-traits = "0.2.19"
 thiserror = "2"
 visibility = { version = "0.1.1", optional = true }
@@ -41,3 +41,6 @@ permutohedron = "0.2.4"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "equix"

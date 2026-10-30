@@ -1,6 +1,6 @@
 [package]
-name = "test-temp-dir"
-version = "0.9.0"
+name = "zakura-test-temp-dir"
+version = "0.9.0-zakura.1"
 # TODO make this 1.x.  Let's say, do this in December 2024 or January 2025
 authors = ["The Tor Project, Inc.", "Ian Jackson <iwj@torproject.org>"]
 edition = "2024"
@@ -10,7 +10,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Temporary directories for use in tests"
 keywords = ["testing", "fs", "filesystem", "temporary", "temp"]
 categories = ["development-tools::testing"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = []
@@ -24,3 +24,6 @@ tempfile = "3"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "test_temp_dir"

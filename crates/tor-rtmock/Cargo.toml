@@ -1,6 +1,6 @@
 [package]
-name = "tor-rtmock"
-version = "0.47.0"
+name = "zakura-tor-rtmock"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Testing mock support for tor-rtcomapt"
 keywords = ["tor", "arti", "async", "testing"]
 categories = ["asynchronous"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [dependencies]
 amplify = { version = "4", default-features = false, features = ["derive"] }
@@ -21,25 +21,25 @@ educe = "0.4.23"
 futures = "0.3.34"
 humantime = "2"
 itertools = "0.15.0"
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
+oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0-zakura.1", package = "zakura-oneshot-fused-workaround" }
 pin-project = "1"
 priority-queue = "2.7.0"
-slotmap-careful = { path = "../slotmap-careful", version = "0.9.0" }
+slotmap-careful = { path = "../slotmap-careful", version = "0.9.0-zakura.1", package = "zakura-slotmap-careful" }
 strum = { version = "0.28.0", features = ["derive"] }
 thiserror = "2"
-tor-error = { version = "0.47.0", path = "../tor-error", features = ["tracing"] }
-tor-general-addr = { version = "0.47.0", path = "../tor-general-addr" }
-tor-rtcompat = { version = "0.47.0", path = "../tor-rtcompat" }
+tor-error = { version = "0.47.0-zakura.1", path = "../tor-error", features = ["tracing"], package = "zakura-tor-error" }
+tor-general-addr = { version = "0.47.0-zakura.1", path = "../tor-general-addr", package = "zakura-tor-general-addr" }
+tor-rtcompat = { version = "0.47.0-zakura.1", path = "../tor-rtcompat", package = "zakura-tor-rtcompat" }
 tracing = "0.1.44"
 void = "1"
-web-time-compat = { version = "0.3.0", path = "../web-time-compat" }
+web-time-compat = { version = "0.3.0-zakura.1", path = "../web-time-compat", package = "zakura-web-time-compat" }
 
 [dev-dependencies]
 futures-await-test = "0.3.0"
 rand = "0.10.3"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-general-addr = { path = "../tor-general-addr", version = "0.47.0" }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "native-tls"] }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
+tor-general-addr = { path = "../tor-general-addr", version = "0.47.0-zakura.1", package = "zakura-tor-general-addr" }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", features = ["tokio", "native-tls"], package = "zakura-tor-rtcompat" }
 tracing-test = "0.2.6"
 
 [features]
@@ -53,3 +53,6 @@ full = [
 ]
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_rtmock"
