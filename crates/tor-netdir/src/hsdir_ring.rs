@@ -18,7 +18,6 @@ use std::fmt::Debug;
 
 use derive_more::{AsRef, From, Into};
 use digest::Digest;
-use typed_index_collections::TiVec;
 
 use tor_basic_utils::impl_debug_hex;
 use tor_hscrypto::{pk::HsBlindId, time::TimePeriod};
@@ -54,6 +53,47 @@ impl_debug_hex! { HsDirIndex .0 }
 #[derive(Debug, From, Into, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct HsDirPos(usize);
 
+/// One relay's ring key and its position in the consensus relay list.
+type HsDirEntry = (HsDirIndex, RouterStatusIdx);
+
+/// Ring entries whose split positions are distinct from consensus indices.
+#[derive(Clone)]
+struct HsDirEntries(Vec<HsDirEntry>);
+
+impl HsDirEntries {
+    /// Iterate over entries in ring order.
+    fn iter(&self) -> std::slice::Iter<'_, HsDirEntry> {
+        self.0.iter()
+    }
+
+    /// Find a ring key or its insertion position within the ordered entries.
+    fn find_pos(&self, key: HsDirIndex) -> HsDirPos {
+        HsDirPos(
+            self.0
+                .binary_search_by_key(&key, |(key, _)| *key)
+                .unwrap_or_else(|pos| pos),
+        )
+    }
+
+    /// Split at a ring position, preserving the usual slice bounds check.
+    fn split_at(&self, pos: HsDirPos) -> (&[HsDirEntry], &[HsDirEntry]) {
+        self.0.split_at(pos.0)
+    }
+}
+
+impl Debug for HsDirEntries {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_map()
+            .entries(
+                self.0
+                    .iter()
+                    .enumerate()
+                    .map(|(i, entry)| (HsDirPos(i), entry)),
+            )
+            .finish()
+    }
+}
+
 /// A hash ring as used in `NetDir`.
 ///
 /// This type is immutable once constructed: entries cannot be added, changed,
@@ -72,7 +112,7 @@ pub(crate) struct HsDirRing {
     ///
     /// This vector is empty in a partial netdir; it is filled in when we
     /// convert to a complete netdir.
-    ring: TiVec<HsDirPos, (HsDirIndex, RouterStatusIdx)>,
+    ring: HsDirEntries,
 }
 
 /// Compute the [`HsDirIndex`] for a given relay.
@@ -128,7 +168,7 @@ impl HsDirRing {
     pub(crate) fn empty_from_params(params: HsDirParams) -> Self {
         Self {
             params,
-            ring: TiVec::new(),
+            ring: HsDirEntries(Vec::new()),
         }
     }
 
@@ -184,7 +224,7 @@ impl HsDirRing {
         })()
         .unwrap_or_default();
 
-        let mut new_ring: TiVec<_, _> = this_netdir
+        let mut new_ring: Vec<_> = this_netdir
             .all_hsdirs()
             .map(|(rsidx, relay)| {
                 let ed_id = relay.md.ed25519_id();
@@ -201,7 +241,7 @@ impl HsDirRing {
         new_ring.sort_by_key(|(hsdir_index, _rsidx)| *hsdir_index);
 
         HsDirRing {
-            ring: new_ring,
+            ring: HsDirEntries(new_ring),
             params: new_params,
         }
     }
@@ -209,13 +249,6 @@ impl HsDirRing {
     /// Return the parameters used for this ring
     pub(crate) fn params(&self) -> &HsDirParams {
         &self.params
-    }
-
-    /// Find the location or (notional) insertion point for `hsdir_index` within `ring`.
-    fn find_pos(&self, hsdir_index: HsDirIndex) -> HsDirPos {
-        self.ring
-            .binary_search_by_key(&hsdir_index, |(hsdir_index, _rs_idx)| *hsdir_index)
-            .unwrap_or_else(|pos| pos)
     }
 
     /// Yield `spread` items from `ring` that satisfy the specified filter, starting with
@@ -235,12 +268,9 @@ impl HsDirRing {
         spread: usize,
         f: impl FnMut(&&(HsDirIndex, RouterStatusIdx)) -> bool,
     ) -> impl Iterator<Item = &(HsDirIndex, RouterStatusIdx)> {
-        let pos = self.find_pos(hsdir_index);
-        self.ring[pos..]
-            .iter()
-            .chain(&self.ring[..pos])
-            .filter(f)
-            .take(spread)
+        let pos = self.ring.find_pos(hsdir_index);
+        let (before, after) = self.ring.split_at(pos);
+        after.iter().chain(before).filter(f).take(spread)
     }
 
     /// Return the time period for which this ring applies.
@@ -269,9 +299,8 @@ mod test {
 
     use std::time::Duration;
 
-    // mirrors C Tor src/test/test_hs_common.c:test_hs_indexes
-    #[test]
-    fn test_hs_indexes() {
+    /// Parameters used by the C Tor HSDir index vectors below.
+    fn test_params() -> HsDirParams {
         // C Tor test vector simply has
         //    uint64_t period_num = 42;
         let time_period = TimePeriod::new(
@@ -281,15 +310,20 @@ mod test {
             Duration::from_secs(12 * 3600),
         )
         .unwrap();
-        assert_eq!(time_period.interval_num(), 42);
-
         let shared_rand = [0x43; 32].into();
 
-        let params = HsDirParams {
+        HsDirParams {
             time_period,
             shared_rand,
             srv_lifespan: time_period.range().unwrap(),
-        };
+        }
+    }
+
+    // mirrors C Tor src/test/test_hs_common.c:test_hs_indexes
+    #[test]
+    fn test_hs_indexes() {
+        let params = test_params();
+        assert_eq!(params.time_period.interval_num(), 42);
 
         // service_index AKA hs_index
         {
@@ -311,5 +345,41 @@ mod test {
                 "db475361014a09965e7e5e4d4a25b8f8d4b8f16cb1d8a7e95eed50249cc1a2d5",
             );
         }
+    }
+
+    #[test]
+    fn ring_insertion_wraparound_and_filtering() {
+        let params = test_params();
+        let empty = HsDirRing::empty_from_params(params.clone());
+        let ring = HsDirRing {
+            params: params.clone(),
+            ring: HsDirEntries(
+                [(10, 21), (20, 8), (30, 55), (40, 2), (50, 13), (60, 34)]
+                    .map(|(key, relay)| (HsDirIndex([key; 32]), RouterStatusIdx(relay)))
+                    .into(),
+            ),
+        };
+        let singleton = HsDirRing {
+            params,
+            ring: HsDirEntries(vec![(HsDirIndex([30; 32]), RouterStatusIdx(7))]),
+        };
+
+        // Consensus positions deliberately differ from ring order. Filtering
+        // A/B/C after the first replica must make an E probe yield E/F/D.
+        let selected = |ring: &HsDirRing, key, spread, excluded: &[usize]| {
+            ring.ring_items_at(HsDirIndex([key; 32]), spread, |(_, relay)| {
+                !excluded.contains(&relay.0)
+            })
+            .map(|(_, relay)| relay.0)
+            .collect::<Vec<_>>()
+        };
+        assert_eq!(selected(&ring, 10, 3, &[]), [21, 8, 55]);
+        assert_eq!(selected(&ring, 15, 3, &[]), [8, 55, 2]);
+        assert_eq!(selected(&ring, 50, 3, &[21, 8, 55]), [13, 34, 2]);
+        assert_eq!(selected(&ring, 65, 99, &[]), [21, 8, 55, 2, 13, 34]);
+        assert!(selected(&ring, 10, 0, &[]).is_empty());
+        assert!(selected(&ring, 10, 99, &[21, 8, 55, 2, 13, 34]).is_empty());
+        assert!(selected(&empty, 10, 99, &[]).is_empty());
+        assert_eq!(selected(&singleton, 31, 99, &[]), [7]);
     }
 }

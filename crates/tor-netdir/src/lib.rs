@@ -85,12 +85,11 @@ use rand::seq::{IndexedRandom as _, SliceRandom as _, WeightError};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::net::IpAddr;
-use std::ops::Deref;
+use std::ops::{Deref, Index, IndexMut};
 use std::sync::Arc;
 use std::time::SystemTime;
 use strum::{EnumCount, EnumIter};
 use tracing::warn;
-use typed_index_collections::{TiSlice, TiVec};
 
 #[cfg(feature = "hs-common")]
 use {
@@ -130,22 +129,98 @@ pub use hsdir_params::HsDirParams;
 #[derive(Debug, From, Into, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub(crate) struct RouterStatusIdx(usize);
 
-/// Extension trait to provide index-type-safe `.c_relays()` method
-//
-// TODO: Really it would be better to have MdConsensns::relays() return TiSlice,
-// but that would be an API break there.
+/// Borrowed consensus relays, indexed only by [`RouterStatusIdx`].
+#[derive(Clone, Copy)]
+pub(crate) struct ConsensusRelaySlice<'a>(&'a [MdRouterStatus]);
+
+impl<'a> ConsensusRelaySlice<'a> {
+    /// Return the number of consensus relays.
+    fn len(self) -> usize {
+        self.0.len()
+    }
+
+    /// Iterate over relays in consensus order.
+    fn iter(self) -> std::slice::Iter<'a, MdRouterStatus> {
+        self.0.iter()
+    }
+
+    /// Iterate over relays with their consensus indices.
+    fn iter_enumerated(self) -> impl Iterator<Item = (RouterStatusIdx, &'a MdRouterStatus)> {
+        self.0
+            .iter()
+            .enumerate()
+            .map(|(i, relay)| (RouterStatusIdx(i), relay))
+    }
+
+    /// Look up a relay, returning `None` for an out-of-bounds index.
+    fn get(self, index: RouterStatusIdx) -> Option<&'a MdRouterStatus> {
+        self.0.get(index.0)
+    }
+}
+
+impl Index<RouterStatusIdx> for ConsensusRelaySlice<'_> {
+    type Output = MdRouterStatus;
+
+    fn index(&self, index: RouterStatusIdx) -> &Self::Output {
+        &self.0[index.0]
+    }
+}
+
+/// Microdescriptors in consensus order, indexed only by [`RouterStatusIdx`].
+#[derive(Clone)]
+struct Microdescriptors(Vec<Option<Arc<MicrodescAndHash>>>);
+
+impl Microdescriptors {
+    /// Look up an entry, returning `None` for an out-of-bounds index.
+    fn get(&self, index: RouterStatusIdx) -> Option<&Option<Arc<MicrodescAndHash>>> {
+        self.0.get(index.0)
+    }
+
+    /// Iterate over entries in consensus order.
+    fn iter(&self) -> std::slice::Iter<'_, Option<Arc<MicrodescAndHash>>> {
+        self.0.iter()
+    }
+}
+
+impl std::fmt::Debug for Microdescriptors {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_map()
+            .entries(
+                self.0
+                    .iter()
+                    .enumerate()
+                    .map(|(i, md)| (RouterStatusIdx(i), md)),
+            )
+            .finish()
+    }
+}
+
+impl Index<RouterStatusIdx> for Microdescriptors {
+    type Output = Option<Arc<MicrodescAndHash>>;
+
+    fn index(&self, index: RouterStatusIdx) -> &Self::Output {
+        &self.0[index.0]
+    }
+}
+
+impl IndexMut<RouterStatusIdx> for Microdescriptors {
+    fn index_mut(&mut self, index: RouterStatusIdx) -> &mut Self::Output {
+        &mut self.0[index.0]
+    }
+}
+
+/// Extension trait providing the typed consensus relay view.
 pub(crate) trait ConsensusRelays {
     /// Obtain the list of relays in the consensus
-    //
-    fn c_relays(&self) -> &TiSlice<RouterStatusIdx, MdRouterStatus>;
+    fn c_relays(&self) -> ConsensusRelaySlice<'_>;
 }
 impl ConsensusRelays for MdConsensus {
-    fn c_relays(&self) -> &TiSlice<RouterStatusIdx, MdRouterStatus> {
-        TiSlice::from_ref(MdConsensus::relays(self))
+    fn c_relays(&self) -> ConsensusRelaySlice<'_> {
+        ConsensusRelaySlice(MdConsensus::relays(self))
     }
 }
 impl ConsensusRelays for NetDir {
-    fn c_relays(&self) -> &TiSlice<RouterStatusIdx, MdRouterStatus> {
+    fn c_relays(&self) -> ConsensusRelaySlice<'_> {
         self.consensus.c_relays()
     }
 }
@@ -414,7 +489,7 @@ pub struct NetDir {
     /// and clamped to certain defaults.
     params: NetParameters,
     /// Map from routerstatus index, to that routerstatus's microdescriptor (if we have one.)
-    mds: TiVec<RouterStatusIdx, Option<Arc<MicrodescAndHash>>>,
+    mds: Microdescriptors,
     /// Map from SHA256 of _missing_ microdescriptors to the index of their
     /// corresponding routerstatus.
     rsidx_by_missing: HashMap<MdDigest, RouterStatusIdx>,
@@ -915,7 +990,7 @@ impl PartialNetDir {
         let netdir = NetDir {
             consensus: Arc::new(consensus),
             params,
-            mds: vec![None; n_relays].into(),
+            mds: Microdescriptors(vec![None; n_relays]),
             rsidx_by_missing,
             rsidx_by_rsa: Arc::new(rsidx_by_rsa),
             rsidx_by_ed: HashMap::with_capacity(n_relays),
@@ -2731,6 +2806,12 @@ mod test {
 
         let netdir = netdir.unwrap_if_sufficient().unwrap();
 
+        for out_of_bounds in [netdir.c_relays().len(), usize::MAX] {
+            let index = RouterStatusIdx(out_of_bounds);
+            assert!(netdir.md_by_rsidx(index).is_none());
+            assert!(netdir.relay_by_rs_idx(index).is_none());
+        }
+
         let r = netdir.by_id(&Ed25519Identity::from([0; 32])).unwrap();
         assert_eq!(r.id().as_bytes(), &[0; 32]);
 
@@ -2971,25 +3052,6 @@ mod test {
                 .collect::<HashSet<_>>();
             assert_eq!(unique.len(), relays.len());
         }
-
-        // TODO: come up with a test that checks that HsDirRing::ring_items_at() skips over the
-        // expected relays.
-        //
-        // For example, let's say we have the following hsdir ring:
-        //
-        //         A  -  B
-        //        /       \
-        //       F         C
-        //        \       /
-        //         E  -  D
-        //
-        // Let's also assume that:
-        //
-        //   * hsdir_spread_store = 3
-        //   * the ordering of the relays on the ring is [A, B, C, D, E, F]
-        //
-        // If we use relays [A, B, C] for replica 1, and hs_index(2) = E, then replica 2 _must_ get
-        // relays [E, F, D]. We should have a test that checks this.
     }
 
     #[test]
