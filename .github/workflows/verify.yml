@@ -54,6 +54,8 @@ jobs:
           cargo test --locked -p zakura-tor-keymgr --no-default-features --features key-encoding
           cargo test --locked -p zakura-tor-keymgr
           cargo test --locked -p zakura-tor-keymgr --features ephemeral-keystore,experimental-api
+          cargo test --locked -p zakura-tor-hsclient
+          cargo test --locked -p zakura-arti-client --no-default-features --features tokio,rustls,onion-service-client,ephemeral-keystore,onion-service-cli-extra
       - name: Test proxy URI parsing and legacy oracle
         run: cargo test --locked -p zakura-tor-chanmgr
 

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import tomllib
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -81,13 +82,17 @@ def main():
         required = {FAMILY["crates/" + name]["name"] for name in ("arti-client", "fs-mistrust", "tor-rtcompat")}
         if args.keymgr:
             required.update({"zakura-tor-key-forge", "ssh-key-fork-arti"})
+        locked = tomllib.loads((consumer / "Cargo.lock").read_text())["package"]
+        unexpected_locked = {package["name"] for package in locked} & forbidden
+        if unexpected_locked:
+            raise SystemExit(f"unexpected locked dependencies: {sorted(unexpected_locked)}")
         if unexpected or not required <= names:
             raise SystemExit(f"unexpected dependencies: {sorted(unexpected)}; missing: {sorted(required - names)}")
         subprocess.run(
             ["cargo", "run", "--locked", "--manifest-path", str(manifest)],
             cwd=ROOT, env=environment, check=True,
         )
-        print(f"embedded client: {len(packages) - 1} dependency packages; graph and public type boundaries passed")
+        print(f"embedded client: {len(locked) - 1} locked, {len(packages) - 1} build dependency packages; graph and public type boundaries passed")
 
 
 if __name__ == "__main__":
