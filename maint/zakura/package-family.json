@@ -179,12 +179,6 @@
     "upstream_version": "0.47.0",
     "version": "0.47.0-zakura.1"
   },
-  "crates/tor-hsservice": {
-    "upstream_name": "tor-hsservice",
-    "name": "zakura-tor-hsservice",
-    "upstream_version": "0.47.0",
-    "version": "0.47.0-zakura.1"
-  },
   "crates/tor-key-forge": {
     "upstream_name": "tor-key-forge",
     "name": "zakura-tor-key-forge",
