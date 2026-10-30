@@ -54,7 +54,7 @@ dirs = "6.0.0"
 rmp-serde = "1"
 serde_json = "1.0.154"
 toml = "1.1.8"
-tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
+tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, features = ["load-config"], package = "zakura-tor-config" }
 
 [package.metadata.docs.rs]
 all-features = true

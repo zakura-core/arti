@@ -1210,6 +1210,7 @@ pub mod exports {
         load::ConfigBuilder,
     };
     pub use derive_deftly::Deftly;
+    #[cfg(feature = "load-config")]
     pub use figment;
     pub use humantime_serde;
     pub use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -2448,8 +2449,9 @@ define_derive_deftly! {
             // TODO: doesn't work on generics. Do we care?  If so, how should we fix?
             fn test_impl_default() {
                 let def = super::$ttype::default();
-                let empty_config = $E::figment::Figment::new();
-                let builder: super::$<$ttype Builder> = empty_config.extract().unwrap();
+                let empty_config = $E::serde_value::Value::Map($E::Default::default());
+                let builder = <super::$<$ttype Builder> as $E::Deserialize>
+                    ::deserialize(empty_config).unwrap();
                 let from_empty = builder.$BLD_NAME().unwrap();
                 assert_eq!(def, from_empty);
             }

@@ -13,6 +13,10 @@ and general machinery for configuration management.
 
 ## Cargo features
 
+The default `load-config` feature enables file loading, TOML parsing and
+configuration-tree resolution. Disable default features to use programmatic
+builders without these parsers. The `full` feature also enables loading.
+
 The default `file-watcher` feature enables configuration-file watching and its
 asynchronous runtime and filesystem notification dependencies. Disable default features to
 use configuration builders and parsing without file watching. The `full` feature
@@ -24,20 +28,20 @@ The configuration for the `arti` command line program,
 and other programs which embed Arti reusing the configuration machinery,
 works as follows:
 
- 1. We use [`tor_config::ConfigurationSources`](ConfigurationSources)
+ 1. We use [`tor_config::ConfigurationSources`](https://docs.rs/zakura-tor-config/latest/tor_config/struct.ConfigurationSources.html)
     to enumerate the various places
     where configuration information needs to come from,
     and configure how they are to be read.
-    `arti` uses [`ConfigurationSources::from_cmdline`].
+    `arti` uses `ConfigurationSources::from_cmdline`.
 
- 2. [`ConfigurationSources::load`] actually *reads* all of these sources,
+ 2. `ConfigurationSources::load` actually *reads* all of these sources,
     parses them (eg, as TOML files),
-    and returns a [`ConfigurationTree`].
+    and returns a `ConfigurationTree`.
     This is a tree-structured dynamically typed data structure,
     mirroring the input configuration structure, largely unvalidated,
     and containing everything in the input config sources.
 
- 3. We call one of the [`tor_config::resolve`](resolve) family.
+ 3. We call one of the `tor_config::resolve` family.
     This maps the input configuration data to concrete `ConfigBuilder `s
     for the configuration consumers within the program.
     (For `arti`, that's `TorClientConfigBuilder` and `ArtiBuilder`).

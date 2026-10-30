@@ -60,6 +60,7 @@ def main():
         names = {package.split()[0] for package in packages}
         forbidden = {
             "url", "idna", "idna_adapter", "sysinfo", "notify", "notify-types",
+            "figment", "toml", "toml_edit", "serde_ignored", "pear", "uncased",
             "criterion", "criterion-cycles-per-byte", "tor-rtmock", "zakura-tor-rtmock",
             "liblzma", "liblzma-sys", "zstd", "zstd-safe", "zstd-sys", "jobserver",
         }
@@ -69,7 +70,7 @@ def main():
         if unexpected or not required <= names:
             raise SystemExit(f"unexpected dependencies: {sorted(unexpected)}; missing: {sorted(required - names)}")
         subprocess.run(
-            ["cargo", "check", "--locked", "--manifest-path", str(manifest)],
+            ["cargo", "run", "--locked", "--manifest-path", str(manifest)],
             cwd=ROOT, env=environment, check=True,
         )
         print(f"embedded client: {len(packages) - 1} dependency packages; graph and public type boundaries passed")

@@ -34,7 +34,7 @@ pin-project = "1"
 rand = "0.10.3"
 tokio = { version = "1.54.1", features = ["signal", "macros"] }
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
-tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
+tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, features = ["load-config"], package = "zakura-tor-config" }
 tor-dirmgr = { package = "zakura-tor-dirmgr", path = "../tor-dirmgr", version = "0.47.0-zakura.1", features = ["dirfilter"] }
 tor-netdoc = { package = "zakura-tor-netdoc", path = "../tor-netdoc", version = "0.47.0-zakura.1", features = [
     "experimental-api",

@@ -29,10 +29,13 @@ jobs:
         run: |
           python3 maint/zakura/check-package-family.py
           cargo fmt --all -- --check
-      - name: Test configuration with and without watching
+      - name: Test configuration loading and watching independently
         run: |
           cargo test --locked -p zakura-tor-config --no-default-features
+          cargo test --locked -p zakura-tor-config --no-default-features --features load-config
+          cargo test --locked -p zakura-tor-config --no-default-features --features file-watcher
           cargo test --locked -p zakura-tor-config
+          cargo test --locked -p zakura-tor-config-path
       - name: Check guard-state provenance
         run: cargo test --locked -p zakura-tor-guardmgr crate_id
       - name: Check embedded Tor and onion-service client

@@ -109,7 +109,7 @@ tor-cell = { path = "../tor-cell", version = "0.47.0-zakura.1", features = ["rel
 tor-cert = { path = "../tor-cert", version = "0.47.0-zakura.1", package = "zakura-tor-cert" }
 tor-chanmgr = { path = "../tor-chanmgr", version = "0.47.0-zakura.1", features = ["relay"], package = "zakura-tor-chanmgr" }
 tor-circmgr = { version = "0.47.0-zakura.1", path = "../tor-circmgr", package = "zakura-tor-circmgr" }
-tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
+tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, features = ["load-config"], package = "zakura-tor-config" }
 tor-config-path = { path = "../tor-config-path", version = "0.47.0-zakura.1", package = "zakura-tor-config-path" }
 tor-config-shared = { path = "../tor-config-shared", version = "0.47.0-zakura.1", package = "zakura-tor-config-shared" }
 tor-dirclient = { version = "0.47.0-zakura.1", path = "../tor-dirclient", features = ["relay"], package = "zakura-tor-dirclient" }
