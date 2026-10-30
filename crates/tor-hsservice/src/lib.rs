@@ -153,12 +153,12 @@ pub struct RunningOnionService {
 /// Implementation details for an onion service.
 struct SvcInner {
     /// Configuration information about this service.
-    config_tx: postage::watch::Sender<Arc<OnionServiceConfig>>,
+    config_tx: tor_async_utils::watch::Sender<Arc<OnionServiceConfig>>,
 
     /// A oneshot that will be dropped when this object is dropped.
     _shutdown_tx: postage::broadcast::Sender<void::Void>,
 
-    /// Postage sender, used to tell subscribers about changes in the status of
+    /// Watch sender, used to tell subscribers about changes in the status of
     /// this onion service.
     status_tx: StatusSender,
 
@@ -320,7 +320,7 @@ impl OnionService {
             .map_err(StartupError::StateDirectoryInaccessible)?;
 
         let status_tx = StatusSender::new(OnionServiceStatus::new_shutdown());
-        let (config_tx, config_rx) = postage::watch::channel_with(Arc::new(config));
+        let (config_tx, config_rx) = tor_async_utils::watch::channel_with(Arc::new(config));
 
         let pow_manager_storage_handle = state_handle
             .storage_handle("pow_manager")

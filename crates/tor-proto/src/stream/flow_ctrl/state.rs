@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use postage::watch;
+use tor_async_utils::watch;
 use tor_cell::relaycell::flow_ctrl::{Xoff, Xon, XonKBpsEwma};
 use tor_cell::relaycell::msg::AnyRelayMsg;
 use tor_cell::relaycell::{RelayMsg, UnparsedRelayMsg};

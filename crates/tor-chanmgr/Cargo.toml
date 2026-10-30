@@ -56,7 +56,6 @@ httparse = "1.10"
 metrics = { version = "0.24.6", optional = true }
 oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
 percent-encoding = "2.3.2"
-postage = { version = "0.5.0", default-features = false, features = ["futures-traits"] }
 rand = "0.10.3"
 safelog = { path = "../safelog", version = "0.10.0" }
 serde = { version = "1.0.229", features = ["derive"] }

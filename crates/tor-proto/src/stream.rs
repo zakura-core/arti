@@ -14,8 +14,8 @@ pub(crate) mod queue;
 
 use futures::SinkExt as _;
 use oneshot_fused_workaround as oneshot;
-use postage::watch;
 use safelog::sensitive;
+use tor_async_utils::watch;
 
 use tor_async_utils::SinkCloseChannel as _;
 use tor_cell::relaycell::flow_ctrl::XonKBpsEwma;

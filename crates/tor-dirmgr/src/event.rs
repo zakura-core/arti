@@ -270,9 +270,9 @@ impl<F: FlagEvent> Stream for FlagListener<F> {
 /// new information.
 //
 // TODO(nickm): This type has gotten a bit large for being the type we send over
-// a `postage::watch`: perhaps we'd be better off having this information stored
-// in the guardmgr, and having only a summary of it sent over the
-// `postage::watch`.  But for now, let's not, unless it shows up in profiles.
+// a `tor_async_utils::watch`: perhaps we'd be better off storing it in the
+// guardmgr and sending only a summary over the watch. For now, let's not,
+// unless it shows up in profiles.
 #[derive(Clone, Debug, Default)]
 pub struct DirBootstrapStatus(StatusEnum);
 
@@ -781,12 +781,12 @@ impl DirProgress {
 #[derive(Clone, Educe)]
 #[educe(Debug)]
 pub struct DirBootstrapEvents {
-    /// The `postage::watch::Receiver` that we're wrapping.
+    /// The `tor_async_utils::watch::Receiver` that we're wrapping.
     ///
     /// We wrap this type so that we don't expose its entire API, and so that we
     /// can migrate to some other implementation in the future if we want.
     #[educe(Debug(method = "skip_fmt"))]
-    pub(crate) inner: postage::watch::Receiver<DirBootstrapStatus>,
+    pub(crate) inner: tor_async_utils::watch::Receiver<DirBootstrapStatus>,
 }
 
 impl Stream for DirBootstrapEvents {

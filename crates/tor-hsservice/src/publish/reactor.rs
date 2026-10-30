@@ -1183,9 +1183,10 @@ impl<R: Runtime, M: Mockable> Reactor<R, M> {
             new_state
         );
 
-        self.publish_status_tx.send(new_state).await.map_err(
-            |_: postage::sink::SendError<_>| internal!("failed to send upload notification?!"),
-        )?;
+        self.publish_status_tx
+            .send(new_state)
+            .await
+            .map_err(|_: watch::SendError<_>| internal!("failed to send upload notification?!"))?;
 
         Ok(())
     }

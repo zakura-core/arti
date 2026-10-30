@@ -14,8 +14,7 @@ use std::time::{Duration, SystemTime};
 use futures::stream::BoxStream;
 use futures::{FutureExt as _, future};
 use futures::{StreamExt as _, select_biased};
-use postage::stream::Stream as _;
-use postage::watch;
+use tor_async_utils::watch;
 use tor_rtcompat::SpawnExt as _;
 
 use tor_async_utils::PostageWatchSenderExt as _;
@@ -383,7 +382,7 @@ impl<R: Runtime> VanguardMgr<R> {
 
                 Ok(ShutdownStatus::Continue)
             },
-            _config = config_rx.recv().fuse() => {
+            _config = config_rx.next().fuse() => {
                 if let Some(netdir) = Self::timely_netdir(&netdir_provider)? {
                     // If we have a NetDir, replenish the vanguard sets that don't have enough vanguards.
                     //

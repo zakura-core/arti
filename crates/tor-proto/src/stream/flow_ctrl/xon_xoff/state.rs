@@ -34,7 +34,7 @@
 use std::num::Saturating;
 use std::sync::Arc;
 
-use postage::watch;
+use tor_async_utils::watch;
 use tor_cell::relaycell::flow_ctrl::{FlowCtrlVersion, Xoff, Xon, XonKBpsEwma};
 use tor_cell::relaycell::msg::AnyRelayMsg;
 use tor_cell::relaycell::{RelayCmd, RelayMsg, UnparsedRelayMsg};

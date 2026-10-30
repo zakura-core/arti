@@ -17,12 +17,12 @@ use tor_basic_utils::skip_fmt;
 #[derive(Clone, Educe)]
 #[educe(Debug)]
 pub struct ClockSkewEvents {
-    /// The `postage::watch::Receiver` that we're wrapping.
+    /// The `tor_async_utils::watch::Receiver` that we're wrapping.
     ///
     /// We wrap this type so that we don't expose its entire API, and so that we
     /// can migrate to some other implementation in the future if we want.
     #[educe(Debug(method = "skip_fmt"))]
-    pub(crate) inner: postage::watch::Receiver<Option<SkewEstimate>>,
+    pub(crate) inner: tor_async_utils::watch::Receiver<Option<SkewEstimate>>,
 }
 
 impl Stream for ClockSkewEvents {
