@@ -19,6 +19,57 @@ use thiserror::Error;
 
 use crate::HasAddrs;
 
+/// Implement string serialization and parsing, including UTF-8 byte input.
+macro_rules! impl_serde_via_string {
+    ($type:ty) => {
+        impl serde::Serialize for $type {
+            fn serialize<S: serde::Serializer>(
+                &self,
+                serializer: S,
+            ) -> std::result::Result<S::Ok, S::Error> {
+                serializer.collect_str::<&Self>(&self)
+            }
+        }
+
+        impl<'de> serde::Deserialize<'de> for $type {
+            fn deserialize<D: serde::Deserializer<'de>>(
+                deserializer: D,
+            ) -> std::result::Result<Self, D::Error> {
+                /// Parse the serialized string representation.
+                struct StringVisitor;
+
+                impl serde::de::Visitor<'_> for StringVisitor {
+                    type Value = $type;
+
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
+                        std::fmt::Display::fmt("a string", formatter)
+                    }
+
+                    fn visit_str<E: serde::de::Error>(
+                        self,
+                        value: &str,
+                    ) -> std::result::Result<Self::Value, E> {
+                        value.parse().map_err(E::custom)
+                    }
+
+                    fn visit_bytes<E: serde::de::Error>(
+                        self,
+                        value: &[u8],
+                    ) -> std::result::Result<Self::Value, E> {
+                        let value = std::str::from_utf8(value).map_err(E::custom)?;
+                        self.visit_str(value)
+                    }
+                }
+
+                deserializer.deserialize_str(StringVisitor)
+            }
+        }
+    };
+}
+
 /// Identify a type of Transport.
 ///
 /// If this crate is compiled with the `pt-client` feature, this type can
@@ -55,17 +106,10 @@ enum Inner {
 /// "obfs4" or "snowflake".  They match a name of a protocol that the transport
 /// binary knows how to provide to the name of a protocol that a bridge is
 /// configured to use.
-#[derive(
-    Debug,
-    Clone,
-    Default,
-    Eq,
-    PartialEq,
-    Hash,
-    serde_with::DeserializeFromStr,
-    serde_with::SerializeDisplay,
-)]
+#[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
 pub struct PtTransportName(String);
+
+impl_serde_via_string!(PtTransportName);
 
 impl FromStr for PtTransportName {
     type Err = TransportIdError;
@@ -238,9 +282,7 @@ const NONE_ADDR: &str = "-";
 //
 // Implementations for `PtTargetAddr` are in terms of those for `BridgeAddr`
 // wheresoever possible, to ensure that they do not diverge in semantics.
-#[derive(
-    Clone, Debug, PartialEq, Eq, Hash, serde_with::DeserializeFromStr, serde_with::SerializeDisplay,
-)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum PtTargetAddr {
     /// An IP address and port for a Tor relay.
@@ -253,6 +295,8 @@ pub enum PtTargetAddr {
     None,
 }
 
+impl_serde_via_string!(PtTargetAddr);
+
 /// An address of a bridge, for use in configuration.
 ///
 /// Contains precisely, either:
@@ -263,17 +307,10 @@ pub enum PtTargetAddr {
 /// Hostnames which are not syntactically invalid Internet hostnames,
 /// and a port value of zero,
 /// *can* be represented within a `BridgeAddr`.
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    serde_with::DeserializeFromStr,
-    serde_with::SerializeDisplay,
-    derive_more::Display,
-)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, derive_more::Display)]
 pub struct BridgeAddr(BridgeAddrInner<SocketAddr, String>);
+
+impl_serde_via_string!(BridgeAddr);
 
 /// `BridgeAddr` contents; type parameters allow use with references to avoid some copying
 ///
@@ -1047,5 +1084,53 @@ mod test {
             m2new.retain_addrs(|a| a.port() == 999),
             Err(RetainAddrsError::NoAddrsLeft)
         ));
+    }
+}
+
+#[cfg(test)]
+mod serde_tests {
+    #![allow(clippy::unwrap_used)]
+
+    use super::{BridgeAddr, PtTargetAddr, PtTransportName};
+
+    /// Check the stored string and Serde's string/byte token variants.
+    fn assert_encoding<T>(value: &T, text: &'static str)
+    where
+        T: serde::Serialize + for<'de> serde::Deserialize<'de> + PartialEq + std::fmt::Debug,
+    {
+        use serde_test::{Token, assert_de_tokens, assert_de_tokens_error, assert_tokens};
+        assert_tokens(value, &[Token::Str(text)]);
+        assert_de_tokens(value, &[Token::BorrowedStr(text)]);
+        assert_de_tokens(value, &[Token::String(text)]);
+        assert_de_tokens(value, &[Token::Bytes(text.as_bytes())]);
+        assert_de_tokens(value, &[Token::BorrowedBytes(text.as_bytes())]);
+        assert_de_tokens(value, &[Token::ByteBuf(text.as_bytes())]);
+        assert_de_tokens_error::<T>(
+            &[Token::Bytes(b"\xff")],
+            "invalid utf-8 sequence of 1 bytes from index 0",
+        );
+        assert_de_tokens_error::<T>(
+            &[Token::Bool(true)],
+            "invalid type: boolean `true`, expected a string",
+        );
+    }
+
+    #[test]
+    fn string_and_byte_tokens() {
+        for text in ["obfs4", "snowflake"] {
+            assert_encoding(&text.parse::<PtTransportName>().unwrap(), text);
+        }
+        for text in [
+            "-",
+            "192.0.2.1:443",
+            "[2001:db8::1]:443",
+            "bridge.example:443",
+        ] {
+            assert_encoding(&text.parse::<PtTargetAddr>().unwrap(), text);
+        }
+        for text in ["192.0.2.1:443", "[2001:db8::1]:443", "bridge.example:443"] {
+            assert_encoding(&text.parse::<BridgeAddr>().unwrap(), text);
+        }
+        serde_test::assert_ser_tokens(&PtTransportName::default(), &[serde_test::Token::Str("")]);
     }
 }

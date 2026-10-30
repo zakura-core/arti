@@ -207,7 +207,6 @@ impl Display for AddrPolicyRule {
 /// assert!(! pat.matches(&not_localhost, 22));
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq, Hash)] //
-#[derive(serde_with::SerializeDisplay, serde_with::DeserializeFromStr)]
 #[allow(clippy::exhaustive_structs)]
 pub struct AddrPortPattern {
     /// A pattern to match somewhere between zero and all IP addresses.
@@ -215,6 +214,8 @@ pub struct AddrPortPattern {
     /// A pattern to match a range of ports.
     pub ports: PortRange,
 }
+
+impl_serde_via_string!(AddrPortPattern);
 
 impl AddrPortPattern {
     /// Return an AddrPortPattern matching specified ports on specified addresses
