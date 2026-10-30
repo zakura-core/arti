@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 """Check a fresh embedded client without workspace test-feature unification."""
 
+import argparse
 import json
 import os
 from pathlib import Path
 import subprocess
 import tempfile
+import tomllib
 
 
 ROOT = Path(__file__).resolve().parents[2]
-FAMILY = json.loads((Path(__file__).parent / "package-family.json").read_text())
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--keymgr", action="store_true", help="also enable functional key stores")
+    parser.add_argument("--forbid", nargs="*", default=[])
+    parser.add_argument("--forbid-icu", action="store_true")
+    parser.add_argument("--expect-keystore", choices=["true", "false"])
+    args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix="zakura-arti-consumer-") as directory:
         consumer = Path(directory)
         dependencies = []
@@ -21,8 +28,10 @@ def main():
             ("fs-mistrust", True, []),
             ("tor-rtcompat", True, ["tokio", "rustls"]),
         ):
+            if name == "arti-client" and args.keymgr:
+                features.append("keymgr")
             path = "crates/" + name
-            package = FAMILY[path]["name"]
+            package = tomllib.loads((ROOT / path / "Cargo.toml").read_text())["package"]["name"]
             target = json.dumps(str(ROOT / path), ensure_ascii=False)
             dependencies.append(
                 f'{name} = {{ package = "{package}", path = {target}, '
@@ -45,7 +54,9 @@ def main():
             "    let mut builder = TorClientConfig::builder();\n"
             "    let permissions = |_: &mut fs_mistrust::MistrustBuilder| {};\n"
             "    permissions(builder.storage().permissions());\n"
-            "    let _config = builder.build().expect(\"default configuration\");\n"
+            "    let config = builder.build().expect(\"default configuration\");\n"
+            + (f"    assert_eq!(config.keystore().is_enabled(), {args.expect_keystore});\n"
+             if args.expect_keystore else "") +
             "    let _runtime_type: fn(TokioRustlsRuntime) = accepts_runtime;\n"
             "}\n"
         )
@@ -58,21 +69,25 @@ def main():
         )
         packages = {line.removesuffix(" (*)") for line in tree.splitlines()}
         names = {package.split()[0] for package in packages}
-        forbidden = {
-            "url", "idna", "idna_adapter", "sysinfo", "notify", "notify-types",
-            "criterion", "criterion-cycles-per-byte", "tor-rtmock", "zakura-tor-rtmock",
-            "liblzma", "liblzma-sys", "zstd", "zstd-safe", "zstd-sys", "jobserver",
+        forbidden = set(args.forbid)
+        unexpected = names & forbidden
+        if args.forbid_icu:
+            unexpected |= {name for name in names if name.startswith("icu_")}
+        required = {
+            tomllib.loads((ROOT / "crates" / name / "Cargo.toml").read_text())["package"]["name"]
+            for name in ("arti-client", "fs-mistrust", "tor-rtcompat")
         }
-        forbidden.update(entry["upstream_name"] for entry in FAMILY.values())
-        unexpected = (names & forbidden) | {name for name in names if name.startswith("icu_")}
-        required = {FAMILY["crates/" + name]["name"] for name in ("arti-client", "fs-mistrust", "tor-rtcompat")}
+        locked = tomllib.loads((consumer / "Cargo.lock").read_text())["package"]
+        unexpected_locked = {package["name"] for package in locked} & forbidden
+        if unexpected_locked:
+            raise SystemExit(f"unexpected locked dependencies: {sorted(unexpected_locked)}")
         if unexpected or not required <= names:
             raise SystemExit(f"unexpected dependencies: {sorted(unexpected)}; missing: {sorted(required - names)}")
         subprocess.run(
-            ["cargo", "check", "--locked", "--manifest-path", str(manifest)],
+            ["cargo", "run", "--locked", "--manifest-path", str(manifest)],
             cwd=ROOT, env=environment, check=True,
         )
-        print(f"embedded client: {len(packages) - 1} dependency packages; graph and public type boundaries passed")
+        print(f"embedded client: {len(locked) - 1} locked, {len(packages) - 1} build dependency packages; graph and public type boundaries passed")
 
 
 if __name__ == "__main__":
