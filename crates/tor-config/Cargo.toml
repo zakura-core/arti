@@ -23,9 +23,9 @@ full = [
     "tor-rtcompat?/full",
 ]
 
-# Load and resolve configuration files and command-line overrides.
+# Load and resolve configuration files.
 # Programmatic builders do not need these parsers.
-load-config = ["dep:figment", "dep:regex", "dep:serde_ignored", "dep:toml"]
+load-config = ["dep:figment", "dep:serde_ignored", "dep:toml"]
 
 # Watch configuration files for changes. Disable default features to use
 # configuration builders and parsing without an asynchronous runtime or watcher.
@@ -67,7 +67,6 @@ itertools = "0.15.0"
 notify = { version = "8", default-features = false, features = ["macos_kqueue"], optional = true }
 paste = "1.0.15"
 postage = { version = "0.5.0", default-features = false, features = ["futures-traits"], optional = true }
-regex = { version = "1", default-features = false, features = ["std"], optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
 serde-value = "0.7.0"
 serde_ignored = { version = "0.1.14", optional = true }

@@ -543,14 +543,6 @@ impl InertTorClient {
         }
     }
 
-    /// Getter for keymgr.
-    #[cfg(feature = "onion-service-cli-extra")]
-    pub fn keymgr(&self) -> crate::Result<&KeyMgr> {
-        Ok(self.keymgr.as_ref().ok_or(ErrorDetail::KeystoreRequired {
-            action: "get key manager handle",
-        })?)
-    }
-
     /// Create (but do not launch) a new
     /// [`OnionService`](tor_hsservice::OnionService)
     /// using the given configuration.
@@ -2344,12 +2336,6 @@ impl<R: Runtime> TorClient<R> {
         // dropped, which will happen when this TorClient is
         // dropped—which is what we want.
         self.client.statemgr.wait_for_unlock()
-    }
-
-    /// Getter for keymgr.
-    #[cfg(feature = "onion-service-cli-extra")]
-    pub fn keymgr(&self) -> crate::Result<&KeyMgr> {
-        self.client.inert_client.keymgr()
     }
 }
 

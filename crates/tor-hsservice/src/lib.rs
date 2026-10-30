@@ -122,9 +122,6 @@ pub use tor_persist::hsnickname::{HsNickname, InvalidNickname};
 
 pub use helpers::handle_rend_requests;
 
-#[cfg(feature = "onion-service-cli-extra")]
-use tor_netdir::NetDir;
-
 //---------- top-level service implementation (types and methods) ----------
 
 /// Convenience alias for link specifiers of an intro point
@@ -445,22 +442,6 @@ impl OnionService {
         let offline_hsid = false;
 
         maybe_generate_hsid(&self.keymgr, &self.config.nickname, offline_hsid, selector)
-    }
-
-    /// List the no-longer-relevant keys of this service.
-    ///
-    /// Returns the [`KeystoreEntry`]s associated with time periods that are not
-    /// "relevant" according to the specified [`NetDir`],
-    /// (i.e. the keys associated with time periods
-    /// the service is not publishing descriptors for).
-    // TODO: unittest
-    #[cfg(feature = "onion-service-cli-extra")]
-    pub fn list_expired_keys(&self, netdir: &NetDir) -> tor_keymgr::Result<Vec<KeystoreEntry>> {
-        list_expired_keys_for_service(
-            &netdir.hs_all_time_periods(),
-            self.config.nickname(),
-            &self.keymgr,
-        )
     }
 }
 

@@ -24,15 +24,15 @@ also enables file watching.
 
 ## Configuration in Arti
 
-The configuration for the `arti` command line program,
-and other programs which embed Arti reusing the configuration machinery,
-works as follows:
+Applications embedding Arti can use its optional configuration-file machinery
+as follows:
 
  1. We use [`tor_config::ConfigurationSources`](ConfigurationSources)
     to enumerate the various places
     where configuration information needs to come from,
     and configure how they are to be read.
-    `arti` uses `ConfigurationSources::from_cmdline`.
+    Start with `ConfigurationSources::new_empty` and add each source with
+    `ConfigurationSources::push_source`.
 
  2. `ConfigurationSources::load` actually *reads* all of these sources,
     parses them (eg, as TOML files),
@@ -44,7 +44,6 @@ works as follows:
  3. We call one of the `tor_config::resolve` family.
     This maps the input configuration data to concrete `ConfigBuilder `s
     for the configuration consumers within the program.
-    (For `arti`, that's `TorClientConfigBuilder` and `ArtiBuilder`).
     This mapping is done using the `Deserialize` implementations on the `Builder`s.
     `resolve` then calls the `build()` method on each of these parts of the configuration
     which applies defaults and validates the resulting configuration.
@@ -54,7 +53,7 @@ works as follows:
     were unrecognized, and therefore may need to be reported to the user.
     See the example in the [`load`] module documentation.
 
- 4. The resulting configuration objects (eg, `TorClientConfig`, `ArtiConfig`)
+ 4. The resulting configuration objects (eg, `TorClientConfig`)
     are provided to the code that must use them (eg, to make a `TorClient`).
 
 See the

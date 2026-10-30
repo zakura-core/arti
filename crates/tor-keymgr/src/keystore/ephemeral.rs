@@ -110,14 +110,6 @@ impl Keystore for ArtiEphemeralKeystore {
         }
     }
 
-    #[cfg(feature = "onion-service-cli-extra")]
-    fn raw_entry_id(&self, _raw_id: &str) -> Result<RawEntryId> {
-        Err(ArtiEphemeralKeystoreError::NotSupported {
-            action: "raw_entry_id",
-        }
-        .into())
-    }
-
     fn insert(&self, key: &dyn EncodableItem, key_spec: &dyn KeySpecifier) -> StdResult<(), Error> {
         let arti_path = key_spec
             .arti_path()
@@ -153,15 +145,6 @@ impl Keystore for ArtiEphemeralKeystore {
             Some(_) => Ok(Some(())),
             None => Ok(None),
         }
-    }
-
-    #[cfg(feature = "onion-service-cli-extra")]
-    fn remove_unchecked(&self, _entry_id: &RawEntryId) -> Result<()> {
-        // TODO: further discussion is needed for this implementation
-        Err(ArtiEphemeralKeystoreError::NotSupported {
-            action: "remove_uncheked",
-        }
-        .into())
     }
 
     fn list(&self) -> Result<Vec<KeystoreEntryResult<KeystoreEntry>>> {

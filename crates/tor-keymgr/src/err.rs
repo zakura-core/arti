@@ -164,8 +164,8 @@ impl UnrecognizedEntryError {
 /// The opaque identifier of an unrecognized key inside a [`Keystore`](crate::Keystore).
 #[derive(Debug, Clone, PartialEq, amplify::Getters)]
 pub struct UnrecognizedEntry {
-    /// The [`RawEntryId`] of the key, an identifier used in `arti raw` operations.
-    #[cfg_attr(not(feature = "onion-service-cli-extra"), getter(skip))]
+    /// The internal [`RawEntryId`] of the key.
+    #[getter(skip)]
     raw_id: RawEntryId,
     /// The [`KeystoreId`] of the keystore where the entry was found.
     keystore_id: KeystoreId,

@@ -68,7 +68,6 @@ members = [
 
 
     "maint/fixup-features",
-    "maint/keygen-client-auth-test",
     "maint/keygen-openssh-test",
 
 ]

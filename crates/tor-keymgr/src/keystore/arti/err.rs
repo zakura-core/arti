@@ -1,7 +1,6 @@
 //! An error type for [`ArtiNativeKeystore`](crate::ArtiNativeKeystore).
 
 use crate::keystore::fs_utils::FilesystemError;
-use crate::raw::RawEntryId;
 use crate::{ArtiPathSyntaxError, KeystoreError, UnknownKeyTypeError};
 use tor_error::{ErrorKind, HasKind};
 use tor_key_forge::{CertType, KeyType, SshKeyAlgorithm};
@@ -69,10 +68,6 @@ pub(crate) enum ArtiNativeKeystoreError {
         err: tor_bytes::Error,
     },
 
-    /// Encountered a non-path `RawEntryId` variant.
-    #[error("Raw entry {:?} not supported in an Arti keystore", _0)]
-    UnsupportedRawEntry(RawEntryId),
-
     /// An internal error.
     #[error("Internal error")]
     Bug(#[from] tor_error::Bug),
@@ -112,7 +107,6 @@ impl HasKind for ArtiNativeKeystoreError {
             KE::SshKeyParse { .. } | KE::UnexpectedSshKeyType { .. } | KE::CertParse { .. } => {
                 ErrorKind::KeystoreCorrupted
             }
-            KE::UnsupportedRawEntry { .. } => ErrorKind::BadApiUsage,
             KE::Bug(e) => e.kind(),
         }
     }

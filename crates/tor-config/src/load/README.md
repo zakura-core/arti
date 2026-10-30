@@ -26,7 +26,7 @@ To use this, you will need to:
 
 # Example
 
-In this example the developers are embedding `arti`, `arti_client`, etc.,
+In this example the developers are embedding `arti_client`
 into a program of their own.  The example code shown:
 
  * Defines a configuration structure `EmbedderConfig`,
@@ -35,13 +35,12 @@ into a program of their own.  The example code shown:
    (the trivial empty [`ConfigurationSources`](crate::ConfigurationSources),
    to avoid clutter in the example)
  * Reads those sources into a single configuration taxonomy [`ConfigurationTree`](crate::ConfigurationTree).
- * Processes that configuration into a 3-tuple of configuration
-   structs for the three components, namely:
+ * Processes that configuration into a 2-tuple of configuration
+   structs for the two components, namely:
      - `TorClientConfig`, the configuration for the `arti_client` crate's `TorClient`
-     - `ArtiConfig`, for behaviours in the `arti` command line utility
      - `EmbedderConfig`.
  * Will report a warning to the user about config settings found in the config files,
-   but not recognized by *any* of the three config consumers,
+   but not recognized by *any* of the config consumers,
 
 ```
 # fn main() -> Result<(), tor_config::load::ConfigResolveError> {
@@ -71,22 +70,11 @@ impl TopLevel for EmbedderConfig {
 #     fn apply_defaults(&mut self) -> Result<(), ConfigBuildError> { Ok(()) }
 # }
 #
-# #[derive(Debug, Clone, Builder, Eq, PartialEq)]
-# #[builder(build_fn(error = "ConfigBuildError"))]
-# #[builder(derive(Debug, Serialize, Deserialize))]
-# struct ArtiConfig { }
-# impl_standard_builder! { ArtiConfig }
-# impl TopLevel for ArtiConfig { type Builder = ArtiConfigBuilder; }
-# impl tor_config::load::ConfigBuilder for ArtiConfigBuilder {
-#     fn apply_defaults(&mut self) -> Result<(), ConfigBuildError> { Ok(()) }
-# }
-
-
-let cfg_sources = ConfigurationSources::new_empty(); // In real program, use from_cmdline
+let cfg_sources = ConfigurationSources::new_empty();
 let cfg = cfg_sources.load()?;
 
-let (tcc, arti_config, embedder_config) =
-     tor_config::resolve::<(TorClientConfig, ArtiConfig, EmbedderConfig)>(&cfg)?;
+let (tcc, embedder_config) =
+     tor_config::resolve::<(TorClientConfig, EmbedderConfig)>(&cfg)?;
 
 let _: EmbedderConfig = embedder_config; // etc.
 

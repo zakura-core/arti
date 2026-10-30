@@ -262,11 +262,6 @@ impl Keystore for CTorClientKeystore {
             .map(|k: curve25519::StaticKeypair| Box::new(k) as ErasedKey))
     }
 
-    #[cfg(feature = "onion-service-cli-extra")]
-    fn raw_entry_id(&self, raw_id: &str) -> Result<RawEntryId> {
-        Ok(RawEntryId::Path(PathBuf::from(raw_id.to_string())))
-    }
-
     fn insert(&self, _key: &dyn EncodableItem, _key_spec: &dyn KeySpecifier) -> Result<()> {
         Err(CTorKeystoreError::NotSupported { action: "insert" }.into())
     }
@@ -277,14 +272,6 @@ impl Keystore for CTorClientKeystore {
         _item_type: &KeystoreItemType,
     ) -> Result<Option<()>> {
         Err(CTorKeystoreError::NotSupported { action: "remove" }.into())
-    }
-
-    #[cfg(feature = "onion-service-cli-extra")]
-    fn remove_unchecked(&self, _entry_id: &RawEntryId) -> Result<()> {
-        Err(CTorKeystoreError::NotSupported {
-            action: "remove_unchecked",
-        }
-        .into())
     }
 
     fn list(&self) -> Result<Vec<KeystoreEntryResult<KeystoreEntry>>> {
