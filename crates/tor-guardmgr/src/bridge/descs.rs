@@ -12,7 +12,6 @@ use crate::{
 };
 use dyn_clone::DynClone;
 use futures::stream::BoxStream;
-use num_enum::{IntoPrimitive, TryFromPrimitive};
 use strum::{EnumCount, EnumIter};
 use tor_error::{HasKind, HasRetryTime};
 use tor_linkspec::{ChanTarget, HasChanMethod, HasRelayIds, OwnedChanTarget};
@@ -117,9 +116,7 @@ dyn_clone::clone_trait_object!(BridgeDescProvider);
 /// In the future, as an optimization, more fine-grained information may be provided.
 /// Unrecognized variants should be handled the same way as `SomethingChanged`.
 /// (So right now, it is not necessary to match on the variant at all.)
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, EnumIter, EnumCount, IntoPrimitive, TryFromPrimitive,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter, EnumCount)]
 #[non_exhaustive]
 #[repr(u16)]
 pub enum BridgeDescEvent {
@@ -134,6 +131,22 @@ pub enum BridgeDescEvent {
     /// This event may also be generated spuriously, if nothing has changed,
     /// but this will usually be avoided for performance reasons.
     SomethingChanged,
+}
+
+impl From<BridgeDescEvent> for u16 {
+    fn from(event: BridgeDescEvent) -> Self {
+        event as Self
+    }
+}
+
+impl TryFrom<u16> for BridgeDescEvent {
+    type Error = strum::ParseError;
+
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        <Self as strum::IntoEnumIterator>::iter()
+            .find(|event| u16::from(*event) == value)
+            .ok_or(strum::ParseError::VariantNotFound)
+    }
 }
 
 /// An error caused while fetching bridge descriptors
@@ -314,5 +327,26 @@ impl Universe for BridgeSet {
                 )
             })
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod event_conversion_test {
+    use super::BridgeDescEvent;
+
+    #[test]
+    fn event_integer_roundtrip() {
+        let vectors = [(0, BridgeDescEvent::SomethingChanged)];
+        for (value, event) in vectors {
+            assert_eq!(u16::from(event), value);
+            assert_eq!(BridgeDescEvent::try_from(value), Ok(event));
+        }
+        for value in 0..=u16::MAX {
+            let expected = vectors.iter().find(|(number, _)| *number == value);
+            assert_eq!(
+                BridgeDescEvent::try_from(value).ok(),
+                expected.map(|(_, event)| *event)
+            );
+        }
     }
 }
