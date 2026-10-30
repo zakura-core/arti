@@ -68,8 +68,6 @@ mod misc;
 pub mod mistrust;
 mod mut_cfg;
 pub mod setter_traits;
-#[cfg(feature = "load-config")]
-#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
 pub mod sources;
 #[cfg(feature = "testing")]
 pub mod testing;
@@ -100,8 +98,6 @@ pub use misc::*;
 pub use mut_cfg::MutCfg;
 #[cfg(feature = "load-config")]
 use serde::de::DeserializeOwned;
-#[cfg(feature = "load-config")]
-#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
 pub use sources::{ConfigurationSource, ConfigurationSources};
 #[cfg(feature = "load-config")]
 use tor_error::into_internal;

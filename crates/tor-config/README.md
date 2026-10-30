@@ -18,8 +18,8 @@ configuration-tree resolution. Disable default features to use programmatic
 builders without these parsers. The `full` feature also enables loading.
 
 The default `file-watcher` feature enables configuration-file watching and its
-asynchronous runtime and filesystem notification dependencies. Disable default features to
-use configuration builders and parsing without file watching. The `full` feature
+asynchronous runtime and filesystem notification dependencies. Disable default
+features to use configuration builders without file watching. The `full` feature
 also enables file watching.
 
 ## Configuration in Arti
@@ -28,7 +28,7 @@ The configuration for the `arti` command line program,
 and other programs which embed Arti reusing the configuration machinery,
 works as follows:
 
- 1. We use [`tor_config::ConfigurationSources`](https://docs.rs/zakura-tor-config/latest/tor_config/struct.ConfigurationSources.html)
+ 1. We use [`tor_config::ConfigurationSources`](ConfigurationSources)
     to enumerate the various places
     where configuration information needs to come from,
     and configure how they are to be read.
