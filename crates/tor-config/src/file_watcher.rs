@@ -14,7 +14,6 @@ use std::task::{Context, Poll};
 
 use tor_rtcompat::Runtime;
 
-use amplify_derive::Getters;
 use notify::{EventKind, Watcher};
 use postage::watch;
 
@@ -55,14 +54,14 @@ cfg_if::cfg_if! {
 /// and can be very expensive for large file trees.
 ///
 /// [^1]: See <https://github.com/notify-rs/notify/issues/644>
-#[derive(Getters)]
+#[derive(getset::Getters)]
 #[must_use = "A dropped FileWatcher exits immediately"]
 pub struct FileWatcher {
     /// An underlying `notify` watcher that tells us about directory changes.
     // this field is kept only so the watcher is not dropped
-    #[getter(skip)]
     _watcher: NotifyWatcher,
     /// The list of directories that we're currently watching.
+    #[getset(get = "pub")]
     watching_dirs: HashSet<PathBuf>,
 }
 

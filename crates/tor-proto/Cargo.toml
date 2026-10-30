@@ -89,7 +89,6 @@ __is_experimental = []
 
 [dependencies]
 aes = { version = "0.9" }
-amplify_derive = "4.0.1"
 async-trait = "0.1.92"
 asynchronous-codec = "0.7.0"
 bitvec = "1.1.1"
@@ -107,6 +106,7 @@ educe = "0.4.23"
 enum_dispatch = "0.3.13"
 futures = "0.3.34"
 futures-util = "0.3.34"
+getset = "0.1.7"
 hkdf = "0.12.4"
 hmac = "0.12.1"
 itertools = "0.15.0"

@@ -69,7 +69,6 @@ negotiate-extensions = ["__is_experimental"]
 __is_experimental = []
 
 [dependencies]
-amplify_derive = "4.0.1"
 async-trait = "0.1.92"
 base64ct = "1.8.3"
 cfg-if = "1.0.5"
@@ -80,6 +79,7 @@ digest = "0.10.7"
 educe = "0.4.23"
 fs-mistrust = { path = "../fs-mistrust", version = "0.16.0", features = ["serde"] }
 futures = "0.3.34"
+getset = "0.1.7"
 growable-bloom-filter = "2.1.1"
 hex = "0.4"
 humantime = "2"

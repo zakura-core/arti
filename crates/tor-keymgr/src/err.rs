@@ -132,10 +132,11 @@ pub struct UnknownKeyTypeError {
 }
 
 /// An unrecognized keystore entry.
-#[derive(Clone, Debug, amplify_derive::Getters, thiserror::Error)]
+#[derive(Clone, Debug, getset::Getters, thiserror::Error)]
 #[error("Unrecognized keystore entry")]
 pub struct UnrecognizedEntryError {
     /// An identifier of the entry that caused the error.
+    #[getset(get = "pub")]
     entry: UnrecognizedEntry,
     /// The underlying error that occurred.
     // TODO: This should be an `Error` specific for the situation.
@@ -150,6 +151,7 @@ pub struct UnrecognizedEntryError {
     // `StdResult<Vec<StdResult<(KeyPath, KeystoreItemType), UnrecognizedEntryError>>, KeystoreError>`,
     // `KeystoreError` presents itself twice at 2 different levels, there is ambiguity
     #[source]
+    #[getset(get = "pub")]
     error: Arc<dyn KeystoreError>,
 }
 
@@ -162,12 +164,12 @@ impl UnrecognizedEntryError {
 }
 
 /// The opaque identifier of an unrecognized key inside a [`Keystore`](crate::Keystore).
-#[derive(Debug, Clone, PartialEq, amplify_derive::Getters)]
+#[derive(Debug, Clone, PartialEq, getset::Getters)]
 pub struct UnrecognizedEntry {
     /// The internal [`RawEntryId`] of the key.
-    #[getter(skip)]
     raw_id: RawEntryId,
     /// The [`KeystoreId`] of the keystore where the entry was found.
+    #[getset(get = "pub")]
     keystore_id: KeystoreId,
 }
 

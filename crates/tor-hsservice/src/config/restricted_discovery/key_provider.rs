@@ -10,7 +10,6 @@ use std::fs::DirEntry;
 use derive_more::{AsRef, Into};
 use fs_mistrust::{CheckedDir, Mistrust, MistrustBuilder};
 
-use amplify_derive::Getters;
 use serde_with::DisplayFromStr;
 
 use tor_config::define_list_builder_helper;
@@ -95,12 +94,13 @@ fn build_static(
 ///
 /// Each file in this directory must have a file name of the form `<nickname>.auth`,
 /// where `<nickname>` is a valid [`HsClientNickname`].
-#[derive(Debug, Clone, Deftly, Eq, PartialEq, Getters)]
+#[derive(Debug, Clone, Deftly, Eq, PartialEq, getset::Getters)]
 #[derive_deftly(TorConfig)]
 #[deftly(tor_config(no_default_trait))]
 pub struct DirectoryKeyProvider {
     /// The path.
     #[deftly(tor_config(no_default))]
+    #[getset(get = "pub")]
     path: CfgPath,
 
     /// Configuration about which permissions we want to enforce on our files.
@@ -108,6 +108,7 @@ pub struct DirectoryKeyProvider {
         sub_builder(build_fn = "build_for_arti"),
         extend_with = "extend_with_replace"
     ))]
+    #[getset(get = "pub")]
     permissions: Mistrust,
 }
 

@@ -65,7 +65,9 @@ caret_int! {
 /// This is similar to [`super::UnrecognizedExt`], but specific to an unrecognized scheme
 /// within a known type of extension.
 ///
-#[derive(Debug, Clone, Eq, PartialEq, amplify_derive::Getters, derive_more::Constructor)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, getset::Getters, getset::CopyGetters, derive_more::Constructor,
+)]
 pub struct UnrecognizedProofOfWork {
     /// The `scheme` byte
     ///
@@ -73,10 +75,10 @@ pub struct UnrecognizedProofOfWork {
     /// values. We don't strictly verify this, to avoid breaking the API every
     /// time a new type is added.
     ///
-    #[getter(as_copy)]
+    #[getset(get_copy = "pub")]
     scheme: u8,
     /// Arbitrary contents with an unknown format
-    #[getter(as_ref)]
+    #[getset(get = "pub")]
     data: Vec<u8>,
 }
 

@@ -2,7 +2,6 @@
 
 use crate::internal_prelude::*;
 
-use amplify_derive::Getters;
 use derive_deftly::derive_deftly_adhoc;
 use tor_cell::relaycell::hs::est_intro;
 use tor_config::derive::prelude::*;
@@ -22,7 +21,7 @@ pub mod restricted_discovery;
 pub(crate) mod restricted_discovery;
 
 /// Configuration for one onion service.
-#[derive(Debug, Clone, Eq, PartialEq, Deftly, Getters)]
+#[derive(Debug, Clone, Eq, PartialEq, Deftly, getset::Getters, getset::MutGetters)]
 #[derive_deftly(TorConfig)]
 #[derive_deftly_adhoc]
 #[deftly(tor_config(no_default_trait, pre_build = "Self::validate"))]
@@ -30,15 +29,18 @@ pub struct OnionServiceConfig {
     /// The nickname used to look up this service's keys, state, configuration, etc.
     #[deftly(publisher_view)]
     #[deftly(tor_config(no_default))]
+    #[getset(get = "pub")]
     pub(crate) nickname: HsNickname,
 
     /// If true, this service will be started. It should be available to
     /// commands that don't require it to start regardless.
     #[deftly(tor_config(default = "true"))]
+    #[getset(get = "pub")]
     pub(crate) enabled: bool,
 
     /// Number of intro points; defaults to 3; max 20.
     #[deftly(tor_config(default = "DEFAULT_NUM_INTRO_POINTS"))]
+    #[getset(get = "pub")]
     pub(crate) num_intro_points: u8,
 
     /// A rate-limit on the acceptable rate of introduction requests.
@@ -53,6 +55,7 @@ pub struct OnionServiceConfig {
     /// This configuration is sent as a `DOS_PARAMS` extension, as documented in
     /// <https://spec.torproject.org/rend-spec/introduction-protocol.html#EST_INTRO_DOS_EXT>.
     #[deftly(tor_config(default))]
+    #[getset(get = "pub")]
     rate_limit_at_intro: Option<TokenBucketConfig>,
 
     /// How many streams will we allow to be open at once for a single circuit on
@@ -63,6 +66,7 @@ pub struct OnionServiceConfig {
     ///
     /// Equivalent to C Tor's HiddenServiceMaxStreamsCloseCircuit option.
     #[deftly(tor_config(default = "65535"))]
+    #[getset(get = "pub")]
     max_concurrent_streams_per_circuit: u32,
 
     /// Reserved compatibility setting; this fork does not implement proof of work.
@@ -71,6 +75,7 @@ pub struct OnionServiceConfig {
     /// their expected denial-of-service protection.
     #[deftly(tor_config(default = "false"))]
     #[deftly(publisher_view)]
+    #[getset(get = "pub")]
     pub(crate) enable_pow: bool,
 
     /// The maximum number of entries allowed in the rendezvous request queue when PoW is enabled.
@@ -85,6 +90,7 @@ pub struct OnionServiceConfig {
     // size of external types), it might be somewhat off. The ~32MB value is
     // based on the idea that each RendRequest is 4KB.
     #[deftly(tor_config(default = "8192"))]
+    #[getset(get = "pub")]
     pub(crate) pow_rend_queue_depth: usize,
 
     /// Configure restricted discovery mode.
@@ -93,7 +99,7 @@ pub struct OnionServiceConfig {
     /// so that only clients holding one of the listed keys can decrypt it.
     #[deftly(tor_config(sub_builder))]
     #[deftly(publisher_view)]
-    #[getter(as_mut)]
+    #[getset(get = "pub", get_mut = "pub")]
     pub(crate) restricted_discovery: RestrictedDiscoveryConfig,
 
     // TODO(#727): add support for single onion services
@@ -111,6 +117,7 @@ pub struct OnionServiceConfig {
     /// Whether to use the compiled backend for proof-of-work.
     // TODO: Consider making this a global option instead?
     #[deftly(tor_config(default = "false"))]
+    #[getset(get = "pub")]
     disable_pow_compilation: bool,
 }
 

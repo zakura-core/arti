@@ -61,7 +61,6 @@ tls-server = ["tor-cert-x509"]
 __is_nonadditive = []
 
 [dependencies]
-amplify_derive = "4.0.1"
 arbitrary = { version = "1.5.0", optional = true, features = ["derive"] }
 async-io = { version = "2.6.0", optional = true }
 async-native-tls = { version = "0.6.0", optional = true }
@@ -82,6 +81,7 @@ futures-rustls = { version = "0.26.0", optional = true, default-features = false
     "logging",
 ] }
 
+getset = "0.1.7"
 hex = "0.4.3"
 
 native-tls-crate = { package = "native-tls", version = "0.2", optional = true }
