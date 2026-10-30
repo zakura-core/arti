@@ -248,7 +248,6 @@ mod specifier {
     #[derive_deftly(KeySpecifier)]
     #[deftly(prefix = "test")]
     #[deftly(role = "simple_keypair")]
-    #[deftly(summary = "A test keypair specifier")]
     pub(crate) struct TestDerivedKeypairSpecifier;
 
     impl From<&TestDerivedKeySpecifier> for TestDerivedKeypairSpecifier {
@@ -262,7 +261,6 @@ mod specifier {
     #[derive_deftly(KeySpecifier)]
     #[deftly(prefix = "test")]
     #[deftly(role = "simple_key")]
-    #[deftly(summary = "A test key specifier")]
     #[deftly(keypair_specifier = TestDerivedKeypairSpecifier)]
     pub(crate) struct TestDerivedKeySpecifier;
 

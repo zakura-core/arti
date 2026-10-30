@@ -17,7 +17,6 @@ use itertools::{EitherOrBoth, Itertools, izip};
 use super::*;
 use crate::DENOTATOR_SEP;
 
-pub use crate::KeyPathInfoBuilder;
 pub use tor_error::{Bug, internal, into_internal};
 
 /// Trait for (only) formatting as a [`KeySpecifierComponent`]
@@ -307,35 +306,6 @@ pub fn parse_cert_denotators(
     Ok(())
 }
 
-/// Build a `KeyPathInfo` given the information about a key specifier
-///
-/// Calling pattern, to minimise macro-generated machine code,
-/// is similar `arti_path_from_components`.
-///
-/// The macro-generated code parses the path into its KeySpecifier impl
-/// (as an owned value) and then feeds references to the various fields
-/// to `describe_via_components`.
-pub fn describe_via_components(
-    summary: &&str,
-    role: &dyn RawKeySpecifierComponent,
-    extra_keys: &&[&str],
-    extra_info: &[&dyn KeySpecifierComponent],
-) -> Result<KeyPathInfo, Bug> {
-    let mut info = KeyPathInfoBuilder::default();
-    info.summary(summary.to_string());
-    info.role({
-        let mut s = String::new();
-        role.append_to(&mut s)?;
-        s
-    });
-    for (key, value) in izip!(*extra_keys, extra_info) {
-        let value = KeySpecifierComponentPrettyHelper(*value).to_string();
-        info.extra_info(*key, value);
-    }
-    info.build()
-        .map_err(into_internal!("failed to build KeyPathInfo"))
-}
-
 define_derive_deftly! {
     /// A helper for implementing [`KeySpecifier`]s.
     ///
@@ -384,8 +354,6 @@ define_derive_deftly! {
     ///    `None` in the pattern means "any".
     ///  * `impl `[`KeySpecifierPattern`]` for SomeKeySpecPattern`
     ///  * `impl TryFrom<`[`KeyPath`]> for SomeKeySpec`
-    ///  * Registration of an impl of [`KeyPathInfoExtractor`]
-    ///    (on a private unit struct `SomeKeySpecInfoExtractor`)
     ///
     /// ### Custom attributes
     ///
@@ -402,11 +370,6 @@ define_derive_deftly! {
     ///  * **`[deftly(role)]` (field):
     ///    Specifies that the role is determined at runtime.
     ///    The field type must implement [`KeyDenotator`].
-    ///
-    ///  * **`#[deftly(summary = "...")]`** (summary, mandatory):
-    ///    Specifies the summary; ends up as the `summary` field in [`KeyPathInfo`].
-    ///    (See [`KeyPathInfoBuilder::summary()`].)
-    ///    Must be a literal string.
     ///
     ///  * **`#[deftly(denotator)]`** (field):
     ///    Designates a field that should be represented
@@ -581,55 +544,6 @@ define_derive_deftly! {
         }
     }
 
-    struct $< $tname InfoExtractor >;
-
-    impl<$tgens> $crate::KeyPathInfoExtractor for $< $tname InfoExtractor >
-    where $twheres
-    {
-        fn describe(
-            &self,
-            path: &$crate::KeyPath,
-        ) -> std::result::Result<$crate::KeyPathInfo, $crate::KeyPathError> {
-            use $crate::key_specifier_derive::*;
-
-            // Parse this path
-            #[allow(unused_variables)] // Unused if no fields
-            let spec = $ttype::try_from(path)?;
-
-            // none of this cares about non-role literals
-            // all the others three be explicitly defined each time
-            ${define DO_LITERAL {}}
-
-            static NON_ROLE_FIELD_KEYS: &[&str] = &[
-                ${define DO_FIELD { stringify!($fname), }}
-                ${define DO_ROLE_FIELD {}}
-                ${define DO_ROLE_LITERAL {}}
-                $ARTI_PATH_COMPONENTS
-                $ARTI_LEAF_COMPONENTS
-            ];
-
-            describe_via_components(
-                &${tmeta(summary) as str},
-
-                // role
-                ${define DO_FIELD {}}
-                ${define DO_ROLE_FIELD { &spec.$fname, }}
-                ${define DO_ROLE_LITERAL { &$LIT, }}
-                $ARTI_LEAF_COMPONENTS
-
-                &NON_ROLE_FIELD_KEYS,
-
-                &[
-                    ${define DO_FIELD { &spec.$fname, }}
-                    ${define DO_ROLE_FIELD {}}
-                    ${define DO_ROLE_LITERAL {}}
-                    $ARTI_PATH_COMPONENTS
-                    $ARTI_LEAF_COMPONENTS
-                ],
-            ).map_err($crate::KeyPathError::Bug)
-        }
-    }
-
     impl<$tgens> TryFrom<&$crate::KeyPath> for $tname
     where $twheres
     {
@@ -725,8 +639,6 @@ define_derive_deftly! {
 
     }}
 
-    // Register the info extractor with `KeyMgr`.
-    $crate::inventory::submit!(&$< $tname InfoExtractor > as &dyn $crate::KeyPathInfoExtractor);
 }
 
 #[cfg(feature = "experimental-api")]
@@ -971,8 +883,6 @@ define_derive_deftly! {
         }
     }
 
-    // TODO: generate and register a KeyPathInfoExtractor impl for cert specifiers
-    // (so that KeyMgr::describe() can describe them)
 }
 
 pub use derive_deftly_template_KeySpecifier;

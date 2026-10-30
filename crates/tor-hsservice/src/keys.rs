@@ -42,7 +42,6 @@ define_derive_deftly! {
 #[derive_deftly(KeySpecifier)]
 #[deftly(prefix = "hss")]
 #[deftly(role = "KP_hs_id")]
-#[deftly(summary = "Public part of the identity key")]
 #[deftly(keypair_specifier = HsIdKeypairSpecifier)]
 #[deftly(ctor_path = HsIdPublicKey)]
 /// The public part of the identity key of the service.
@@ -55,7 +54,6 @@ pub struct HsIdPublicKeySpecifier {
 #[derive_deftly(KeySpecifier)]
 #[deftly(prefix = "hss")]
 #[deftly(role = "KS_hs_id")]
-#[deftly(summary = "Long-term identity keypair")]
 #[deftly(ctor_path = HsIdKeypair)]
 /// The long-term identity keypair of the service.
 pub struct HsIdKeypairSpecifier {
@@ -73,7 +71,6 @@ impl From<&HsIdPublicKeySpecifier> for HsIdKeypairSpecifier {
 #[derive_deftly(KeySpecifier, HsTimePeriodKeySpecifier)]
 #[deftly(prefix = "hss")]
 #[deftly(role = "KS_hs_blind_id")]
-#[deftly(summary = "Blinded signing keypair")]
 /// The blinded signing keypair.
 pub struct BlindIdKeypairSpecifier {
     /// The nickname of the  hidden service.
@@ -88,7 +85,6 @@ pub struct BlindIdKeypairSpecifier {
 #[deftly(prefix = "hss")]
 #[deftly(role = "KP_hs_blind_id")]
 #[deftly(keypair_specifier = BlindIdKeypairSpecifier)]
-#[deftly(summary = "Blinded public key")]
 /// The blinded public key.
 pub struct BlindIdPublicKeySpecifier {
     /// The nickname of the  hidden service.
@@ -113,7 +109,6 @@ impl From<&BlindIdPublicKeySpecifier> for BlindIdKeypairSpecifier {
 #[derive_deftly(KeySpecifier, HsTimePeriodKeySpecifier)]
 #[deftly(prefix = "hss")]
 #[deftly(role = "KS_hs_desc_sign")]
-#[deftly(summary = "Descriptor signing key")]
 /// The descriptor signing key.
 pub struct DescSigningKeypairSpecifier {
     /// The nickname of the  hidden service.
@@ -139,7 +134,6 @@ impl KeySpecifierComponentViaDisplayFromStr for IptKeyRole {}
 #[derive(Debug, Deftly, Eq, PartialEq)]
 #[derive_deftly(KeySpecifier)]
 #[deftly(prefix = "hss")]
-#[deftly(summary = "introduction point key")]
 pub(crate) struct IptKeySpecifier {
     /// nick
     pub(crate) nick: HsNickname,
