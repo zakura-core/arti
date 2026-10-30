@@ -298,25 +298,12 @@ impl PublicKey {
     ///
     /// The result is an RsaPublicKey, not a PublicKeyInfo.
     pub fn to_der(&self) -> Vec<u8> {
-        use der_parser::ber::BerObject;
-        use rsa::traits::PublicKeyParts;
+        use rsa::pkcs1::EncodeRsaPublicKey;
 
-        let mut n = self.0.n().to_bytes_be();
-        // prepend 0 if high bit is 1 to ensure correct signed encoding
-        if n[0] & 0b10000000 != 0 {
-            n.insert(0, 0_u8);
-        }
-        let n = BerObject::from_int_slice(&n);
-
-        let mut e = self.0.e().to_bytes_be();
-        // prepend 0 if high bit is 1 to ensure correct signed encoding
-        if e[0] & 0b10000000 != 0 {
-            e.insert(0, 0_u8);
-        }
-        let e = BerObject::from_int_slice(&e);
-
-        let asn1 = BerObject::from_seq(vec![n, e]);
-        asn1.to_vec().expect("RSA key not encodable as DER")
+        self.0
+            .to_pkcs1_der()
+            .expect("RSA key not encodable as DER")
+            .into_vec()
     }
 
     /// Compute the RsaIdentity for this public key.
