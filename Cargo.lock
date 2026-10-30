@@ -152,6 +152,7 @@ name = "arti-client"
 version = "0.47.0"
 dependencies = [
  "anyhow",
+ "async-native-tls",
  "async-trait",
  "cfg-if",
  "derive-deftly",
@@ -168,6 +169,7 @@ dependencies = [
  "once_cell",
  "postage",
  "rand 0.10.3",
+ "rustls",
  "safelog",
  "serde",
  "serde_json",
@@ -3784,6 +3786,7 @@ dependencies = [
  "aws-lc-rs",
  "log",
  "once_cell",
+ "ring",
  "rustls-pki-types",
  "rustls-webpki",
  "subtle",
