@@ -24,6 +24,8 @@ use tor_dirmgr::bridgedesc::BridgeDescMgr;
 use tor_dirmgr::{DirMgrStore, Timeliness};
 use tor_error::{Bug, error_report, internal};
 use tor_guardmgr::{GuardMgr, RetireCircuits};
+#[cfg(all(feature = "onion-service-client", feature = "keymgr"))]
+use tor_keymgr::CTorClientKeystore;
 use tor_keymgr::Keystore;
 use tor_memquota::MemoryQuotaTracker;
 use tor_netdir::{NetDirProvider, params::NetParameters};
@@ -41,7 +43,6 @@ use tor_rtcompat::{Runtime, SleepProviderExt};
 use {
     tor_hsclient::{HsClientConnector, HsClientDescEncKeypairSpecifier, HsClientSecretKeysBuilder},
     tor_hscrypto::pk::{HsClientDescEncKey, HsClientDescEncKeypair, HsClientDescEncSecretKey},
-    tor_keymgr::CTorClientKeystore,
     tor_netdir::DirEvent,
 };
 #[cfg(feature = "onion-service-service")]
@@ -344,6 +345,8 @@ impl InertTorClient {
             ty => return Err(internal!("unrecognized keystore type {ty:?}").into()),
         };
 
+        // Only the optional C Tor stores append secondary keystores.
+        #[allow(unused_mut)]
         let mut builder = KeyMgrBuilder::default().primary_store(primary_store);
 
         #[cfg(feature = "onion-service-service")]
@@ -360,7 +363,7 @@ impl InertTorClient {
             builder.secondary_stores().push(store);
         }
 
-        #[cfg(feature = "onion-service-client")]
+        #[cfg(all(feature = "onion-service-client", feature = "keymgr"))]
         for config in config.storage.keystore().ctor_client_stores() {
             let store: Box<dyn Keystore> = Box::new(CTorClientKeystore::from_path_and_mistrust(
                 config.path(),
