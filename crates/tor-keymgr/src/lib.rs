@@ -1,5 +1,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc = include_str!("../README.md")]
+#![cfg_attr(feature = "key-encoding", doc = include_str!("../README.md"))]
+#![cfg_attr(not(feature = "key-encoding"), doc = include_str!("../README-minimal.md"))]
 // @@ begin lint list maintained by maint/add_warning @@
 #![allow(renamed_and_removed_lints)] // @@REMOVE_WHEN(ci_arti_stable)
 #![allow(unknown_lints)] // @@REMOVE_WHEN(ci_arti_nightly)
@@ -101,6 +102,8 @@ pub use keystore::ephemeral::ArtiEphemeralKeystore;
 #[doc(hidden)]
 pub use key_specifier::derive as key_specifier_derive;
 
+#[cfg(feature = "key-encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
 pub use tor_key_forge::{
     EncodableItem, ErasedKey, KeyType, Keygen, KeygenRng, SshKeyAlgorithm, SshKeyData,
     ToEncodableKey,
