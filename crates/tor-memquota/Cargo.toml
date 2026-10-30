@@ -25,7 +25,6 @@ pin-project = "1"
 serde = { version = "1.0.229", features = ["derive"] }
 slotmap-careful = { path = "../slotmap-careful", version = "0.9.0-zakura.1", package = "zakura-slotmap-careful" }
 static_assertions = "1"
-sysinfo = { version = "0.38.4", default-features = false, features = ["system"] }
 thiserror = "2"
 tor-async-utils = { path = "../tor-async-utils", version = "0.47.0-zakura.1", package = "zakura-tor-async-utils" }
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["serde"], package = "zakura-tor-basic-utils" }
@@ -39,6 +38,7 @@ visibility = { version = "0.1.1", optional = true }
 void = "1"
 
 [dev-dependencies]
+sysinfo = { version = "0.38.4", default-features = false, features = ["system"] }
 rand = "0.10.3"
 safelog = { path = "../safelog", version = "0.10.0-zakura.1", package = "zakura-safelog" }
 serde_json = "1.0.154"
@@ -70,3 +70,9 @@ all-features = true
 
 [lib]
 name = "tor_memquota"
+
+[target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "freebsd", target_os = "netbsd"))'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_System_SystemInformation"] }

@@ -39,3 +39,17 @@ jobs:
         run: |
           cargo check --locked -p zakura-arti-client --no-default-features \
             --features tokio,rustls,onion-service-client
+
+  memory-query:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2022]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install pinned Rust
+        run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - name: Test memory quotas and native memory oracle
+        run: cargo test --locked -p zakura-tor-memquota

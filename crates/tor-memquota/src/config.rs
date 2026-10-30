@@ -1,8 +1,7 @@
 //! Configuration (private module)
 
-use std::sync::LazyLock;
+mod memory;
 
-use sysinfo::{MemoryRefreshKind, System};
 use tracing::warn;
 
 use crate::internal_prelude::*;
@@ -297,61 +296,11 @@ fn compute_max_from_total_system_mem(mem: Result<usize, MemQueryError>) -> Qty {
 /// This is generally the amount of system RAM,
 /// but we may also take into account other OS-specific limits such as cgroups.
 ///
-/// Returns `None` if we were unable to get the total available memory.
-/// But see internal comments for details.
+/// Returns [`MemQueryError::Unavailable`] if the physical-memory query fails.
 fn total_available_memory() -> Result<usize, MemQueryError> {
-    // The sysinfo crate says we should use only one `System` per application.
-    // But we're a library, so it's probably best to just make this global and reuse it.
-    // In reality getting the system memory probably shouldn't require persistent state,
-    // but since the internals of the sysinfo crate are opaque to us,
-    // we'll just follow their documentation and cache the `System`.
-    //
-    // NOTE: The sysinfo crate in practice gets more information than we ask for.
-    // For example `System::new()` will always query the `_SC_PAGESIZE` and `_SC_CLK_TCK`
-    // on Linux even though we only refresh the memory info below
-    // (see https://github.com/GuillaumeGomez/sysinfo/blob/fc31b411eea7b9983176399dc5be162786dec95b/src/unix/linux/system.rs#L152).
-    // This means that miri will fail to run on tests that build the config, even if the config uses
-    // explicit values.
-    static SYSTEM: LazyLock<Mutex<System>> = LazyLock::new(|| Mutex::new(System::new()));
-    let mut system = SYSTEM.lock().unwrap_or_else(|mut e| {
-        // The sysinfo crate has some internal panics which would poison this mutex.
-        // But we can easily reset it, rather than panicking ourselves if it's poisoned.
-        **e.get_mut() = System::new();
-        SYSTEM.clear_poison();
-        e.into_inner()
-    });
-
-    system.refresh_memory_specifics(MemoryRefreshKind::nothing().with_ram());
-
-    // It might be possible for 32-bit systems to return >usize::MAX due to PAE (I haven't looked
-    // into this), so we just saturate the value and don't consider this an error.
-    let mem = to_usize_saturating(system.total_memory());
-
-    // The sysinfo crate doesn't report errors, so the best we can do is guess that a value of 0
-    // implies that it was unable to get the total memory.
-    //
-    // We also need to return early to prevent a panic below.
-    if mem == 0 {
-        return Err(MemQueryError::Unavailable);
-    }
-
-    // Note: The docs for the sysinfo crate say:
-    //
-    // > You need to have run refresh_memory at least once before calling this method.
-    //
-    // But as implemented, it also panics if `sys.mem_total == 0` (for example if the refresh
-    // silently failed).
-    let Some(cgroups) = system.cgroup_limits() else {
-        // There is no cgroup (or we're a non-Linux platform).
-        return Ok(mem);
-    };
-
-    // The `cgroup_limits()` surprisingly doesn't actually return the unaltered cgroups limits.
-    // It also adjusts them depending on the total memory.
-    // Since this is all undocumented, we'll also do the same calculation here.
-    let mem = std::cmp::min(mem, to_usize_saturating(cgroups.total_memory));
-
-    Ok(mem)
+    memory::available_memory()
+        .map(to_usize_saturating)
+        .ok_or(MemQueryError::Unavailable)
 }
 
 /// An error when we are unable to obtain the system's total available memory.
