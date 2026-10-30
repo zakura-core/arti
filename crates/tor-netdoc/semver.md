@@ -9,3 +9,5 @@ ADDED: `IdentifiedDigest` is now exhaustive, with fields `pub`
 ADDED: `{FixedB64, FixedB16U}::from_byte_slice`
 ADDED: `ProtoStatusesConstructor`; `ProtoStatuses` fields are now `pub`
 ADDED: `ProtoStatusConstructor`; `ProtoStatus` fields are now `pub`
+
+CHANGED: Private relay-nickname storage; public APIs, accepted inputs and serialized output are unchanged.

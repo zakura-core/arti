@@ -2305,7 +2305,8 @@ mod fingerprint {
 /// A type for relay nicknames
 mod nickname {
     use super::*;
-    use tinystr::TinyAsciiStr;
+    use arrayvec::ArrayString;
+    use std::hash::{Hash, Hasher};
 
     /// This is a strange limit, but it comes from Tor.
     const MAX_NICKNAME_LEN: usize = 19;
@@ -2325,11 +2326,10 @@ mod nickname {
         Eq,
         Ord,
         PartialOrd,
-        Hash,
         serde_with::SerializeDisplay,
         serde_with::DeserializeFromStr,
     )]
-    pub struct Nickname(tinystr::TinyAsciiStr<MAX_NICKNAME_LEN>);
+    pub struct Nickname(ArrayString<MAX_NICKNAME_LEN>);
 
     /// Invalid nickname
     #[derive(Clone, Debug, thiserror::Error)]
@@ -2354,12 +2354,30 @@ mod nickname {
         type Err = InvalidNickname;
 
         fn from_str(s: &str) -> Result<Self, InvalidNickname> {
-            let tiny = TinyAsciiStr::from_str(s).map_err(|_| InvalidNickname {})?;
+            if s.is_empty()
+                || s.len() > MAX_NICKNAME_LEN
+                || !s.bytes().all(|byte| byte.is_ascii_alphanumeric())
+            {
+                return Err(InvalidNickname {});
+            }
+            ArrayString::from(s)
+                .map(Nickname)
+                .map_err(|_| InvalidNickname {})
+        }
+    }
 
-            if tiny.is_ascii_alphanumeric() && !tiny.is_empty() {
-                Ok(Nickname(tiny))
-            } else {
-                Err(InvalidNickname {})
+    impl Hash for Nickname {
+        fn hash<H: Hasher>(&self, state: &mut H) {
+            // Preserve the former padded ASCII-array hash, including its length
+            // prefix and individual byte writes, for callers using custom hashers.
+            MAX_NICKNAME_LEN.hash(state);
+            for byte in self
+                .as_str()
+                .bytes()
+                .chain(std::iter::repeat(0))
+                .take(MAX_NICKNAME_LEN)
+            {
+                byte.hash(state);
             }
         }
     }
