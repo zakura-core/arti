@@ -55,7 +55,7 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 #[cfg(feature = "expand-paths")]
-use {directories::BaseDirs, std::sync::LazyLock};
+use {directories::BaseDirs, std::ffi::OsString, std::sync::LazyLock};
 
 use tor_error::{ErrorKind, HasKind};
 
@@ -91,7 +91,7 @@ pub struct CfgPath(PathInner);
 enum PathInner {
     /// A path that should be used literally, with no expansion.
     Literal(LiteralPath),
-    /// A path that should be expanded from a string using ShellExpand.
+    /// A path that should be expanded from a string.
     Shell(String),
 }
 
@@ -303,12 +303,76 @@ pub fn home() -> Result<&'static Path, CfgPathError> {
 /// Helper: expand a directory given as a string.
 #[cfg(feature = "expand-paths")]
 fn expand(s: &str, path_resolver: &CfgPathResolver) -> Result<PathBuf, CfgPathError> {
-    let path = shellexpand::path::full_with_context(
-        s,
-        || home().ok(),
-        |x| path_resolver.get_var(x).map(Some),
-    );
-    Ok(path.map_err(|e| e.cause)?.into_owned())
+    // Expand variables before deciding whether a leading tilde denotes home.
+    // A tilde introduced by a variable must stay literal. Keep the original
+    // tilde separate so inserted paths never need to be sliced or decoded.
+    let Some(after_tilde) = s.strip_prefix('~') else {
+        return expand_variables(s, path_resolver).map(PathBuf::from);
+    };
+    let suffix = expand_variables(after_tilde, path_resolver)?;
+    let separator = suffix.as_encoded_bytes().first().copied();
+    let denotes_home =
+        suffix.is_empty() || separator == Some(b'/') || (cfg!(windows) && separator == Some(b'\\'));
+    let mut result = if denotes_home {
+        home().map_or_else(|_| OsString::from("~"), |path| path.as_os_str().to_owned())
+    } else {
+        OsString::from("~")
+    };
+    result.push(suffix);
+    Ok(result.into())
+}
+
+/// Interpolate resolver variables and dollar escapes without altering paths.
+///
+/// Variable values and braced defaults are inserted literally, without
+/// recursively expanding their contents. Concatenation uses [`OsString`],
+/// preserving non-Unicode paths and separators in the inserted values.
+#[cfg(feature = "expand-paths")]
+fn expand_variables(
+    mut input: &str,
+    path_resolver: &CfgPathResolver,
+) -> Result<OsString, CfgPathError> {
+    let mut result = OsString::with_capacity(input.len());
+    while let Some((literal, after_dollar)) = input.split_once('$') {
+        result.push(literal);
+        if let Some(rest) = after_dollar.strip_prefix('$') {
+            result.push("$");
+            input = rest;
+        } else if let Some(after_brace) = after_dollar.strip_prefix('{') {
+            if let Some((body, rest)) = after_brace.split_once('}') {
+                let (name, default) = match body.split_once(":-") {
+                    Some((name, value)) if !name.is_empty() => (name, Some(value)),
+                    _ => (body, None),
+                };
+                match path_resolver.get_var(name) {
+                    Ok(value) => result.push(value.as_os_str()),
+                    Err(error) => match default {
+                        Some(value) => result.push(value),
+                        None => return Err(error),
+                    },
+                }
+                input = rest;
+            } else {
+                // An unclosed brace is literal, but later variables still
+                // expand, as in "${unfinished/$NAME".
+                result.push("${");
+                input = after_brace;
+            }
+        } else {
+            let end = after_dollar
+                .find(|c: char| !(c.is_alphanumeric() || c == '_'))
+                .unwrap_or(after_dollar.len());
+            let (name, rest) = after_dollar.split_at(end);
+            if name.is_empty() {
+                result.push("$");
+            } else {
+                result.push(path_resolver.get_var(name)?.as_os_str());
+            }
+            input = rest;
+        }
+    }
+    result.push(input);
+    Ok(result)
 }
 
 /// Helper: convert a string to a path without expansion.
@@ -402,6 +466,147 @@ mod test {
     }
 
     #[test]
+    fn variable_syntax() {
+        let mut r = CfgPathResolver::from_pairs([
+            ("FOO", "value"),
+            ("EMPTY", ""),
+            ("1ABC", "digits"),
+            ("café٢", "Unicode"),
+            ("odd:name", "braced"),
+        ]);
+        r.set_var("ERROR", Err(CfgPathError::NoProgramDir));
+        for (input, expected) in [
+            ("", ""),
+            ("$", "$"),
+            ("$/!", "$/!"),
+            ("$$", "$"),
+            ("$$FOO", "$FOO"),
+            ("$$$FOO", "$value"),
+            ("$$$$FOO", "$$FOO"),
+            ("a$$${FOO}z", "a$valuez"),
+            ("$FOO.txt", "value.txt"),
+            ("$1ABC/$café٢/${odd:name}", "digits/Unicode/braced"),
+            ("'$FOO'\\$FOO", "'value'\\value"),
+            ("${FOO:-unused}", "value"),
+            ("${EMPTY:-unused}", ""),
+            ("${MISSING:-fallback}", "fallback"),
+            ("${ERROR:-fallback}", "fallback"),
+            ("${MISSING:-}", ""),
+            ("${MISSING:-$FOO}", "$FOO"),
+            ("${MISSING:-$$}", "$$"),
+            ("${MISSING:-${FOO}}", "${FOO}"),
+            ("${unfinished/$FOO", "${unfinished/value"),
+        ] {
+            assert_eq!(
+                CfgPath::new(input.into()).path(&r).unwrap(),
+                Path::new(expected),
+                "input: {input:?}"
+            );
+        }
+        for (input, expected) in [
+            ("$MISSING", CfgPathError::UnknownVar("MISSING".into())),
+            ("${}", CfgPathError::UnknownVar("".into())),
+            (
+                "${:-fallback}",
+                CfgPathError::UnknownVar(":-fallback".into()),
+            ),
+            ("${ERROR}", CfgPathError::NoProgramDir),
+            ("$ERROR", CfgPathError::NoProgramDir),
+            ("${MISSING:-fallback}/$ERROR", CfgPathError::NoProgramDir),
+        ] {
+            assert_eq!(
+                CfgPath::new(input.into()).path(&r).unwrap_err(),
+                expected,
+                "input: {input:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn tilde_after_variable_expansion() {
+        let r = CfgPathResolver::from_pairs([
+            ("FOO", "value"),
+            ("EMPTY", ""),
+            ("SLASH", "/"),
+            ("TILDE", "~"),
+            ("ABSOLUTE", "/absolute"),
+        ]);
+        for (input, suffix) in [
+            ("~", ""),
+            ("~/a", "/a"),
+            ("~//a", "//a"),
+            ("~/$FOO", "/value"),
+            ("~${SLASH}a", "/a"),
+            ("~${EMPTY}", ""),
+            ("~$ABSOLUTE", "/absolute"),
+            ("~${MISSING:-/fallback}", "/fallback"),
+        ] {
+            let mut expected = home().unwrap().as_os_str().to_owned();
+            expected.push(suffix);
+            assert_eq!(
+                CfgPath::new(input.into()).path(&r).unwrap().as_os_str(),
+                expected,
+                "input: {input:?}"
+            );
+        }
+        for (input, expected) in [
+            ("~user/a", "~user/a"),
+            ("before/~", "before/~"),
+            ("~$TILDE", "~~"),
+            ("~${EMPTY}user", "~user"),
+            ("$TILDE/$FOO", "~/value"),
+            ("${MISSING:-~}/a", "~/a"),
+        ] {
+            assert_eq!(
+                CfgPath::new(input.into()).path(&r).unwrap(),
+                Path::new(expected),
+                "input: {input:?}"
+            );
+        }
+        let expected = if cfg!(windows) {
+            let mut result = home().unwrap().as_os_str().to_owned();
+            result.push("\\value");
+            result
+        } else {
+            OsString::from("~\\value")
+        };
+        assert_eq!(
+            CfgPath::new("~\\$FOO".into()).path(&r).unwrap().as_os_str(),
+            expected
+        );
+    }
+
+    #[cfg(any(unix, windows))]
+    #[test]
+    fn inserted_non_unicode_paths() {
+        #[cfg(unix)]
+        let raw = {
+            use std::os::unix::ffi::OsStringExt as _;
+            OsString::from_vec(b"/raw\xff".to_vec())
+        };
+        #[cfg(windows)]
+        let raw = {
+            use std::os::windows::ffi::OsStringExt as _;
+            OsString::from_wide(&[u16::from(b'/'), u16::from(b'r'), 0xd800])
+        };
+        let r = CfgPathResolver::from_pairs([("RAW", &raw)]);
+        for (input, prefix, suffix) in [
+            ("before${RAW}after", OsString::from("before"), "after"),
+            ("$RAW", OsString::new(), ""),
+            ("~$RAW", home().unwrap().as_os_str().to_owned(), ""),
+        ] {
+            let mut expected = prefix;
+            expected.push(&raw);
+            expected.push(suffix);
+            assert_eq!(
+                CfgPath::new(input.into()).path(&r).unwrap().as_os_str(),
+                expected,
+                "input: {input:?}"
+            );
+        }
+    }
+
+    #[test]
     fn literal() {
         let r = CfgPathResolver::from_pairs([("ARTI_CACHE", "foo")]);
 
@@ -428,30 +633,38 @@ mod test {
         let expanded = p.path(&r).unwrap();
         assert_eq!(expanded, this_binary);
     }
+}
+
+#[cfg(all(test, not(feature = "expand-paths")))]
+mod no_expansion {
+    use super::*;
 
     #[test]
-    #[cfg(not(feature = "expand-paths"))]
-    fn rejections() {
-        let r = CfgPathResolver::from_pairs([("PROGRAM_DIR", std::env::current_exe().unwrap())]);
-
-        let chk_err = |s: &str, mke: &dyn Fn(String) -> CfgPathError| {
-            let p = CfgPath::new(s.to_string());
-            assert_eq!(p.path(&r).unwrap_err(), mke(s.to_string()));
-        };
-
-        let chk_ok = |s: &str, exp| {
-            let p = CfgPath::new(s.to_string());
-            assert_eq!(p.path(&r), Ok(PathBuf::from(exp)));
-        };
-
-        chk_err(
-            "some/${PROGRAM_DIR}/foo",
-            &CfgPathError::VariableInterpolationNotSupported,
+    fn rejections_and_dollar_escapes() {
+        let resolver = CfgPathResolver::default();
+        for input in ["some/${PROGRAM_DIR}/foo", "$", "${MISSING:-fallback}"] {
+            assert_eq!(
+                CfgPath::new(input.into()).path(&resolver),
+                Err(CfgPathError::VariableInterpolationNotSupported(
+                    input.into()
+                ))
+            );
+        }
+        assert_eq!(
+            CfgPath::new("~some".into()).path(&resolver),
+            Err(CfgPathError::HomeDirInterpolationNotSupported(
+                "~some".into()
+            ))
         );
-        chk_err("~some", &CfgPathError::HomeDirInterpolationNotSupported);
-
-        chk_ok("some$$foo$$bar", "some$foo$bar");
-        chk_ok("no dollars", "no dollars");
+        for (input, expected) in [
+            ("some$$foo$$bar", "some$foo$bar"),
+            ("no dollars", "no dollars"),
+        ] {
+            assert_eq!(
+                CfgPath::new(input.into()).path(&resolver),
+                Ok(PathBuf::from(expected))
+            );
+        }
     }
 }
 
