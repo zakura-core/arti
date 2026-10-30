@@ -35,9 +35,6 @@ full = [
     "web-time-compat/full",
 ]
 
-experimental = []
-__is_experimental = []
-
 [dependencies]
 cipher = { version = "0.5.2", features = ["zeroize"], optional = true }
 data-encoding = "2.11.1"                                                                                    # want MSVC i686 build fix, data-encoding/issues/33
