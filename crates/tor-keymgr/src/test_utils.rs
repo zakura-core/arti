@@ -281,7 +281,7 @@ mod specifier {
 }
 
 /// A module exporting key implementations used for testing.
-#[cfg(test)]
+#[cfg(all(test, feature = "key-encoding"))]
 mod key {
     use crate::EncodableItem;
     use tor_key_forge::{ItemType, KeystoreItem, KeystoreItemType};
@@ -312,7 +312,7 @@ mod key {
 #[cfg(test)]
 pub(crate) use specifier::*;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "key-encoding"))]
 pub(crate) use key::*;
 
 #[cfg(test)]

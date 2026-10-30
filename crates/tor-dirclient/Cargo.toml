@@ -59,14 +59,14 @@ httparse = "1.10"
 httpdate = "1.0"
 itertools = "0.15.0"
 thiserror = "2"
-tor-circmgr = { path = "../tor-circmgr", version = "0.47.0-zakura.1", package = "zakura-tor-circmgr" }
-tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", package = "zakura-tor-llcrypto" }
-tor-netdoc = { path = "../tor-netdoc", version = "0.47.0-zakura.1", package = "zakura-tor-netdoc" }
-tor-proto = { path = "../tor-proto", version = "0.47.0-zakura.1", package = "zakura-tor-proto" }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", package = "zakura-tor-rtcompat" }
+tor-circmgr = { package = "zakura-tor-circmgr", path = "../tor-circmgr", version = "0.47.0-zakura.1" }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }
+tor-hscrypto = { package = "zakura-tor-hscrypto", default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true }
+tor-linkspec = { package = "zakura-tor-linkspec", path = "../tor-linkspec", version = "0.47.0-zakura.1" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1" }
+tor-netdoc = { package = "zakura-tor-netdoc", path = "../tor-netdoc", version = "0.47.0-zakura.1" }
+tor-proto = { package = "zakura-tor-proto", path = "../tor-proto", version = "0.47.0-zakura.1" }
+tor-rtcompat = { package = "zakura-tor-rtcompat", path = "../tor-rtcompat", version = "0.47.0-zakura.1" }
 tracing = "0.1.44"
 web-time-compat = { path = "../web-time-compat", version = "0.3.0-zakura.1", package = "zakura-web-time-compat" }
 

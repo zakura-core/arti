@@ -70,7 +70,7 @@ thiserror = "2"
 time = { version = "0.3.55", features = ["macros"], optional = true }
 tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
 tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }
-tor-hscrypto = { package = "zakura-tor-hscrypto", path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true }
+tor-hscrypto = { package = "zakura-tor-hscrypto", default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true }
 tor-linkspec = { package = "zakura-tor-linkspec", path = "../tor-linkspec", version = "0.47.0-zakura.1" }
 tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1" }
 tor-netdoc = { package = "zakura-tor-netdoc", path = "../tor-netdoc", version = "0.47.0-zakura.1" }

@@ -129,25 +129,25 @@ subtle = "2"
 thiserror = "2"
 tokio-crate = { package = "tokio", version = "1.54.1", optional = true }
 tokio-util = { version = "0.7.20", features = ["compat"], optional = true }
-tor-async-utils = { path = "../tor-async-utils", version = "0.47.0-zakura.1", package = "zakura-tor-async-utils" }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
-tor-bytes = { path = "../tor-bytes", version = "0.47.0-zakura.1", package = "zakura-tor-bytes" }
-tor-cell = { path = "../tor-cell", version = "0.47.0-zakura.1", features = ["relay"], package = "zakura-tor-cell" }
-tor-cert = { path = "../tor-cert", version = "0.47.0-zakura.1", package = "zakura-tor-cert" }
-tor-checkable = { path = "../tor-checkable", version = "0.47.0-zakura.1", package = "zakura-tor-checkable" }
-tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
-tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"], optional = true, package = "zakura-tor-hscrypto" }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"], package = "zakura-tor-llcrypto" }
-tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0-zakura.1", package = "zakura-tor-log-ratelim" }
-tor-memquota = { version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false, package = "zakura-tor-memquota" }
-tor-protover = { version = "0.47.0-zakura.1", path = "../tor-protover", package = "zakura-tor-protover" }
-tor-relay-crypto = { version = "0.47.0-zakura.1", path = "../tor-relay-crypto", optional = true, package = "zakura-tor-relay-crypto" }
-tor-rpcbase = { version = "0.47.0-zakura.1", path = "../tor-rpcbase", optional = true, package = "zakura-tor-rpcbase" }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", package = "zakura-tor-rtcompat" }
-tor-rtmock = { path = "../tor-rtmock", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-rtmock" }
-tor-units = { path = "../tor-units", version = "0.47.0-zakura.1", features = ["memquota-memcost"], package = "zakura-tor-units" }
+tor-async-utils = { package = "zakura-tor-async-utils", path = "../tor-async-utils", version = "0.47.0-zakura.1" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-bytes = { package = "zakura-tor-bytes", path = "../tor-bytes", version = "0.47.0-zakura.1" }
+tor-cell = { package = "zakura-tor-cell", path = "../tor-cell", version = "0.47.0-zakura.1", features = ["relay"] }
+tor-cert = { package = "zakura-tor-cert", path = "../tor-cert", version = "0.47.0-zakura.1" }
+tor-checkable = { package = "zakura-tor-checkable", path = "../tor-checkable", version = "0.47.0-zakura.1" }
+tor-config = { package = "zakura-tor-config", path = "../tor-config", version = "0.47.0-zakura.1", default-features = false }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }
+tor-hscrypto = { package = "zakura-tor-hscrypto", default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"], optional = true }
+tor-linkspec = { package = "zakura-tor-linkspec", path = "../tor-linkspec", version = "0.47.0-zakura.1" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"] }
+tor-log-ratelim = { package = "zakura-tor-log-ratelim", path = "../tor-log-ratelim", version = "0.47.0-zakura.1" }
+tor-memquota = { package = "zakura-tor-memquota", version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false }
+tor-protover = { package = "zakura-tor-protover", version = "0.47.0-zakura.1", path = "../tor-protover" }
+tor-relay-crypto = { package = "zakura-tor-relay-crypto", version = "0.47.0-zakura.1", path = "../tor-relay-crypto", optional = true }
+tor-rpcbase = { package = "zakura-tor-rpcbase", version = "0.47.0-zakura.1", path = "../tor-rpcbase", optional = true }
+tor-rtcompat = { package = "zakura-tor-rtcompat", path = "../tor-rtcompat", version = "0.47.0-zakura.1" }
+tor-rtmock = { package = "zakura-tor-rtmock", path = "../tor-rtmock", version = "0.47.0-zakura.1", optional = true }
+tor-units = { package = "zakura-tor-units", path = "../tor-units", version = "0.47.0-zakura.1", features = ["memquota-memcost"] }
 tracing = "0.1.44"
 typenum = "1.20"
 visibility = { version = "0.1.1" }

@@ -101,17 +101,17 @@ strum = { version = "0.28.0", features = ["derive"] }
 subtle = "2"
 thiserror = "2"
 time = { version = "0.3.55", features = ["std", "parsing", "macros", "formatting"] }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
-tor-bytes = { path = "../tor-bytes", version = "0.47.0-zakura.1", package = "zakura-tor-bytes" }
-tor-cell = { path = "../tor-cell", version = "0.47.0-zakura.1", package = "zakura-tor-cell" }
-tor-cert = { path = "../tor-cert", version = "0.47.0-zakura.1", package = "zakura-tor-cert" }
-tor-checkable = { path = "../tor-checkable", version = "0.47.0-zakura.1", package = "zakura-tor-checkable" }
-tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-linkspec" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["cvt-x25519"], package = "zakura-tor-llcrypto" }
-tor-protover = { path = "../tor-protover", version = "0.47.0-zakura.1", features = ["serde"], package = "zakura-tor-protover" }
-tor-units = { version = "0.47.0-zakura.1", path = "../tor-units", optional = true, package = "zakura-tor-units" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-bytes = { package = "zakura-tor-bytes", path = "../tor-bytes", version = "0.47.0-zakura.1" }
+tor-cell = { package = "zakura-tor-cell", path = "../tor-cell", version = "0.47.0-zakura.1" }
+tor-cert = { package = "zakura-tor-cert", path = "../tor-cert", version = "0.47.0-zakura.1" }
+tor-checkable = { package = "zakura-tor-checkable", path = "../tor-checkable", version = "0.47.0-zakura.1" }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }
+tor-hscrypto = { package = "zakura-tor-hscrypto", default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true }
+tor-linkspec = { package = "zakura-tor-linkspec", path = "../tor-linkspec", version = "0.47.0-zakura.1", optional = true }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["cvt-x25519"] }
+tor-protover = { package = "zakura-tor-protover", path = "../tor-protover", version = "0.47.0-zakura.1", features = ["serde"] }
+tor-units = { package = "zakura-tor-units", version = "0.47.0-zakura.1", path = "../tor-units", optional = true }
 visibility = { version = "0.1.1", optional = true }
 void = "1"
 web-time-compat = { version = "0.3.0-zakura.1", path = "../web-time-compat", package = "zakura-web-time-compat" }
