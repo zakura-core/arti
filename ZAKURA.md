@@ -35,3 +35,11 @@ cargo test --locked -p zakura-tor-config
 cargo check --locked -p zakura-arti-client --no-default-features \
   --features tokio,rustls,onion-service-client
 ```
+
+Embedded clients can disable default features and select `tokio`, `rustls` and
+`onion-service-client` to use programmatic configuration without file parsers.
+Applications loading configuration files can enable `arti-client/load-config`
+(or `tor-config/load-config` when using that crate directly). Loading remains
+part of both crates' default features; watching is independently selectable.
+The fresh-client graph guard builds and runs the programmatic builder without
+workspace test-feature unification.

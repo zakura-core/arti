@@ -26,7 +26,7 @@ opentelemetry-otlp = { version = "0.33.1", optional = true }
 # TODO: Figure out why this feature is needed, and how it interacts with non-tokio runtimes.
 opentelemetry_sdk = { version = "0.33.1", features = ["rt-tokio"], optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
-tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, features = ["load-config"], package = "zakura-tor-config" }
+tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
 tor-config-path = { path = "../tor-config-path", version = "0.47.0-zakura.1", package = "zakura-tor-config-path" }
 
 [package.metadata.docs.rs]
