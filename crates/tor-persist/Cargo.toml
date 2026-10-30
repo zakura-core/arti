@@ -44,7 +44,6 @@ futures = "0.3.34"
 itertools = "0.15.0"
 oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
 paste = "1.0.15"
-sanitize-filename = "0.6.0"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 thiserror = "2"

@@ -19,6 +19,57 @@ use tor_error::warn_report;
 use tracing::info;
 use web_time_compat::{SystemTime, SystemTimeExt};
 
+/// Maximum UTF-8 byte length of a sanitized state key, before adding `.json`.
+const STATE_KEY_MAX_BYTES: usize = 255;
+
+/// Preserve the filename mapping used for existing JSON state files.
+///
+/// Invalid characters are removed, without a replacement character. The order
+/// of reserved-name handling, Windows trimming and truncation is significant.
+fn sanitized_state_key(key: &str, windows: bool) -> String {
+    let mut name: String = key
+        .chars()
+        .filter(|&ch| {
+            !matches!(
+                ch,
+                '/' | '\\' | '?' | '<' | '>' | ':' | '*' | '|' | '"'
+                    | '\u{0}'..='\u{1f}'
+                    | '\u{80}'..='\u{9f}'
+            )
+        })
+        .collect();
+
+    if name.bytes().all(|byte| byte == b'.') {
+        name.clear();
+    }
+    if windows {
+        let stem = name
+            .split_once('.')
+            .map_or(name.as_str(), |(stem, _)| stem)
+            .as_bytes();
+        let reserved = ["con", "prn", "aux", "nul"]
+            .iter()
+            .any(|reserved| stem.eq_ignore_ascii_case(reserved.as_bytes()))
+            || (stem.len() == 4
+                && stem[3].is_ascii_digit()
+                && (stem[..3].eq_ignore_ascii_case(b"com")
+                    || stem[..3].eq_ignore_ascii_case(b"lpt")));
+        if reserved {
+            name.clear();
+        }
+        let end = name.trim_end_matches(['.', ' ']).len();
+        name.truncate(end);
+    }
+    if name.len() > STATE_KEY_MAX_BYTES {
+        let mut end = STATE_KEY_MAX_BYTES;
+        while !name.is_char_boundary(end) {
+            end -= 1;
+        }
+        name.truncate(end);
+    }
+    name
+}
+
 /// Implementation of StateMgr that stores state as JSON files on disk.
 ///
 /// # Locking
@@ -122,7 +173,7 @@ impl FsStateMgr {
     ///
     /// See "Limitations" section on [`FsStateMgr`] for caveats.
     fn rel_filename(&self, key: &str) -> PathBuf {
-        (sanitize_filename::sanitize(key) + ".json").into()
+        (sanitized_state_key(key, cfg!(windows)) + ".json").into()
     }
     /// Return the top-level directory for this storage manager.
     ///
@@ -277,6 +328,130 @@ mod test {
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
     use super::*;
     use std::{collections::HashMap, time::Duration};
+
+    #[test]
+    fn state_key_filename_vectors() {
+        // The third column preserves the Windows-specific mapping. In
+        // particular, reserved names are checked before trailing spaces/dots
+        // are removed, and invalid characters are deleted rather than replaced.
+        let vectors = [
+            ("guards", "guards", "guards"),
+            ("résumé", "résumé", "résumé"),
+            (
+                "re\u{301}sume\u{301}",
+                "re\u{301}sume\u{301}",
+                "re\u{301}sume\u{301}",
+            ),
+            ("", "", ""),
+            (".", "", ""),
+            ("..", "", ""),
+            (".../.", "", ""),
+            ("../guards", "..guards", "..guards"),
+            ("gu/ar\\d:s\0?<>*|\"", "guards", "guards"),
+            ("a?b", "ab", "ab"),
+            ("a/b", "ab", "ab"),
+            ("a\n\u{1f}\u{80}\u{9f}b", "ab", "ab"),
+            (
+                "a\u{7f}\u{a0}\u{100}",
+                "a\u{7f}\u{a0}\u{100}",
+                "a\u{7f}\u{a0}\u{100}",
+            ),
+            ("'semi;colon'", "'semi;colon'", "'semi;colon'"),
+            (" leading space", " leading space", " leading space"),
+            ("trailing space ", "trailing space ", "trailing space"),
+            ("trailing...", "trailing...", "trailing"),
+            ("dots... \u{a0}", "dots... \u{a0}", "dots... \u{a0}"),
+            ("... ", "... ", ""),
+            ("con", "con", ""),
+            ("CoN.ext", "CoN.ext", ""),
+            ("PRN", "PRN", ""),
+            ("aUx.🦀", "aUx.🦀", ""),
+            ("nul..", "nul..", ""),
+            ("com0", "com0", ""),
+            ("LPT9.data", "LPT9.data", ""),
+            ("con.\n", "con.", ""),
+            ("CON ", "CON ", "CON"),
+            ("CON .", "CON .", "CON"),
+            ("con .txt", "con .txt", "con .txt"),
+            ("com10", "com10", "com10"),
+            ("lpt10", "lpt10", "lpt10"),
+            ("com９.txt", "com９.txt", "com９.txt"),
+            ("ＣＯＮ", "ＣＯＮ", "ＣＯＮ"),
+            ("com1x", "com1x", "com1x"),
+            ("abé", "abé", "abé"),
+        ];
+        for (input, unix, windows) in vectors {
+            for (windows_mode, expected) in [(false, unix), (true, windows)] {
+                let actual = sanitized_state_key(input, windows_mode);
+                assert_eq!(actual, expected, "{input:?}, windows={windows_mode}");
+                let filename = PathBuf::from(actual + ".json");
+                assert!(matches!(
+                    filename.components().collect::<Vec<_>>().as_slice(),
+                    [std::path::Component::Normal(_)],
+                ));
+            }
+        }
+    }
+
+    #[test]
+    fn state_key_truncation_vectors() {
+        let vectors = [
+            ("a".repeat(255), "a".repeat(255)),
+            ("a".repeat(256), "a".repeat(255)),
+            ("é".repeat(128), "é".repeat(127)),
+            (
+                format!("{}é", "a".repeat(253)),
+                format!("{}é", "a".repeat(253)),
+            ),
+            (format!("{}é", "a".repeat(254)), "a".repeat(254)),
+            (format!("{}🦀", "a".repeat(252)), "a".repeat(252)),
+            (
+                format!("{}🦀", "a".repeat(251)),
+                format!("{}🦀", "a".repeat(251)),
+            ),
+            (
+                format!("{}?b", "a".repeat(254)),
+                format!("{}b", "a".repeat(254)),
+            ),
+        ];
+        for (input, expected) in vectors {
+            for windows in [false, true] {
+                assert_eq!(sanitized_state_key(&input, windows), expected);
+            }
+        }
+
+        // Truncation happens after Windows trimming, without another trim.
+        let trailing_after_truncation = format!("{} .a", "a".repeat(254));
+        assert_eq!(
+            sanitized_state_key(&trailing_after_truncation, true),
+            format!("{} ", "a".repeat(254)),
+        );
+    }
+
+    #[test]
+    fn existing_state_filename() -> Result<()> {
+        let dir = tempfile::TempDir::new().unwrap();
+        let store = FsStateMgr::from_path(dir.path())?;
+        let filename = dir.path().join("state").join("guards.json");
+        std::fs::write(&filename, br#"{"generation":1}"#).unwrap();
+
+        // Load a fixed existing filename, then update it through the public
+        // store interface. The path must not change for a sanitized key.
+        let key = "gu/ar\\d:s";
+        let loaded: Option<serde_json::Value> = store.load(key)?;
+        assert_eq!(loaded, Some(serde_json::json!({"generation": 1})));
+        assert_eq!(store.rel_filename(key), Path::new("guards.json"));
+        assert_eq!(
+            store.rel_filename(&"a".repeat(256)),
+            PathBuf::from("a".repeat(255) + ".json"),
+        );
+        assert_eq!(store.try_lock()?, LockStatus::NewlyAcquired);
+        store.store(key, &serde_json::json!({"generation": 2}))?;
+        let stored: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(filename).unwrap()).unwrap();
+        assert_eq!(stored, serde_json::json!({"generation": 2}));
+        Ok(())
+    }
 
     #[test]
     fn simple() -> Result<()> {
