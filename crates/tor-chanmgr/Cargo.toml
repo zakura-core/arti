@@ -79,11 +79,12 @@ tor-socksproto = { package = "zakura-tor-socksproto", path = "../tor-socksproto"
 ] }
 tor-units = { path = "../tor-units", version = "0.47.0-zakura.1", package = "zakura-tor-units" }
 tracing = "0.1.44"
-url = "2.5.8"
 void = "1"
 web-time-compat = { path = "../web-time-compat", version = "0.3.0-zakura.1", package = "zakura-web-time-compat" }
 
 [dev-dependencies]
+# Preserve an independent oracle for the previous proxy URI parser.
+url = "=2.5.8"
 float_eq = "1.0.1"
 futures-await-test = "0.3.0"
 hex-literal = "1.1"

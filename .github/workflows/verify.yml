@@ -39,6 +39,8 @@ jobs:
         run: |
           cargo check --locked -p zakura-arti-client --no-default-features \
             --features tokio,rustls,onion-service-client
+      - name: Test proxy URI parsing and legacy oracle
+        run: cargo test --locked -p zakura-tor-chanmgr
 
   memory-query:
     strategy:
