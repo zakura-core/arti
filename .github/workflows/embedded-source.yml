@@ -1,14 +1,26 @@
 name: Check embedded source
-on: [pull_request, push, workflow_dispatch]
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   embedded-client:
+    timeout-minutes: 45
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: rustup show active-toolchain
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          key: ${{ github.workflow }}
+          cache-workspace-crates: true
+          cache-on-failure: true
       - run: python3 maint/zakura/check-embedded-source.py
       - run: cargo fmt --all -- --check
       - run: cargo check --workspace --locked
