@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check a fresh embedded client without workspace test-feature unification."""
 
+import argparse
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,9 @@ FAMILY = json.loads((Path(__file__).parent / "package-family.json").read_text())
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--keymgr", action="store_true", help="also enable functional key stores")
+    args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix="zakura-arti-consumer-") as directory:
         consumer = Path(directory)
         dependencies = []
@@ -21,6 +25,8 @@ def main():
             ("fs-mistrust", True, []),
             ("tor-rtcompat", True, ["tokio", "rustls"]),
         ):
+            if name == "arti-client" and args.keymgr:
+                features.append("keymgr")
             path = "crates/" + name
             package = FAMILY[path]["name"]
             target = json.dumps(str(ROOT / path), ensure_ascii=False)
@@ -45,7 +51,8 @@ def main():
             "    let mut builder = TorClientConfig::builder();\n"
             "    let permissions = |_: &mut fs_mistrust::MistrustBuilder| {};\n"
             "    permissions(builder.storage().permissions());\n"
-            "    let _config = builder.build().expect(\"default configuration\");\n"
+            "    let config = builder.build().expect(\"default configuration\");\n"
+            f"    assert_eq!(config.keystore().is_enabled(), {str(args.keymgr).lower()});\n"
             "    let _runtime_type: fn(TokioRustlsRuntime) = accepts_runtime;\n"
             "}\n"
         )
@@ -61,14 +68,19 @@ def main():
         forbidden = {
             "url", "idna", "idna_adapter", "sysinfo", "notify", "notify-types",
             "figment", "toml", "serde_ignored", "pear", "uncased",
-            "zakura-tor-key-forge", "ssh-key-fork-arti", "ssh-cipher-fork-arti",
-            "ssh-encoding-fork-arti", "p256", "p384", "p521",
             "criterion", "criterion-cycles-per-byte", "tor-rtmock", "zakura-tor-rtmock",
             "liblzma", "liblzma-sys", "zstd", "zstd-safe", "zstd-sys", "jobserver",
         }
+        if not args.keymgr:
+            forbidden.update({
+                "zakura-tor-key-forge", "ssh-key-fork-arti", "ssh-cipher-fork-arti",
+                "ssh-encoding-fork-arti", "p256", "p384", "p521",
+            })
         forbidden.update(entry["upstream_name"] for entry in FAMILY.values())
         unexpected = (names & forbidden) | {name for name in names if name.startswith("icu_")}
         required = {FAMILY["crates/" + name]["name"] for name in ("arti-client", "fs-mistrust", "tor-rtcompat")}
+        if args.keymgr:
+            required.update({"zakura-tor-key-forge", "ssh-key-fork-arti"})
         if unexpected or not required <= names:
             raise SystemExit(f"unexpected dependencies: {sorted(unexpected)}; missing: {sorted(required - names)}")
         subprocess.run(
