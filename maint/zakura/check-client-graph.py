@@ -54,8 +54,8 @@ def main():
             "    let mut builder = TorClientConfig::builder();\n"
             "    let permissions = |_: &mut fs_mistrust::MistrustBuilder| {};\n"
             "    permissions(builder.storage().permissions());\n"
-            "    let config = builder.build().expect(\"default configuration\");\n"
-            + (f"    assert_eq!(config.keystore().is_enabled(), {args.expect_keystore});\n"
+            "    let _config = builder.build().expect(\"default configuration\");\n"
+            + (f"    assert_eq!(_config.keystore().is_enabled(), {args.expect_keystore});\n"
              if args.expect_keystore else "") +
             "    let _runtime_type: fn(TokioRustlsRuntime) = accepts_runtime;\n"
             "}\n"
