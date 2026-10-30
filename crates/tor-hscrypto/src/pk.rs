@@ -15,6 +15,7 @@ use safelog::util::write_end_redacted;
 use subtle::ConstantTimeEq;
 use thiserror::Error;
 use tor_basic_utils::{StrExt as _, impl_debug_hex};
+#[cfg(feature = "key-encoding")]
 use tor_key_forge::ToEncodableKey;
 use tor_llcrypto::d::Sha3_256;
 use tor_llcrypto::pk::ed25519::{Ed25519PublicKey, Ed25519SigningKey};
@@ -695,6 +696,8 @@ pub struct HsSvcDescEncKeypair {
 // For some of the keys here, this currently cannot be done
 // because the macro doesn't support generating expanded ed25519 keys.
 
+#[cfg(feature = "key-encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
 impl ToEncodableKey for HsClientDescEncKeypair {
     type Key = curve25519::StaticKeypair;
     type KeyPair = HsClientDescEncKeypair;
@@ -708,6 +711,8 @@ impl ToEncodableKey for HsClientDescEncKeypair {
     }
 }
 
+#[cfg(feature = "key-encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
 impl ToEncodableKey for HsBlindIdKeypair {
     type Key = ed25519::ExpandedKeypair;
     type KeyPair = HsBlindIdKeypair;
@@ -721,6 +726,8 @@ impl ToEncodableKey for HsBlindIdKeypair {
     }
 }
 
+#[cfg(feature = "key-encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
 impl ToEncodableKey for HsBlindIdKey {
     type Key = ed25519::PublicKey;
     type KeyPair = HsBlindIdKeypair;
@@ -734,6 +741,8 @@ impl ToEncodableKey for HsBlindIdKey {
     }
 }
 
+#[cfg(feature = "key-encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
 impl ToEncodableKey for HsIdKeypair {
     type Key = ed25519::ExpandedKeypair;
     type KeyPair = HsIdKeypair;
@@ -747,6 +756,8 @@ impl ToEncodableKey for HsIdKeypair {
     }
 }
 
+#[cfg(feature = "key-encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
 impl ToEncodableKey for HsIdKey {
     type Key = ed25519::PublicKey;
     type KeyPair = HsIdKeypair;
@@ -760,6 +771,8 @@ impl ToEncodableKey for HsIdKey {
     }
 }
 
+#[cfg(feature = "key-encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
 impl ToEncodableKey for HsDescSigningKeypair {
     type Key = ed25519::Keypair;
     type KeyPair = HsDescSigningKeypair;
@@ -773,6 +786,8 @@ impl ToEncodableKey for HsDescSigningKeypair {
     }
 }
 
+#[cfg(feature = "key-encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
 impl ToEncodableKey for HsIntroPtSessionIdKeypair {
     type Key = ed25519::Keypair;
     type KeyPair = HsIntroPtSessionIdKeypair;
@@ -786,6 +801,8 @@ impl ToEncodableKey for HsIntroPtSessionIdKeypair {
     }
 }
 
+#[cfg(feature = "key-encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
 impl ToEncodableKey for HsSvcNtorKeypair {
     type Key = curve25519::StaticKeypair;
     type KeyPair = HsSvcNtorKeypair;

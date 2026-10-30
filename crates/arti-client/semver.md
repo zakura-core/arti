@@ -23,3 +23,12 @@ BREAKING: Remove the `rpc` and implicit `dyn-clone` Cargo features and public
 `ResolvePtrWithPrefs` with all their public fields and RPC trait implementations.
 The RPC `Object` implementation for `TorClient` is removed. Native embedded
 client operations and optional persistent key stores are unchanged.
+
+BREAKING: Removing channel-manager's unused key-manager dependency means a
+client built without `keymgr` no longer accidentally enables key stores.
+Default key-store configuration is now disabled in that feature combination;
+explicit `enabled = true` is rejected by the existing configuration validator.
+Enable `keymgr` to use persistent or C Tor key stores. In-memory onion client
+keys and cryptographic operations remain available without it.
+The existing `ephemeral-keystore` feature now explicitly selects `keymgr`,
+retaining its functional key-store behavior.

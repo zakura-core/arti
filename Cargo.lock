@@ -4189,7 +4189,6 @@ dependencies = [
  "tor-cell",
  "tor-config",
  "tor-error",
- "tor-keymgr",
  "tor-linkspec",
  "tor-llcrypto",
  "tor-memquota",
