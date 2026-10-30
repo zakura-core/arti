@@ -70,6 +70,11 @@ def main():
         errors.append(f"stale family entries: {sorted(FAMILY.keys() - found)}")
     lock = tomllib.loads((ROOT / "Cargo.lock").read_text())
     upstream = {entry["upstream_name"] for entry in FAMILY.values()}
+    manifest = tomllib.loads((ROOT / "Cargo.toml").read_text())
+    for name, profile in manifest.get("profile", {}).items():
+        for package in profile.get("package", {}):
+            if package in upstream:
+                errors.append(f"profile {name} retains upstream package: {package}")
     for package in lock["package"]:
         if package["name"] in upstream:
             errors.append(f"lockfile retains upstream identity: {package['name']}")
