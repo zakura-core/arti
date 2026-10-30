@@ -8255,7 +8255,6 @@ dependencies = [
  "zakura-tor-cell",
  "zakura-tor-config",
  "zakura-tor-error",
- "zakura-tor-keymgr",
  "zakura-tor-linkspec",
  "zakura-tor-llcrypto",
  "zakura-tor-memquota",
