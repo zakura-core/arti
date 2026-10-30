@@ -214,7 +214,14 @@ mod tests {
         fields[4] = tlv(0x05, &[]);
         // Context-specific extensions stay opaque, including unknown critical
         // extensions; authenticating relays is the handshake's responsibility.
-        fields.push(tlv(0xa3, b"opaque extension contents"));
+        use rsa::pkcs8::der::{Encode, asn1::ObjectIdentifier};
+        let oid = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.55555.1");
+        let extension = sequence(&[
+            oid.to_der().unwrap(),
+            tlv(0x01, &[0xff]),
+            tlv(0x04, b"opaque extension contents"),
+        ]);
+        fields.push(tlv(0xa3, &sequence(&[extension])));
         let certificate = certificate_with_fields(&fields);
         assert_eq!(extract(&certificate).unwrap().to_der(), expected);
     }
@@ -226,5 +233,35 @@ mod tests {
         let mut fields = certificate_fields(spki);
         fields[1] = vec![0x02, 0x81, 0x01, 0x01];
         assert!(extract(&certificate_with_fields(&fields)).is_none());
+    }
+
+    #[test]
+    fn extraction_checks_required_sequence_tags() {
+        use super::x509_extract_rsa_subject_kludge as extract;
+        let spki = sequence(&[rsa_algorithm(), key_bits(0)]);
+        let fields = certificate_fields(spki.clone());
+        let mut outer_set = certificate_with_fields(&fields);
+        outer_set[0] = 0x31;
+        assert!(extract(&outer_set).is_none());
+        let mut tbs_set = sequence(&fields);
+        tbs_set[0] = 0x31;
+        assert!(extract(&sequence(&[tbs_set])).is_none());
+        let mut spki_set = spki;
+        spki_set[0] = 0x31;
+        assert!(extract(&certificate_with_fields(&certificate_fields(spki_set))).is_none());
+    }
+
+    #[test]
+    fn extraction_does_not_interpret_algorithm_parameters() {
+        use super::x509_extract_rsa_subject_kludge as extract;
+        use rsa::pkcs8::der::Encode;
+        let oid = rsa::pkcs1::ALGORITHM_OID.to_der().unwrap();
+        let expected = extract(CHUTNEY_CERT).unwrap().to_der();
+        for parameters in [vec![], vec![tlv(0x05, &[])], vec![tlv(0x02, &[1])]] {
+            let algorithm = sequence(&[vec![oid.clone()], parameters].concat());
+            let spki = sequence(&[algorithm, key_bits(0)]);
+            let certificate = certificate_with_fields(&certificate_fields(spki));
+            assert_eq!(extract(&certificate).unwrap().to_der(), expected);
+        }
     }
 }
