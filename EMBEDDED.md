@@ -13,3 +13,8 @@ Run `python3 maint/zakura/check-embedded-source.py` to verify retained path
 dependencies, including fuzz and development manifests. These source deletions
 reduce this fork's workspace and maintenance scope; they do not remove packages
 from a downstream wallet's already selected dependency graph.
+
+Serde's string/display and map adapters select `serde_with`'s `alloc` and
+`macros` features explicitly. They do not need its `std` feature, which weakly
+resolves unused timezone and schema adapter dependencies. Serialization formats
+and the adapters themselves are unchanged.
