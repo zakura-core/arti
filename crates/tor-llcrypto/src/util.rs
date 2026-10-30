@@ -227,12 +227,18 @@ mod tests {
     }
 
     #[test]
-    fn extraction_requires_canonical_field_lengths() {
+    fn extraction_requires_supported_canonical_field_headers() {
         use super::x509_extract_rsa_subject_kludge as extract;
         let spki = sequence(&[rsa_algorithm(), key_bits(0)]);
         let mut fields = certificate_fields(spki);
-        fields[1] = vec![0x02, 0x81, 0x01, 0x01];
-        assert!(extract(&certificate_with_fields(&fields)).is_none());
+        for unsupported_header in [
+            vec![0x02, 0x81, 0x01, 0x01], // Nonminimal length.
+            vec![0x9f, 0x1f, 0x01, 0x01], // High-tag-number form.
+            vec![0x25, 0x00],             // Constructed NULL.
+        ] {
+            fields[1] = unsupported_header;
+            assert!(extract(&certificate_with_fields(&fields)).is_none());
+        }
     }
 
     #[test]
