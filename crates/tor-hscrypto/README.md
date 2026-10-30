@@ -37,3 +37,9 @@ onion services.
 ## License
 
 MIT OR Apache-2.0
+
+## Key encoding features
+
+The default `key-encoding` feature provides `ToEncodableKey` conversions for
+onion keys. Disable defaults to use the same in-memory key types, cryptographic
+operations and authentication-key parsing without key-store encoding support.
