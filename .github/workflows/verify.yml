@@ -40,6 +40,10 @@ jobs:
         run: cargo test --locked -p zakura-tor-guardmgr crate_id
       - name: Check embedded Tor and onion-service client
         run: python3 maint/zakura/check-client-graph.py
+      - name: Check configuration loading in the Arti application
+        run: |
+          cargo check --locked -p zakura-arti --no-default-features --features tokio,rustls
+          cargo test --locked -p zakura-arti-client --no-default-features --features tokio,rustls,onion-service-client config::
       - name: Test proxy URI parsing and legacy oracle
         run: cargo test --locked -p zakura-tor-chanmgr
 
