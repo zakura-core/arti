@@ -33,13 +33,15 @@ fn public_tor_bootstrap_and_https_request() -> Result<()> {
     .context("build wallet-style Tor configuration")?;
     let runtime = TokioRustlsRuntime::create().context("create Tokio/Rustls runtime")?;
 
-    runtime
-        .block_on(runtime.timeout(LIVE_TIMEOUT, async {
+    runtime.block_on(async {
+        runtime.timeout(LIVE_TIMEOUT, async {
+            eprintln!("Bootstrapping against the public Tor network");
             let client = TorClient::with_runtime(runtime.clone())
                 .config(config)
                 .create_bootstrapped()
                 .await
                 .context("bootstrap and authenticate channels against public Tor")?;
+            eprintln!("Bootstrapped; opening a Tor exit stream to the HTTPS check service");
             let stream = client
                 .connect((CHECK_HOST, 443))
                 .await
@@ -89,7 +91,9 @@ fn public_tor_bootstrap_and_https_request() -> Result<()> {
                 "the authenticated Tor check service did not identify a Tor exit"
             );
             Ok::<_, anyhow::Error>(())
-        }))
-        .context("public Tor bootstrap/request exceeded its four-minute deadline")??;
+        })
+        .await
+        .context("public Tor bootstrap/request exceeded its four-minute deadline")?
+    })?;
     Ok(())
 }
