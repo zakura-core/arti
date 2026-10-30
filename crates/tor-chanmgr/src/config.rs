@@ -13,6 +13,17 @@ use tor_config::derive::prelude::*;
 use tor_socksproto::SocksAuth;
 use tor_socksproto::SocksVersion;
 
+/// URI scheme for HTTP CONNECT.
+const HTTP_SCHEME: &str = "http";
+/// Canonical URI scheme for [`SocksVersion::V4`].
+const SOCKS4_SCHEME: &str = "socks4";
+/// SOCKS4a URI alias for [`SocksVersion::V4`].
+const SOCKS4A_SCHEME: &str = "socks4a";
+/// Canonical URI scheme for [`SocksVersion::V5`].
+const SOCKS5_SCHEME: &str = "socks5";
+/// SOCKS5h URI alias for [`SocksVersion::V5`].
+const SOCKS5H_SCHEME: &str = "socks5h";
+
 /// Error parsing a proxy URI string
 #[derive(Debug, Clone, thiserror::Error)]
 #[non_exhaustive]
@@ -126,7 +137,7 @@ impl std::str::FromStr for ProxyProtocol {
         let scheme_lower = scheme.to_ascii_lowercase();
         let authority = rest.strip_suffix('/').unwrap_or(rest);
         if authority.contains(['/', '?', '#'])
-            || (scheme_lower == "http" && authority.contains('\\'))
+            || (scheme_lower == HTTP_SCHEME && authority.contains('\\'))
         {
             return Err(ProxyProtocolParseError::InvalidFormat(
                 "unexpected proxy URI path, query or fragment".to_string(),
@@ -160,7 +171,7 @@ impl std::str::FromStr for ProxyProtocol {
         let addr = SocketAddr::new(ip, port);
 
         match scheme_lower.as_str() {
-            "http" => {
+            HTTP_SCHEME => {
                 // HTTP CONNECT: optional Basic auth via user:pass@host:port
                 // Reject password-only auth (http://:pass@host:port): a username
                 // is required.
@@ -194,10 +205,10 @@ impl std::str::FromStr for ProxyProtocol {
                 };
                 Ok(ProxyProtocol::HttpConnect { addr, credentials })
             }
-            "socks4" | "socks4a" | "socks5" | "socks5h" => {
+            SOCKS4_SCHEME | SOCKS4A_SCHEME | SOCKS5_SCHEME | SOCKS5H_SCHEME => {
                 let version = match scheme_lower.as_str() {
-                    "socks4" | "socks4a" => SocksVersion::V4,
-                    "socks5" | "socks5h" => SocksVersion::V5,
+                    SOCKS4_SCHEME | SOCKS4A_SCHEME => SocksVersion::V4,
+                    SOCKS5_SCHEME | SOCKS5H_SCHEME => SocksVersion::V5,
                     _ => unreachable!(),
                 };
                 // Check for authentication credentials (user:pass@host:port or user@host:port).
@@ -286,12 +297,12 @@ impl std::fmt::Display for ProxyProtocol {
                     let (user_encoded, pass_encoded) =
                         encode_userinfo(&auth.username, auth.password.as_deref());
                     if let Some(p) = pass_encoded {
-                        write!(f, "http://{}:{}@{}", user_encoded, p, addr)
+                        write!(f, "{HTTP_SCHEME}://{}:{}@{}", user_encoded, p, addr)
                     } else {
-                        write!(f, "http://{}@{}", user_encoded, addr)
+                        write!(f, "{HTTP_SCHEME}://{}@{}", user_encoded, addr)
                     }
                 } else {
-                    write!(f, "http://{}", addr)
+                    write!(f, "{HTTP_SCHEME}://{}", addr)
                 }
             }
         }
