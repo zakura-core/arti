@@ -27,3 +27,9 @@ There are no added or changed `pub(crate)` interfaces.
 
 BREAKING: Remove the `config::ConfigurationSource` re-export with the
 configuration-file discovery API. Typed keystore configuration is unchanged.
+
+ADDED: `key-encoding` feature, enabled by `keymgr` and therefore by default.
+Disabling it gates key-forge re-exports, `Error::{KeyForge, InvalidCert}` and
+their `From` implementations, and `raw::RawEntryId::Ephemeral` (crate-visible
+normally, public under the existing experimental visibility selection).
+The test-only crate-visible `DummyKey` helper is similarly gated.
