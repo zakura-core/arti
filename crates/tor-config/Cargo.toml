@@ -12,15 +12,20 @@ categories = ["config"]
 repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
 
 [features]
-default = ["file-watcher"]
+default = ["file-watcher", "load-config"]
 
 full = [
+    "load-config",
     "file-watcher",
     "fs-mistrust/full",
     "tor-basic-utils/full",
     "tor-error/full",
     "tor-rtcompat?/full",
 ]
+
+# Load and resolve configuration files and command-line overrides.
+# Programmatic builders do not need these parsers.
+load-config = ["dep:figment", "dep:regex", "dep:serde_ignored", "dep:toml"]
 
 # Watch configuration files for changes. Disable default features to use
 # configuration builders and parsing without an asynchronous runtime or watcher.
@@ -54,7 +59,7 @@ derive_builder = { version = "0.11.2", package = "derive_builder_fork_arti" }
 educe = "0.4.23"
 either = "1"
 extend = "1.2.0"
-figment = { version = "0.10.19", features = ["toml"] }
+figment = { version = "0.10.19", features = ["toml"], optional = true }
 fs-mistrust = { path = "../fs-mistrust", version = "0.16.0" }
 futures = { version = "0.3.34", optional = true }
 humantime-serde = "1.1.1"
@@ -62,13 +67,13 @@ itertools = "0.15.0"
 notify = { version = "8", default-features = false, features = ["macos_kqueue"], optional = true }
 paste = "1.0.15"
 postage = { version = "0.5.0", default-features = false, features = ["futures-traits"], optional = true }
-regex = { version = "1", default-features = false, features = ["std"] }
+regex = { version = "1", default-features = false, features = ["std"], optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
 serde-value = "0.7.0"
-serde_ignored = "0.1.14"
+serde_ignored = { version = "0.1.14", optional = true }
 strum = { version = "0.28.0", features = ["derive"] }
 thiserror = "2"
-toml = "1.1.8"
+toml = { version = "1.1.8", optional = true }
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-error = { path = "../tor-error", version = "0.47.0" }
 tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", optional = true }
@@ -77,11 +82,13 @@ void = "1"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
+serde_ignored = "0.1.14"
 serde_json = "1.0.154"
 tempfile = "3"
 test-temp-dir = { version = "0.9.0", path = "../test-temp-dir" }
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0", features = ["serde"] }
 tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "native-tls"] }
+toml = "1.1.8"
 tracing-test = "0.2.6"
 
 [package.metadata.docs.rs]

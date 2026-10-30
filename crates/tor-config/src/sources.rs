@@ -4,7 +4,7 @@
 //!
 //! This layer brings together the functionality of
 //! our underlying configuration library,
-//! [`fs_mistrust`] and [`tor_config::cmdline`](crate::cmdline).
+//! [`fs_mistrust`] and, with `load-config`, command-line TOML overrides.
 //!
 //! A `ConfigurationSources` records a set of filenames of TOML files,
 //! ancillary instructions for reading them,
@@ -12,24 +12,26 @@
 //!
 //! Usually, call [`ConfigurationSources::from_cmdline`],
 //! perhaps [`set_mistrust`](ConfigurationSources::set_mistrust),
-//! and finally [`load`](ConfigurationSources::load).
-//! The resulting [`ConfigurationTree`] can then be deserialized.
+//! and finally `load` (with `load-config`).
+//! The resulting `ConfigurationTree` can then be deserialized.
 //!
 //! If you want to watch for config file changes,
 //! use [`ConfigurationSources::scan()`],
 //! to obtain a [`FoundConfigFiles`],
 //! start watching the paths returned by [`FoundConfigFiles::iter()`],
-//! and then call [`FoundConfigFiles::load()`].
+//! and then call `FoundConfigFiles::load()` (with `load-config`).
 //! (This ordering starts watching the files before you read them,
 //! which is necessary to avoid possibly missing changes.)
 
 use std::ffi::OsString;
 use std::{fs, io, sync::Arc};
 
+#[cfg(feature = "load-config")]
 use figment::Figment;
 use void::ResultVoidExt as _;
 
 use crate::err::ConfigError;
+#[cfg(feature = "load-config")]
 use crate::{CmdLine, ConfigurationTree};
 
 use std::path::{Path, PathBuf};
@@ -129,6 +131,8 @@ pub struct FoundConfigFiles<'srcs> {
     files: Vec<FoundConfigFile>,
 
     /// Our parent, which contains details we need for `load`
+    // Preserve the borrow when discovery is used without file loading.
+    #[cfg_attr(not(feature = "load-config"), allow(dead_code))]
     sources: &'srcs ConfigurationSources,
 }
 
@@ -139,6 +143,7 @@ struct FoundConfigFile {
     source: ConfigurationSource,
 
     /// Were we expecting this to definitely exist
+    #[cfg_attr(not(feature = "load-config"), allow(dead_code))]
     must_read: MustRead,
 }
 
@@ -231,7 +236,7 @@ impl ConfigurationSources {
     /// Options are applied after all configuration files are loaded, in the
     /// order that they are added to this object.
     ///
-    /// The format for `s` is as in [`CmdLine`].
+    /// Use the `key=value` command-line TOML override syntax.
     pub fn push_option(&mut self, option: impl Into<String>) {
         self.options.push(option.into());
     }
@@ -265,10 +270,12 @@ impl ConfigurationSources {
         &self.mistrust
     }
 
-    /// Scan for files and load the configuration into a new [`ConfigurationTree`].
+    /// Scan for files and load the configuration into a new `ConfigurationTree`.
     ///
     /// This is a convenience method for [`scan()`](Self::scan)
     /// followed by `files.load`.
+    #[cfg(feature = "load-config")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
     pub fn load(&self) -> Result<ConfigurationTree, ConfigError> {
         let files = self.scan()?;
         files.load()
@@ -361,6 +368,7 @@ impl FoundConfigFiles<'_> {
 
     /// Add every file and commandline source to `builder`, returning a new
     /// builder.
+    #[cfg(feature = "load-config")]
     fn add_sources(self, mut builder: Figment) -> Result<Figment, ConfigError> {
         use figment::providers::Format;
 
@@ -415,7 +423,9 @@ impl FoundConfigFiles<'_> {
         Ok(builder)
     }
 
-    /// Load the configuration into a new [`ConfigurationTree`].
+    /// Load the configuration into a new `ConfigurationTree`.
+    #[cfg(feature = "load-config")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
     pub fn load(self) -> Result<ConfigurationTree, ConfigError> {
         let mut builder = Figment::new();
         builder = self.add_sources(builder)?;
@@ -497,6 +507,7 @@ friends = 4242
 
     /// Load from a set of files and option strings, without taking
     /// the arti defaults into account.
+    #[cfg(feature = "load-config")]
     fn load_nodefaults<P: AsRef<Path>>(
         files: &[(P, MustRead)],
         opts: &[String],
@@ -505,6 +516,7 @@ friends = 4242
     }
 
     #[test]
+    #[cfg(feature = "load-config")]
     fn non_required_file() {
         let td = tempdir().unwrap();
         let dflt = td.path().join("a_file");
@@ -518,6 +530,7 @@ world = \"nonsense\"
 ";
 
     #[test]
+    #[cfg(feature = "load-config")]
     fn both_required_and_not() {
         let td = tempdir().unwrap();
         let dflt = td.path().join("a_file");
@@ -564,19 +577,23 @@ world = \"nonsense\"
             &["1.toml", "extra.d", "extra.d/2.toml"]
         );
 
-        let c = found.load().unwrap();
+        #[cfg(feature = "load-config")]
+        {
+            let c = found.load().unwrap();
 
-        assert_eq!(c.get_string("hello.friends").unwrap(), "4242");
-        assert_eq!(c.get_string("hello.world").unwrap(), "nonsense");
+            assert_eq!(c.get_string("hello.friends").unwrap(), "4242");
+            assert_eq!(c.get_string("hello.world").unwrap(), "nonsense");
 
-        let files = vec![(xd, MustRead::MustRead)];
-        let e = load_nodefaults(&files, Default::default())
-            .unwrap_err()
-            .to_string();
-        assert!(dbg!(e).contains("nonexistent.d"));
+            let files = vec![(xd, MustRead::MustRead)];
+            let e = load_nodefaults(&files, Default::default())
+                .unwrap_err()
+                .to_string();
+            assert!(dbg!(e).contains("nonexistent.d"));
+        }
     }
 
     #[test]
+    #[cfg(feature = "load-config")]
     fn load_two_files_with_cmdline() {
         let td = tempdir().unwrap();
         let cf1 = td.path().join("a_file");

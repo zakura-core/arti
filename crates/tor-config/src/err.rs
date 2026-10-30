@@ -210,13 +210,21 @@ pub enum ConfigGetValueError {
 
 /// Wrapper for our an error type from our underlying configuration library.
 #[derive(Debug, Clone)]
-pub struct ConfigLoadError(figment::Error);
+pub struct ConfigLoadError(LoadError);
+
+/// The loader error is uninhabited when file loading is disabled.
+#[cfg(not(feature = "load-config"))]
+type LoadError = void::Void;
+/// The underlying configuration parser's error.
+#[cfg(feature = "load-config")]
+type LoadError = figment::Error;
 
 impl ConfigError {
     /// Wrap `err` as a ConfigError.
     ///
     /// This is not a From implementation, since we don't want to expose our
     /// underlying configuration library.
+    #[cfg(feature = "load-config")]
     pub(crate) fn from_cfg_err(err: figment::Error) -> Self {
         // TODO: It would be lovely to extract IO errors from figment::Error
         // and report them as Error::Io.  Unfortunately, it doesn't seem
