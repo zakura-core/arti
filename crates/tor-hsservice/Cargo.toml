@@ -106,7 +106,7 @@ tor-config = { version = "0.47.0", path = "../tor-config", default-features = fa
 tor-config-path = { version = "0.47.0", path = "../tor-config-path" }
 tor-dirclient = { path = "../tor-dirclient", version = "0.47.0", default-features = false, features = ["hs-service"] }
 tor-error = { version = "0.47.0", path = "../tor-error" }
-tor-hscrypto = { version = "0.47.0", path = "../tor-hscrypto", features = ["ope"] }
+tor-hscrypto = { default-features = false, version = "0.47.0", path = "../tor-hscrypto", features = ["ope"] }
 tor-keymgr = { version = "0.47.0", path = "../tor-keymgr", features = ["keymgr"] }
 tor-linkspec = { version = "0.47.0", path = "../tor-linkspec", features = ["verbatim", "decode"] }
 tor-llcrypto = { version = "0.47.0", path = "../tor-llcrypto" }
