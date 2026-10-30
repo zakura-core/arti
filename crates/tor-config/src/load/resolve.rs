@@ -9,7 +9,7 @@ use itertools::{Itertools, chain, izip};
 use thiserror::Error;
 use tracing::warn;
 
-use super::{Buildable, Builder, ConfigBuilder, TopLevel};
+use super::{Builder, ConfigBuilder, TopLevel};
 use crate::{ConfigBuildError, ConfigurationTree};
 
 /// Error resolving a configuration (during deserialize, or build)

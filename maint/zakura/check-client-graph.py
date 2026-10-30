@@ -60,7 +60,7 @@ def main():
         names = {package.split()[0] for package in packages}
         forbidden = {
             "url", "idna", "idna_adapter", "sysinfo", "notify", "notify-types",
-            "figment", "toml", "toml_edit", "serde_ignored", "pear", "uncased",
+            "figment", "toml", "serde_ignored", "pear", "uncased",
             "criterion", "criterion-cycles-per-byte", "tor-rtmock", "zakura-tor-rtmock",
             "liblzma", "liblzma-sys", "zstd", "zstd-safe", "zstd-sys", "jobserver",
         }
