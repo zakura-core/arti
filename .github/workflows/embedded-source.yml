@@ -36,7 +36,7 @@ jobs:
       - name: Test library workspace with a supported runtime
         run: |
           cargo test --workspace --locked --exclude tor-memquota \
-            --features tor-rtcompat/tokio,tor-rtcompat/native-tls,arti-client/tokio,arti-client/native-tls,arti-client/onion-service-client
+            --features tor-rtcompat/tokio,tor-rtcompat/native-tls,tor-rtcompat/tls-server,arti-client/tokio,arti-client/native-tls,arti-client/onion-service-client
       - name: Test configuration feature boundaries
         run: |
           cargo test --locked --manifest-path crates/tor-config/Cargo.toml --no-default-features
