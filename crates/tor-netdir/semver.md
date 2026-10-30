@@ -8,7 +8,7 @@ but the latter now returns `strum::ParseError`. The provider-specific
 CHANGED (crate-visible): `ConsensusRelays::c_relays` returns a borrowed
 `ConsensusRelaySlice<'_>` by value instead of
 `&TiSlice<RouterStatusIdx, MdRouterStatus>`.
-The new borrowed view has a private slice field, `Clone`/`Copy`, typed
+The new private view has a private slice field, `Clone`/`Copy`, typed
 `Index<RouterStatusIdx>`, and private length, iteration, indexed-iteration and
 optional-lookup methods. It does not expose the former generic `TiSlice` API.
 `RouterStatusIdx`, `HsDirPos`, and all public signatures and visibility are

@@ -131,7 +131,7 @@ pub(crate) struct RouterStatusIdx(usize);
 
 /// Borrowed consensus relays, indexed only by [`RouterStatusIdx`].
 #[derive(Clone, Copy)]
-pub(crate) struct ConsensusRelaySlice<'a>(&'a [MdRouterStatus]);
+struct ConsensusRelaySlice<'a>(&'a [MdRouterStatus]);
 
 impl<'a> ConsensusRelaySlice<'a> {
     /// Return the number of consensus relays.
