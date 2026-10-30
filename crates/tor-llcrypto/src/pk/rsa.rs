@@ -366,3 +366,49 @@ impl super::ValidatableSignature for ValidatableRsaSignature {
             .is_ok()
     }
 }
+
+#[cfg(test)]
+mod der_tests {
+    use super::PublicKey;
+    use rsa::{BigUint, RsaPublicKey};
+    use sha2::Digest;
+
+    /// Frozen outputs from the previous serializer cover integer sign padding,
+    /// short/long DER lengths, supported key sizes and exponent boundaries.
+    #[test]
+    fn previous_der_encoding_vectors() {
+        let mut count = 0;
+        for row in include_str!("../../testdata/rsa-der-encoding.txt").lines() {
+            if row.starts_with('#') {
+                continue;
+            }
+            let fields: Vec<_> = row.split_ascii_whitespace().collect();
+            assert_eq!(fields.len(), 6);
+            let length: usize = fields[0].parse().expect("fixture modulus length");
+            let first: u8 = fields[1].parse().expect("fixture modulus leading byte");
+            let exponent: u64 = fields[2].parse().expect("fixture exponent");
+            let mut modulus = vec![0x5a; length];
+            modulus[0] = first;
+            modulus[length - 1] |= 1;
+            let key = PublicKey(
+                RsaPublicKey::new(BigUint::from_bytes_be(&modulus), BigUint::from(exponent))
+                    .expect("valid RSA fixture key"),
+            );
+            let der = key.to_der();
+            assert_eq!(
+                der.len(),
+                fields[3].parse::<usize>().expect("fixture DER length")
+            );
+            assert_eq!(hex::encode(sha2::Sha256::digest(&der)), fields[4]);
+            assert_eq!(hex::encode(key.to_rsa_identity().as_bytes()), fields[5]);
+            assert_eq!(
+                PublicKey::from_der(&der)
+                    .expect("encoded RSA key decodes")
+                    .as_key(),
+                key.as_key()
+            );
+            count += 1;
+        }
+        assert_eq!(count, 50);
+    }
+}
