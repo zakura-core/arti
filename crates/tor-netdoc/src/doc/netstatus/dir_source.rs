@@ -35,6 +35,7 @@ define_derive_deftly! {
     ${define DEFINE_NORMAL_FIELDS { $(
         ${when F_NORMAL}
         ${fattrs !_no_such_attr} // derive-deftly has no way to say all attrs even deftly
+        $NORMAL_FIELD_GETTER
         $fname: $ftype,
     ) }}
 
@@ -47,19 +48,20 @@ define_derive_deftly! {
     // `raw_nickname_string` which would encode surprisingly.
     //
     /// <https://spec.torproject.org/dir-spec/consensus-formats.html#item:dir-source>
-    #[derive(Debug, Clone, Deftly, amplify_derive::Getters)]
+    #[derive(Debug, Clone, Deftly, getset::Getters)]
     #[derive_deftly(ItemValueEncodable)]
     #[derive_deftly_adhoc] // ignore deftly attrs directed at Constructor
     pub struct SupersededAuthorityKey {
         /// Real nickname for this authority, not including the `-legacy`
         #[deftly(netdoc(skip))]
+        #[getset(get = "pub")]
         real_nickname: Nickname,
 
         /// The raw nickname, including "-legacy"
-        // We want #[getter(as_deref)] but it doesn't exist.  We open-code it, below.
-        #[getter(skip)]
+        // Return a string slice from the explicit accessor below.
         raw_nickname_string: String,
 
+        ${define NORMAL_FIELD_GETTER { #[getset(get = "pub")] }}
         $DEFINE_NORMAL_FIELDS
     }
 
@@ -118,6 +120,7 @@ define_derive_deftly! {
         /// Raw nickname, as parsed
         raw_nickname_string: String,
 
+        ${define NORMAL_FIELD_GETTER {}}
         $DEFINE_NORMAL_FIELDS
     }
 

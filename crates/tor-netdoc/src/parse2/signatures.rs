@@ -238,10 +238,10 @@ pub trait SignatureHashesAccumulator: Clone {
 // parser implementations, where lots of different strings are floating about.
 // In particular, the parser must save this value when it starts parsing
 // signatures and must then reuse it for later ones.
-#[derive(Copy, Debug, Clone, Eq, PartialEq, Hash, amplify_derive::Getters)]
+#[derive(Copy, Debug, Clone, Eq, PartialEq, Hash, getset::CopyGetters)]
 pub struct SignedDocumentBody<'s> {
     /// The actual body as a string
-    #[getter(as_copy)]
+    #[getset(get_copy = "pub")]
     pub(crate) body: &'s str,
 }
 
@@ -256,19 +256,16 @@ pub struct SignedDocumentBody<'s> {
 ///
 ///  * Extra information for calculating Disorderly signatures.
 ///    Disorderly signature Items can only be implemented within this crate.
-#[derive(Copy, Debug, Clone, Eq, PartialEq, Hash, amplify_derive::Getters)]
+#[derive(Copy, Debug, Clone, Eq, PartialEq, Hash, getset::CopyGetters)]
 pub struct SignatureHashInputs<'s> {
     /// The Orderly body (up to the first signature item)
-    #[getter(as_copy)]
+    #[getset(get_copy = "pub")]
     pub(crate) body: SignedDocumentBody<'s>,
     /// The part of the document up to just before this signature item.
-    #[getter(skip)]
     pub(crate) document_sofar: &'s str,
     /// The signature item keyword and the following space
-    #[getter(skip)]
     pub(crate) signature_item_kw_spc: &'s str,
     /// The whole signature item keyword line not including the final newline
-    #[getter(skip)]
     pub(crate) signature_item_line: &'s str,
 }
 

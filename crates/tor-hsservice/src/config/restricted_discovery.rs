@@ -105,7 +105,6 @@ use derive_more::From;
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 
-use amplify_derive::Getters;
 use derive_more::{Display, Into};
 
 use tor_config::derive::prelude::*;
@@ -185,7 +184,9 @@ impl FromStr for HsClientNickname {
 /// its restricted discovery settings in order for the changes to be applied.
 ///
 /// See the [module-level documentation](self) for more details.
-#[derive(Debug, Clone, Deftly, Eq, PartialEq, Getters)]
+#[derive(
+    Debug, Clone, Deftly, Eq, PartialEq, getset::Getters, getset::CopyGetters, getset::MutGetters,
+)]
 #[derive_deftly(TorConfig)]
 #[deftly(tor_config(post_build = "Self::post_build_validate"))]
 pub struct RestrictedDiscoveryConfig {
@@ -201,11 +202,12 @@ pub struct RestrictedDiscoveryConfig {
     ///
     /// Restricted discovery mode is disabled by default.
     #[deftly(tor_config(default))]
+    #[getset(get = "pub")]
     pub(crate) enabled: bool,
 
     /// If true, the provided `key_dirs` will be watched for changes.
     #[deftly(tor_config(default, attr = serde(skip)))]
-    #[getter(as_mut, as_copy)]
+    #[getset(get_copy = "pub", get_mut = "pub")]
     watch_configuration: bool,
 
     /// Directories containing the client keys, each in the
@@ -217,6 +219,7 @@ pub struct RestrictedDiscoveryConfig {
     // TODO: Use the list-builder pattern instead. (Right now this uses the sub_builder pattern
     // directly, since before migration to TorConfig, this builder didn't declare list accessors.)
     #[deftly(tor_config(sub_builder, no_magic))]
+    #[getset(get = "pub")]
     key_dirs: DirectoryKeyProviderList,
 
     /// A static mapping from client nicknames to keys.
@@ -227,6 +230,7 @@ pub struct RestrictedDiscoveryConfig {
     // TODO: We could eventually migrate to use the map-builder pattern, but that would
     // be a breaking change.
     #[deftly(tor_config(sub_builder))]
+    #[getset(get = "pub")]
     static_keys: StaticKeyProvider,
 }
 

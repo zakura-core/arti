@@ -59,17 +59,18 @@ pub struct KeyMgr {
 /// or removed, using [`KeyMgr::remove_entry`].
 ///
 /// Returned from [`KeyMgr::list_matching`].
-#[derive(Clone, Debug, PartialEq, amplify_derive::Getters)]
+#[derive(Clone, Debug, PartialEq, getset::Getters, getset::CopyGetters)]
 pub struct KeystoreEntry<'a> {
     /// The [`KeyPath`] of the key.
+    #[getset(get = "pub")]
     key_path: KeyPath,
     /// The [`KeystoreItemType`] of the key.
+    #[getset(get = "pub")]
     key_type: KeystoreItemType,
     /// The [`KeystoreId`] of the keystore where the key was found.
-    #[getter(as_copy)]
+    #[getset(get_copy = "pub")]
     keystore_id: &'a KeystoreId,
     /// The internal [`RawEntryId`] of the key.
-    #[getter(skip)]
     raw_id: RawEntryId,
 }
 

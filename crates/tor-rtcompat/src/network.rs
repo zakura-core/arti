@@ -11,15 +11,17 @@
 /// For established streams that are accepted from a listener,
 /// you can use [`StreamOps`](crate::StreamOps) to perform additional operations
 /// or to configure additional options.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, amplify_derive::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, getset::Getters)]
 #[non_exhaustive]
 pub struct CommonListenOptions {
     /// Value set for `SO_SNDBUF` on the listening socket.
     #[builder(default)]
+    #[getset(get = "pub")]
     pub(crate) send_buffer_size: Option<usize>,
 
     /// Value set for `SO_RCVBUF` on the listening socket.
     #[builder(default)]
+    #[getset(get = "pub")]
     pub(crate) recv_buffer_size: Option<usize>,
 }
 
@@ -46,11 +48,12 @@ impl Default for CommonListenOptions {
 /// Options to use when initializing a TCP listening socket.
 ///
 /// See [`CommonListenOptions`] for more information.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, amplify_derive::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, getset::Getters)]
 #[non_exhaustive]
 pub struct TcpListenOptions {
     /// Options that are common for all socket types.
     #[builder(sub_builder)]
+    #[getset(get = "pub")]
     pub(crate) common: CommonListenOptions,
 }
 
@@ -75,7 +78,7 @@ impl Default for TcpListenOptions {
 
 /// Options to use when initializing a unix stream listening socket.
 // TODO: We should support at least the options in `CommonListenOptions`.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, amplify_derive::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder)]
 #[non_exhaustive]
 pub struct UnixListenOptions {}
 
@@ -107,15 +110,17 @@ impl Default for UnixListenOptions {
 /// For established streams,
 /// you can use [`StreamOps`](crate::StreamOps) to perform additional operations
 /// or to configure additional options.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, amplify_derive::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, getset::Getters)]
 #[non_exhaustive]
 pub struct CommonConnectOptions {
     /// Value set for `SO_SNDBUF` on the socket.
     #[builder(default)]
+    #[getset(get = "pub")]
     pub(crate) send_buffer_size: Option<usize>,
 
     /// Value set for `SO_RCVBUF` on the socket.
     #[builder(default)]
+    #[getset(get = "pub")]
     pub(crate) recv_buffer_size: Option<usize>,
 }
 
@@ -142,11 +147,12 @@ impl Default for CommonConnectOptions {
 /// Options to use when connecting a TCP socket.
 ///
 /// See [`CommonConnectOptions`] for more information.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, amplify_derive::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, getset::Getters)]
 #[non_exhaustive]
 pub struct TcpConnectOptions {
     /// Options that are common for all socket types.
     #[builder(sub_builder)]
+    #[getset(get = "pub")]
     pub(crate) common: CommonConnectOptions,
 }
 
@@ -171,7 +177,7 @@ impl Default for TcpConnectOptions {
 
 /// Options to use when connecting a unix stream socket.
 // TODO: We should support at least the options in `CommonConnectOptions`.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, amplify_derive::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder)]
 #[non_exhaustive]
 pub struct UnixConnectOptions {}
 

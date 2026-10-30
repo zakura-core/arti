@@ -5,7 +5,6 @@
 use std::fmt::{Debug, Display};
 use std::ops::ControlFlow;
 
-use amplify_derive::Getters;
 use futures::FutureExt as _;
 use itertools::chain;
 use strum::IntoEnumIterator as _;
@@ -79,9 +78,8 @@ use crate::task::{MockExecutor, SchedulingPolicy};
 ///
 ///  * Anything provided by a Rust runtime/executor project (eg anything from Tokio),
 ///    unless it is definitively established that it's runtime-agnostic.
-#[derive(Debug, Default, Clone, Getters, Deftly)]
+#[derive(Debug, Default, Clone, Deftly)]
 #[derive_deftly(SomeMockRuntime)]
-#[getter(prefix = "mock_")]
 pub struct MockRuntime {
     /// Tasks
     #[deftly(mock(task, toplevel))]
@@ -106,6 +104,23 @@ pub struct MockRuntimeBuilder {
 }
 
 impl MockRuntime {
+    /// Borrow the mock task executor.
+    #[inline]
+    pub fn mock_task(&self) -> &MockExecutor {
+        &self.task
+    }
+
+    /// Borrow the mock time provider.
+    #[inline]
+    pub fn mock_sleep(&self) -> &SimpleMockTimeProvider {
+        &self.sleep
+    }
+
+    /// Borrow the mock network provider.
+    #[inline]
+    pub fn mock_net(&self) -> &MockNetProvider {
+        &self.net
+    }
     /// Create a new `MockRuntime` with default parameters
     pub fn new() -> Self {
         Self::default()

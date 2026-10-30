@@ -264,7 +264,7 @@ define_derive_deftly! {
     impl ErrorProblem {
         /// Obtain the `column` of this error
         //
-        // Our usual getters macro is `amplify` but it doesn't support conditional
+        // Getter derives do not support conditional
         // getters of enum fields, like we want here.
         pub fn column(&self) -> Option<usize> {
             Some(match self {

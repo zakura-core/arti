@@ -163,11 +163,7 @@ pub struct PreemptiveCircuitConfig {
 /// not currently expired, and the request timing of all _future_
 /// requests.  However, there are currently bugs: see bug
 /// [#263](https://gitlab.torproject.org/tpo/core/arti/-/issues/263).
-#[derive(Debug, Clone, Eq, PartialEq, Deftly)]
-// TODO Use a getters derive macro which lets us only generate getters
-// for fields we explicitly request, rather than having to mark the rest with `skip`.
-// (amplify_derive::Getters doesn't allow #[getter(skip)] at the type level)
-#[derive(amplify_derive::Getters)]
+#[derive(Debug, Clone, Eq, PartialEq, Deftly, getset::CopyGetters)]
 #[derive_deftly(TorConfig)]
 pub struct CircuitTiming {
     /// How long after a circuit has first been used should we give
@@ -176,7 +172,6 @@ pub struct CircuitTiming {
     /// This setting applies to circuits without strong isolation.
     /// See also [`disused_circuit_timeout`](Self::disused_circuit_timeout)
     #[deftly(tor_config(default = "default_max_dirtiness()"))]
-    #[getter(skip)]
     pub(crate) max_dirtiness: Duration,
 
     /// How long after a circuit has become disused should we discard it?
@@ -185,28 +180,24 @@ pub struct CircuitTiming {
     /// See also [`max_dirtiness`](Self::max_dirtiness)
     // TODO: Impose a maximum or minimum?
     #[deftly(tor_config(default = "default_disused_timeout()"))]
-    #[getter(skip)]
     pub(crate) disused_circuit_timeout: Duration,
 
     /// When a circuit is requested, we stop retrying new circuits
     /// after this much time.
     // TODO: Impose a maximum or minimum?
     #[deftly(tor_config(default = "default_request_timeout()"))]
-    #[getter(skip)]
     pub(crate) request_timeout: Duration,
 
     /// When a circuit is requested, we stop retrying new circuits after
     /// this many attempts.
     // TODO: Impose a maximum or minimum?
     #[deftly(tor_config(default = "default_request_max_retries()"))]
-    #[getter(skip)]
     pub(crate) request_max_retries: u32,
 
     /// When waiting for requested circuits, wait at least this long
     /// before using a suitable-looking circuit launched by some other
     /// request.
     #[deftly(tor_config(default = "default_request_loyalty()"))]
-    #[getter(skip)]
     pub(crate) request_loyalty: Duration,
 
     /// When an HS connection is attempted, we stop trying more hsdirs after this many attempts
@@ -219,7 +210,7 @@ pub struct CircuitTiming {
     // a warning when the user provided a setting for this value while hs-client was compiled out.
     #[cfg(feature = "hs-client")]
     #[deftly(tor_config(default = "default_hs_max_attempts()"))]
-    #[getter(as_copy)]
+    #[getset(get_copy = "pub")]
     pub(crate) hs_desc_fetch_attempts: u32,
 
     /// When an HS connection is attempted, we stop trying intro/rendezvous
@@ -228,7 +219,7 @@ pub struct CircuitTiming {
     // This parameter is honoured by tor-hsclient, not here.
     #[cfg(feature = "hs-client")]
     #[deftly(tor_config(default = "default_hs_max_attempts()"))]
-    #[getter(as_copy)]
+    #[getset(get_copy = "pub")]
     pub(crate) hs_intro_rend_attempts: u32,
 
     /// The period for which a hidden service directory cannot be queried for
@@ -237,7 +228,7 @@ pub struct CircuitTiming {
     // This parameter is honoured by tor-hsclient, not here.
     #[cfg(feature = "hs-client")]
     #[deftly(tor_config(default = "default_hs_dir_requery_interval()"))]
-    #[getter(as_copy)]
+    #[getset(get_copy = "pub")]
     pub(crate) hs_dir_requery_interval: Duration,
 }
 

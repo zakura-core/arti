@@ -30,9 +30,9 @@ load-config = ["dep:figment", "dep:serde_ignored", "dep:toml"]
 # Watch configuration files for changes. Disable default features to use
 # configuration builders and parsing without an asynchronous runtime or watcher.
 file-watcher = [
-    "dep:amplify_derive",
     "dep:cfg-if",
     "dep:futures",
+    "dep:getset",
     "dep:notify",
     "dep:postage",
     "dep:tor-rtcompat",
@@ -52,7 +52,6 @@ testing = ["__is_experimental"]
 __is_experimental = []
 
 [dependencies]
-amplify_derive = { version = "4.0.1", optional = true }
 cfg-if = { version = "1.0.5", optional = true }
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_builder = { version = "0.11.2", package = "derive_builder_fork_arti" }
@@ -62,6 +61,7 @@ extend = "1.2.0"
 figment = { version = "0.10.19", features = ["toml"], optional = true }
 fs-mistrust = { path = "../fs-mistrust", version = "0.16.0" }
 futures = { version = "0.3.34", optional = true }
+getset = { version = "0.1.7", optional = true }
 humantime-serde = "1.1.1"
 itertools = "0.15.0"
 notify = { version = "8", default-features = false, features = ["macos_kqueue"], optional = true }

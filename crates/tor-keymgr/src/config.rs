@@ -3,7 +3,6 @@
 pub use tor_config::{ConfigBuildError, ConfigurationSource, Reconfigure};
 pub use tor_config_path::{CfgPath, CfgPathError};
 
-use amplify_derive::Getters;
 use derive_deftly::Deftly;
 use serde::{Deserialize, Serialize};
 use tor_config::derive::prelude::*;
@@ -29,16 +28,18 @@ pub enum ArtiKeystoreKind {
 impl_not_auto_value! {ArtiKeystoreKind}
 
 /// [`ArtiNativeKeystore`](crate::ArtiNativeKeystore) configuration
-#[derive(Debug, Clone, Deftly, Eq, PartialEq, Serialize, Deserialize, Getters)]
+#[derive(Debug, Clone, Deftly, Eq, PartialEq, Serialize, Deserialize, getset::Getters)]
 #[derive_deftly(TorConfig)]
 #[deftly(tor_config(pre_build = "Self::validate"))]
 pub struct ArtiKeystoreConfig {
     /// Whether keystore use is enabled.
     #[deftly(tor_config(default))]
+    #[getset(get = "pub")]
     enabled: BoolOrAuto,
 
     /// The primary keystore.
     #[deftly(tor_config(sub_builder))]
+    #[getset(get = "pub")]
     primary: PrimaryKeystoreConfig,
 
     /// Optionally configure C Tor keystores for arti to use.
@@ -50,11 +51,12 @@ pub struct ArtiKeystoreConfig {
     /// Each C Tor keystore **must** have a unique identifier.
     /// It is an error to configure multiple keystores with the same [`KeystoreId`].
     #[deftly(tor_config(sub_builder))]
+    #[getset(get = "pub")]
     ctor: CTorKeystoreConfig,
 }
 
 /// [`ArtiNativeKeystore`](crate::ArtiNativeKeystore) configuration
-#[derive(Debug, Clone, Deftly, Eq, PartialEq, Serialize, Deserialize, Getters)]
+#[derive(Debug, Clone, Deftly, Eq, PartialEq, Serialize, Deserialize, getset::Getters)]
 #[derive_deftly(TorConfig)]
 #[deftly(tor_config(pre_build = "Self::validate"))]
 pub struct CTorKeystoreConfig {
@@ -62,12 +64,14 @@ pub struct CTorKeystoreConfig {
     //
     // NOTE: This could become a map builder, but it would change the API.
     #[deftly(tor_config(sub_builder))]
+    #[getset(get = "pub")]
     services: CTorServiceKeystoreConfigMap,
 
     /// C Tor hidden service client keystores.
     //
     // NOTE: This could become a list builder, but it would change the API.
     #[deftly(tor_config(no_magic, sub_builder))]
+    #[getset(get = "pub")]
     clients: CTorClientKeystoreConfigList,
 }
 
@@ -81,7 +85,7 @@ pub struct PrimaryKeystoreConfig {
 }
 
 /// C Tor [`ArtiNativeKeystore`](crate::ArtiNativeKeystore) configuration
-#[derive(Debug, Clone, Deftly, Eq, PartialEq, Serialize, Deserialize, Getters)]
+#[derive(Debug, Clone, Deftly, Eq, PartialEq, Serialize, Deserialize, getset::Getters)]
 #[derive_deftly(TorConfig)]
 #[deftly(tor_config(no_default_trait))]
 pub struct CTorServiceKeystoreConfig {
@@ -94,6 +98,7 @@ pub struct CTorServiceKeystoreConfig {
     ///   * have a corresponding arti hidden service configured in the
     ///     `[onion_services]` section with the same nickname
     #[deftly(tor_config(no_default))]
+    #[getset(get = "pub")]
     id: KeystoreId,
 
     /// The root directory of this keystore.
@@ -104,10 +109,12 @@ pub struct CTorServiceKeystoreConfig {
     /// `[[onion_services."<the nickname of your svc>".restricted_discovery.key_dirs]]`
     /// to `HiddenServiceDirectory/client_keys`).
     #[deftly(tor_config(no_default))]
+    #[getset(get = "pub")]
     path: PathBuf,
 
     /// The nickname of the service this keystore is to be used with.
     #[deftly(tor_config(no_default))]
+    #[getset(get = "pub")]
     nickname: HsNickname,
 }
 
@@ -210,7 +217,7 @@ fn build_ctor_service_list(
 }
 
 /// C Tor [`ArtiNativeKeystore`](crate::ArtiNativeKeystore) configuration
-#[derive(Debug, Clone, Deftly, Eq, PartialEq, Serialize, Deserialize, Getters)]
+#[derive(Debug, Clone, Deftly, Eq, PartialEq, Serialize, Deserialize, getset::Getters)]
 #[derive_deftly(TorConfig)]
 #[deftly(tor_config(no_default_trait))]
 pub struct CTorClientKeystoreConfig {
@@ -219,6 +226,7 @@ pub struct CTorClientKeystoreConfig {
     /// Each keystore **must** have a unique identifier.
     /// It is an error to configure multiple keystores with the same [`KeystoreId`].
     #[deftly(tor_config(no_default))]
+    #[getset(get = "pub")]
     id: KeystoreId,
 
     /// The root directory of this keystore.
@@ -233,6 +241,7 @@ pub struct CTorClientKeystoreConfig {
     ///
     /// Malformed files, and files that don't have the `.auth_private` extension, will be ignored.
     #[deftly(tor_config(no_default))]
+    #[getset(get = "pub")]
     path: PathBuf,
 }
 

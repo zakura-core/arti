@@ -1155,12 +1155,13 @@ impl<T: PartialOrd> PartialOrd for Unknown<T> {
 pub struct F64Finite(f64);
 
 /// Error converting an [`F64Finite`] from an `f64`: the value wasn't finite
-#[derive(Clone, Debug, Eq, PartialEq, thiserror::Error, amplify_derive::Getters)]
+#[derive(Clone, Debug, Eq, PartialEq, thiserror::Error, getset::Getters)]
 #[error("FP value {} ({bits:#x}) is not finite", f64::from_bits(self.bits))]
 pub struct F64FiniteError {
     /// The raw bits (as from [`f64::to_bits`])
     //
     // We store it this way rather than as `f64` so that `Eq` etc. make sense.
+    #[getset(get = "pub")]
     bits: u64,
 }
 
