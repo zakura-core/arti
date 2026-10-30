@@ -32,6 +32,7 @@ jobs:
       - name: Check retained sources and formatting
         run: |
           python3 maint/zakura/check-embedded-source.py
+          python3 maint/zakura/check-package-family.py
           cargo fmt --all -- --check
       - name: Check the retained library workspace
         run: cargo check --workspace --locked

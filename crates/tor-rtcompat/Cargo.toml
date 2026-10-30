@@ -111,3 +111,6 @@ libc = "0.2"
 [dev-dependencies]
 assert_matches = "1.5.0"
 tor-basic-utils = { package = "zakura-tor-basic-utils", version = "0.47.0-zakura.1", path = "../tor-basic-utils" }
+
+[lib]
+name = "tor_rtcompat"
