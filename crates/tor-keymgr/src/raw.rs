@@ -1,4 +1,4 @@
-//! Raw keystore entry identifiers used in plumbing CLI functionalities.
+//! Internal identifiers for recognized and unrecognized keystore entries.
 
 use std::path::PathBuf;
 
@@ -11,10 +11,7 @@ use crate::ArtiPath;
 ///
 /// The exact type of the identifier depends on the backing storage of the keystore
 /// (for example, an on-disk keystore will identify its entries by [`Path`](RawEntryId::Path)).
-#[cfg_attr(
-    any(feature = "onion-service-cli-extra", feature = "experimental-api"),
-    visibility::make(pub)
-)]
+#[cfg_attr(feature = "experimental-api", visibility::make(pub))]
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, derive_more::Display)]
 pub(crate) enum RawEntryId {

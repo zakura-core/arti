@@ -4,13 +4,13 @@
 //!
 //! This layer brings together the functionality of
 //! our underlying configuration library,
-//! [`fs_mistrust`] and, with `load-config`, command-line TOML overrides.
+//! [`fs_mistrust`], with optional TOML file loading.
 //!
 //! A `ConfigurationSources` records a set of filenames of TOML files,
-//! ancillary instructions for reading them,
-//! and also a set of command line options.
+//! and ancillary instructions for reading them.
 //!
-//! Usually, call [`ConfigurationSources::from_cmdline`],
+//! Start with [`ConfigurationSources::new_empty`] and add paths with
+//! [`ConfigurationSources::push_source`],
 //! perhaps [`set_mistrust`](ConfigurationSources::set_mistrust),
 //! and finally `load` (with `load-config`).
 //! The resulting `ConfigurationTree` can then be deserialized.
@@ -28,11 +28,10 @@ use std::{fs, io, sync::Arc};
 
 #[cfg(feature = "load-config")]
 use figment::Figment;
-use void::ResultVoidExt as _;
 
-use crate::err::ConfigError;
 #[cfg(feature = "load-config")]
-use crate::{CmdLine, ConfigurationTree};
+use crate::ConfigurationTree;
+use crate::err::ConfigError;
 
 use std::path::{Path, PathBuf};
 
@@ -41,8 +40,6 @@ use std::path::{Path, PathBuf};
 pub struct ConfigurationSources {
     /// List of files to read (in order).
     files: Vec<(ConfigurationSource, MustRead)>,
-    /// A list of command-line options to apply after parsing the files.
-    options: Vec<String>,
     /// We will check all files we read
     mistrust: fs_mistrust::Mistrust,
 }
@@ -50,8 +47,7 @@ pub struct ConfigurationSources {
 /// Rules for whether we should proceed if a configuration file is unreadable.
 ///
 /// Some files (like the default configuration file) are okay to skip if they
-/// aren't present. Others (like those specified on the command line) really
-/// need to be there.
+/// aren't present. Others are required by the caller.
 #[derive(Clone, Debug, Copy, Eq, PartialEq)]
 #[allow(clippy::exhaustive_enums)]
 pub enum MustRead {
@@ -64,8 +60,7 @@ pub enum MustRead {
 
 /// A configuration file or directory, for use by a `ConfigurationSources`
 ///
-/// You can make one out of a `PathBuf`, examining its syntax like `arti` does,
-/// using `ConfigurationSource::from_path`.
+/// Construct one from a [`PathBuf`] using [`ConfigurationSource::from_path`].
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 #[allow(clippy::exhaustive_enums)]
 pub enum ConfigurationSource {
@@ -153,74 +148,6 @@ impl ConfigurationSources {
         Self::default()
     }
 
-    /// Establish a [`ConfigurationSources`] the from an infallible command line and defaults
-    ///
-    /// Convenience method for if the default config file location(s) can be infallibly computed.
-    pub fn from_cmdline<F, O>(
-        default_config_files: impl IntoIterator<Item = ConfigurationSource>,
-        config_files_options: impl IntoIterator<Item = F>,
-        cmdline_toml_override_options: impl IntoIterator<Item = O>,
-    ) -> Self
-    where
-        F: Into<PathBuf>,
-        O: Into<String>,
-    {
-        ConfigurationSources::try_from_cmdline(
-            || Ok(default_config_files),
-            config_files_options,
-            cmdline_toml_override_options,
-        )
-        .void_unwrap()
-    }
-
-    /// Establish a [`ConfigurationSources`] the usual way from a command line and defaults
-    ///
-    /// The caller should have parsed the program's command line, and extracted (inter alia)
-    ///
-    ///  * `config_files_options`: Paths of config file(s) (or directories of `.toml` files)
-    ///  * `cmdline_toml_override_options`: Overrides ("key=value")
-    ///
-    /// The caller should also provide `default_config_files`,
-    /// which returns the default locations of the configuration files.
-    /// This used if no file(s) are specified on the command line.
-    //
-    // The other inputs are always used and therefore
-    // don't need to be lifted into FnOnce() -> Result.
-    ///
-    /// `ConfigurationSource::Dir`s
-    /// will be scanned for files whose name ends in `.toml`.
-    /// All those files (if any) will be read (in lexical order by filename).
-    pub fn try_from_cmdline<F, O, DEF, E>(
-        default_config_files: impl FnOnce() -> Result<DEF, E>,
-        config_files_options: impl IntoIterator<Item = F>,
-        cmdline_toml_override_options: impl IntoIterator<Item = O>,
-    ) -> Result<Self, E>
-    where
-        F: Into<PathBuf>,
-        O: Into<String>,
-        DEF: IntoIterator<Item = ConfigurationSource>,
-    {
-        let mut cfg_sources = ConfigurationSources::new_empty();
-
-        let mut any_files = false;
-        for f in config_files_options {
-            let f = f.into();
-            cfg_sources.push_source(ConfigurationSource::from_path(f), MustRead::MustRead);
-            any_files = true;
-        }
-        if !any_files {
-            for default in default_config_files()? {
-                cfg_sources.push_source(default, MustRead::TolerateAbsence);
-            }
-        }
-
-        for s in cmdline_toml_override_options {
-            cfg_sources.push_option(s);
-        }
-
-        Ok(cfg_sources)
-    }
-
     /// Add `src` to the list of files or directories that we want to read configuration from.
     ///
     /// Configuration files are loaded and applied in the order that they are
@@ -229,23 +156,6 @@ impl ConfigurationSources {
     /// If the listed file is absent, loading the configuration won't succeed.
     pub fn push_source(&mut self, src: ConfigurationSource, must_read: MustRead) {
         self.files.push((src, must_read));
-    }
-
-    /// Add `s` to the list of overridden options to apply to our configuration.
-    ///
-    /// Options are applied after all configuration files are loaded, in the
-    /// order that they are added to this object.
-    ///
-    /// Use the `key=value` command-line TOML override syntax.
-    pub fn push_option(&mut self, option: impl Into<String>) {
-        self.options.push(option.into());
-    }
-
-    /// All given override options.
-    ///
-    /// See [`push_option`](Self::push_option).
-    pub fn options(&self) -> impl Iterator<Item = &String> + Clone {
-        self.options.iter()
     }
 
     /// Sets the filesystem permission mistrust
@@ -414,12 +324,6 @@ impl FoundConfigFiles<'_> {
             builder = builder.merge(f);
         }
 
-        let mut cmdline = CmdLine::new();
-        for opt in &self.sources.options {
-            cmdline.push_toml_line(opt.clone());
-        }
-        builder = builder.merge(cmdline);
-
         Ok(builder)
     }
 
@@ -487,32 +391,22 @@ world = \"stuff\"
 friends = 4242
 ";
 
-    /// Make a ConfigurationSources (that doesn't include the arti defaults)
-    fn sources_nodefaults<P: AsRef<Path>>(
-        files: &[(P, MustRead)],
-        opts: &[String],
-    ) -> ConfigurationSources {
+    /// Construct configuration sources without application defaults.
+    fn sources_nodefaults<P: AsRef<Path>>(files: &[(P, MustRead)]) -> ConfigurationSources {
         let mistrust = fs_mistrust::Mistrust::new_dangerously_trust_everyone();
         let files = files
             .iter()
             .map(|(p, m)| (ConfigurationSource::from_path(p.as_ref()), *m))
             .collect_vec();
-        let options = opts.iter().cloned().collect_vec();
-        ConfigurationSources {
-            files,
-            options,
-            mistrust,
-        }
+        ConfigurationSources { files, mistrust }
     }
 
-    /// Load from a set of files and option strings, without taking
-    /// the arti defaults into account.
+    /// Load from files without application defaults.
     #[cfg(feature = "load-config")]
     fn load_nodefaults<P: AsRef<Path>>(
         files: &[(P, MustRead)],
-        opts: &[String],
     ) -> Result<ConfigurationTree, crate::ConfigError> {
-        sources_nodefaults(files, opts).load()
+        sources_nodefaults(files).load()
     }
 
     #[test]
@@ -521,7 +415,7 @@ friends = 4242
         let td = tempdir().unwrap();
         let dflt = td.path().join("a_file");
         let files = vec![(dflt, MustRead::TolerateAbsence)];
-        let _ignore_tree = load_nodefaults(&files, Default::default()).unwrap();
+        let _ignore_tree = load_nodefaults(&files).unwrap();
     }
 
     static EX2_TOML: &str = "
@@ -537,7 +431,7 @@ world = \"nonsense\"
         let cf = td.path().join("other_file");
         std::fs::write(&cf, EX2_TOML).unwrap();
         let files = vec![(dflt, MustRead::TolerateAbsence), (cf, MustRead::MustRead)];
-        let c = load_nodefaults(&files, Default::default()).unwrap();
+        let c = load_nodefaults(&files).unwrap();
 
         assert!(c.get_string("hello.friends").is_err());
         assert_eq!(c.get_string("hello.world").unwrap(), "nonsense");
@@ -560,7 +454,7 @@ world = \"nonsense\"
             (d, MustRead::MustRead),
             (xd.clone(), MustRead::TolerateAbsence),
         ];
-        let c = sources_nodefaults(&files, Default::default());
+        let c = sources_nodefaults(&files);
         let found = c.scan().unwrap();
 
         assert_eq!(
@@ -585,63 +479,24 @@ world = \"nonsense\"
             assert_eq!(c.get_string("hello.world").unwrap(), "nonsense");
 
             let files = vec![(xd, MustRead::MustRead)];
-            let e = load_nodefaults(&files, Default::default())
-                .unwrap_err()
-                .to_string();
+            let e = load_nodefaults(&files).unwrap_err().to_string();
             assert!(dbg!(e).contains("nonexistent.d"));
         }
     }
 
     #[test]
     #[cfg(feature = "load-config")]
-    fn load_two_files_with_cmdline() {
+    fn load_two_files() {
         let td = tempdir().unwrap();
         let cf1 = td.path().join("a_file");
         let cf2 = td.path().join("other_file");
         std::fs::write(&cf1, EX_TOML).unwrap();
         std::fs::write(&cf2, EX2_TOML).unwrap();
         let v = vec![(cf1, MustRead::TolerateAbsence), (cf2, MustRead::MustRead)];
-        let v2 = vec!["other.var=present".to_string()];
-        let c = load_nodefaults(&v, &v2).unwrap();
+        let c = load_nodefaults(&v).unwrap();
 
         assert_eq!(c.get_string("hello.friends").unwrap(), "4242");
         assert_eq!(c.get_string("hello.world").unwrap(), "nonsense");
-        assert_eq!(c.get_string("other.var").unwrap(), "present");
-    }
-
-    #[test]
-    fn from_cmdline() {
-        // Try one with specified files
-        let sources = ConfigurationSources::from_cmdline(
-            [ConfigurationSource::from_path("/etc/loid.toml")],
-            ["/family/yor.toml", "/family/anya.toml"],
-            ["decade=1960", "snack=peanuts"],
-        );
-        let files: Vec<_> = sources
-            .files
-            .iter()
-            .map(|file| file.0.as_path().unwrap().to_str().unwrap())
-            .collect();
-        assert_eq!(files, vec!["/family/yor.toml", "/family/anya.toml"]);
-        assert_eq!(sources.files[0].1, MustRead::MustRead);
-        assert_eq!(
-            &sources.options,
-            &vec!["decade=1960".to_owned(), "snack=peanuts".to_owned()]
-        );
-
-        // Try once with default only.
-        let sources = ConfigurationSources::from_cmdline(
-            [ConfigurationSource::from_path("/etc/loid.toml")],
-            Vec::<PathBuf>::new(),
-            ["decade=1960", "snack=peanuts"],
-        );
-        assert_eq!(
-            &sources.files,
-            &vec![(
-                ConfigurationSource::from_path("/etc/loid.toml"),
-                MustRead::TolerateAbsence
-            )]
-        );
     }
 
     #[test]

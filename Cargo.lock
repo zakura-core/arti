@@ -201,7 +201,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "time",
- "tokio",
  "toml 1.1.8+spec-1.1.0",
  "tor-async-utils",
  "tor-basic-utils",
@@ -231,7 +230,6 @@ dependencies = [
  "tor-rpcbase",
  "tor-rtcompat",
  "tracing",
- "tracing-subscriber",
  "tracing-test",
  "visibility",
  "void",
@@ -585,12 +583,6 @@ name = "base16ct"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
-
-[[package]]
-name = "base32"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "022dfe9eb35f19ebbcb51e0b40a5ab759f46ad60cadf7297e0bd085afb50e076"
 
 [[package]]
 name = "base64"
@@ -2770,21 +2762,6 @@ checksum = "d8f198d1db720e4940b5a493201d199d9f24f568f8f746bd13706243a2f71598"
 dependencies = [
  "cfg-if",
  "cpufeatures 0.3.1",
-]
-
-[[package]]
-name = "keygen-client-auth-test"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base32",
- "clap",
- "regex",
- "safelog",
- "tor-basic-utils",
- "tor-hsservice",
- "tor-llcrypto",
- "x25519-dalek",
 ]
 
 [[package]]
@@ -5371,7 +5348,6 @@ dependencies = [
  "notify",
  "paste",
  "postage",
- "regex",
  "serde",
  "serde-value",
  "serde_ignored",
@@ -6227,7 +6203,6 @@ dependencies = [
 name = "tor-ptmgr"
 version = "0.47.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "cfg-if",
  "derive-deftly",
@@ -6238,7 +6213,6 @@ dependencies = [
  "oneshot-fused-workaround",
  "serde",
  "thiserror 2.0.21",
- "tokio",
  "tor-async-utils",
  "tor-basic-utils",
  "tor-chanmgr",
@@ -6250,7 +6224,6 @@ dependencies = [
  "tor-rtcompat",
  "tor-socksproto",
  "tracing",
- "tracing-subscriber",
  "visibility",
  "web-time-compat",
 ]

@@ -49,9 +49,6 @@
 #![allow(recursion_depth_exceeding_limit)] // arti#2715, rust/issues/159228
 //! <!-- @@ end lint list maintained by maint/add_warning @@ -->
 
-#[cfg(feature = "load-config")]
-#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
-pub mod cmdline;
 pub mod derive;
 mod err;
 #[macro_use]
@@ -84,9 +81,6 @@ pub mod deps {
     pub use tor_basic_utils::{if_empty, macro_first_nonempty};
 }
 
-#[cfg(feature = "load-config")]
-#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
-pub use cmdline::CmdLine;
 pub use err::{ConfigBuildError, ConfigError, ConfigGetValueError, ReconfigureError};
 pub use flatten::{Flatten, Flattenable};
 pub use list_builder::{MultilineListBuilder, MultilineListBuilderError};

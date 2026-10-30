@@ -18,13 +18,8 @@ crates in Arti.
 The API here is great if you are building an application in async Rust
 and want your Tor connections as async streams (`AsyncRead`/`AsyncWrite`).
 
-If you are trying to glue Arti to some other programming language,
-right now your best bet is probably to spawn the
-[`arti` CLI](https://tpo.pages.torproject.net/core/doc/rust/arti/index.html)
-SOCKS proxy,
-as a subprocess.
-We don't yet offer an API that would be nice to expose via FFI;
-we intend to add this in the future.
+Wallet applications embed this library and integrate its asynchronous streams
+with their own application and language-binding layers.
 
 ### ⚠ Warnings ⚠
 
@@ -302,8 +297,6 @@ implementation with another.
 * `error_detail` -- expose the `arti_client::Error` inner error type.
 * `dirfilter` -- expose the `DirFilter` API, which lets you modify a network
   directory before it is used.
-* `onion-service-cli-extra` -- build with additional key and state management
-  command line functionalities.
 * `smol` -- build with [smol](https://github.com/smol-rs/smol) support.
 * `experimental` -- build with all experimental features above, along with
   all experimental features from other arti crates.

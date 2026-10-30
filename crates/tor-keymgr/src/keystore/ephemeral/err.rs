@@ -16,13 +16,6 @@ pub(crate) enum ArtiEphemeralKeystoreError {
     /// An error that occurred serializing a key to OpenSSH text format
     #[error("{0}")]
     SshKeySerialize(#[from] ssh_key::Error),
-
-    /// An unsupported operation.
-    #[error("Operation not supported: {action}")]
-    NotSupported {
-        /// The action we were trying to perform.
-        action: &'static str,
-    },
 }
 
 impl KeystoreError for ArtiEphemeralKeystoreError {}
@@ -36,7 +29,6 @@ impl HasKind for ArtiEphemeralKeystoreError {
             // rather than letting the default match handle it.
             Self::ArtiPathUnavailableError(_) => ErrorKind::Other,
             Self::SshKeySerialize(_) => ErrorKind::Other,
-            Self::NotSupported { .. } => ErrorKind::BadApiUsage,
         }
     }
 }
