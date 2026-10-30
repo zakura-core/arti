@@ -307,3 +307,39 @@ fn credential_formatting_matches_previous() {
         }
     }
 }
+
+#[test]
+fn scoped_address_formatting_does_not_need_a_url() {
+    let addr = SocketAddr::V6(std::net::SocketAddrV6::new(
+        "fe80::1".parse().expect("IPv6 address"),
+        1080,
+        0,
+        3,
+    ));
+    for (proxy, expected) in [
+        (
+            ProxyProtocol::HttpConnect {
+                addr,
+                credentials: Some(HttpConnectAuth {
+                    username: "u@name".to_owned(),
+                    password: Some("p:word".to_owned()),
+                }),
+            },
+            "http://u%40name:p%3Aword@[fe80::1%3]:1080",
+        ),
+        (
+            ProxyProtocol::Socks {
+                version: SocksVersion::V5,
+                auth: SocksAuth::Username(b"u@name".to_vec(), b"p:word".to_vec()),
+                addr,
+            },
+            "socks5://u%40name:p%3Aword@[fe80::1%3]:1080",
+        ),
+    ] {
+        assert_eq!(proxy.to_string(), expected);
+        // String parsing still rejects scoped addresses, as before. The old
+        // formatter also failed when it used a URL merely to encode userinfo.
+        assert!(previous(expected).is_err());
+        assert!(expected.parse::<ProxyProtocol>().is_err());
+    }
+}
