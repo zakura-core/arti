@@ -1,6 +1,6 @@
 //! Types related to stream isolation
-use downcast_rs::{Downcast, impl_downcast};
 use dyn_clone::{DynClone, clone_trait_object};
+use std::any::Any;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 /// A type that can make isolation decisions about streams it is attached to.
@@ -14,7 +14,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 /// You typically do not want to implement this trait directly.  Instead, most
 /// users should implement [`IsolationHelper`].
 pub trait Isolation:
-    seal::Sealed + Downcast + DynClone + std::fmt::Debug + Send + Sync + 'static
+    seal::Sealed + Any + DynClone + std::fmt::Debug + Send + Sync + 'static
 {
     /// Return true if this Isolation is compatible with another.
     ///
@@ -77,7 +77,6 @@ mod seal {
     impl<T: super::IsolationHelper> Sealed for T {}
 }
 
-impl_downcast!(Isolation);
 clone_trait_object!(Isolation);
 impl<T: Isolation> From<T> for Box<dyn Isolation> {
     fn from(isolation: T) -> Self {
@@ -87,7 +86,7 @@ impl<T: Isolation> From<T> for Box<dyn Isolation> {
 
 impl<T: IsolationHelper + Clone + std::fmt::Debug + Send + Sync + 'static> Isolation for T {
     fn compatible(&self, other: &dyn Isolation) -> bool {
-        if let Some(other) = other.as_any().downcast_ref() {
+        if let Some(other) = (other as &dyn Any).downcast_ref() {
             self.compatible_same_type(other)
         } else {
             false
@@ -95,7 +94,7 @@ impl<T: IsolationHelper + Clone + std::fmt::Debug + Send + Sync + 'static> Isola
     }
 
     fn join(&self, other: &dyn Isolation) -> Option<Box<dyn Isolation>> {
-        if let Some(other) = other.as_any().downcast_ref() {
+        if let Some(other) = (other as &dyn Any).downcast_ref() {
             self.join_same_type(other)
                 .map(|res| Box::new(res) as Box<dyn Isolation>)
         } else {
@@ -483,8 +482,8 @@ pub(crate) mod test {
 
     impl IsolationTokenEq for dyn Isolation {
         fn isol_eq(&self, other: &Self) -> bool {
-            let this = self.as_any().downcast_ref::<IsolationToken>();
-            let other = other.as_any().downcast_ref::<IsolationToken>();
+            let this = (self as &dyn Any).downcast_ref::<IsolationToken>();
+            let other = (other as &dyn Any).downcast_ref::<IsolationToken>();
             match (this, other) {
                 (Some(this), Some(other)) => this == other,
                 _ => false,
@@ -594,17 +593,11 @@ pub(crate) mod test {
             .build()
             .unwrap();
         assert_eq!(no_isolation.owner_token, no_isolation2.owner_token);
+        let first: &dyn Any = no_isolation.stream_isolation.as_ref();
+        let second: &dyn Any = no_isolation2.stream_isolation.as_ref();
         assert_eq!(
-            no_isolation
-                .stream_isolation
-                .as_ref()
-                .as_any()
-                .downcast_ref::<IsolationToken>(),
-            no_isolation2
-                .stream_isolation
-                .as_ref()
-                .as_any()
-                .downcast_ref::<IsolationToken>()
+            first.downcast_ref::<IsolationToken>(),
+            second.downcast_ref::<IsolationToken>()
         );
         assert!(no_isolation.compatible(&no_isolation2));
 

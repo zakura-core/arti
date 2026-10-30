@@ -221,7 +221,7 @@ mod tests {
             let key = UnparsedOpenSshKey::new(enc1.into(), PathBuf::from("/test/path"));
             let erased_key = key.parse_ssh_format_erased(&key_type).unwrap();
 
-            let Ok(dec1) = erased_key.downcast::<$expected_ty>() else {
+            let Ok(dec1) = (erased_key as Box<dyn std::any::Any>).downcast::<$expected_ty>() else {
                 panic!("failed to downcast");
             };
 
@@ -251,7 +251,7 @@ mod tests {
 
             let key = UnparsedOpenSshKey::new(enc2.into(), PathBuf::from("/test/path"));
             let erased_key = key.parse_ssh_format_erased(&key_type).unwrap();
-            let Ok(dec2) = erased_key.downcast::<$expected_ty>() else {
+            let Ok(dec2) = (erased_key as Box<dyn std::any::Any>).downcast::<$expected_ty>() else {
                 panic!("failed to downcast");
             };
 
