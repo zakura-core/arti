@@ -13,6 +13,57 @@ use tor_config::derive::prelude::*;
 use tor_socksproto::SocksAuth;
 use tor_socksproto::SocksVersion;
 
+/// Implement string serialization and parsing, including UTF-8 byte input.
+macro_rules! impl_serde_via_string {
+    ($type:ty) => {
+        impl serde::Serialize for $type {
+            fn serialize<S: serde::Serializer>(
+                &self,
+                serializer: S,
+            ) -> std::result::Result<S::Ok, S::Error> {
+                serializer.collect_str::<&Self>(&self)
+            }
+        }
+
+        impl<'de> serde::Deserialize<'de> for $type {
+            fn deserialize<D: serde::Deserializer<'de>>(
+                deserializer: D,
+            ) -> std::result::Result<Self, D::Error> {
+                /// Parse the serialized string representation.
+                struct StringVisitor;
+
+                impl serde::de::Visitor<'_> for StringVisitor {
+                    type Value = $type;
+
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
+                        std::fmt::Display::fmt("a string", formatter)
+                    }
+
+                    fn visit_str<E: serde::de::Error>(
+                        self,
+                        value: &str,
+                    ) -> std::result::Result<Self::Value, E> {
+                        value.parse().map_err(E::custom)
+                    }
+
+                    fn visit_bytes<E: serde::de::Error>(
+                        self,
+                        value: &[u8],
+                    ) -> std::result::Result<Self::Value, E> {
+                        let value = std::str::from_utf8(value).map_err(E::custom)?;
+                        self.visit_str(value)
+                    }
+                }
+
+                deserializer.deserialize_str(StringVisitor)
+            }
+        }
+    };
+}
+
 /// URI scheme for HTTP CONNECT.
 const HTTP_SCHEME: &str = "http";
 /// Canonical URI scheme for [`SocksVersion::V4`].
@@ -87,9 +138,7 @@ pub struct HttpConnectAuth {
 /// - `http://ip:port` - HTTP CONNECT proxy without auth
 /// - `http://user:pass@ip:port` - HTTP CONNECT proxy with Basic auth (RFC 7617)
 /// - `http://user@ip:port` - HTTP CONNECT proxy with username only (empty password)
-#[derive(
-    Debug, Clone, Eq, PartialEq, serde_with::DeserializeFromStr, serde_with::SerializeDisplay,
-)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum ProxyProtocol {
     /// Connect via SOCKS 4, SOCKS 4a, or SOCKS 5.
@@ -109,6 +158,8 @@ pub enum ProxyProtocol {
         credentials: Option<HttpConnectAuth>,
     },
 }
+
+impl_serde_via_string!(ProxyProtocol);
 
 impl std::str::FromStr for ProxyProtocol {
     type Err = ProxyProtocolParseError;
@@ -788,6 +839,46 @@ mod test {
                 );
             }
             _ => panic!("expected HttpConnect"),
+        }
+    }
+}
+
+#[cfg(test)]
+mod serde_tests {
+    #![allow(clippy::unwrap_used)]
+
+    use super::ProxyProtocol;
+
+    /// Check the stored string and Serde's string/byte token variants.
+    fn assert_encoding<T>(value: &T, text: &'static str)
+    where
+        T: serde::Serialize + for<'de> serde::Deserialize<'de> + PartialEq + std::fmt::Debug,
+    {
+        use serde_test::{Token, assert_de_tokens, assert_de_tokens_error, assert_tokens};
+        assert_tokens(value, &[Token::Str(text)]);
+        assert_de_tokens(value, &[Token::BorrowedStr(text)]);
+        assert_de_tokens(value, &[Token::String(text)]);
+        assert_de_tokens(value, &[Token::Bytes(text.as_bytes())]);
+        assert_de_tokens(value, &[Token::BorrowedBytes(text.as_bytes())]);
+        assert_de_tokens(value, &[Token::ByteBuf(text.as_bytes())]);
+        assert_de_tokens_error::<T>(
+            &[Token::Bytes(b"\xff")],
+            "invalid utf-8 sequence of 1 bytes from index 0",
+        );
+        assert_de_tokens_error::<T>(
+            &[Token::Bool(true)],
+            "invalid type: boolean `true`, expected a string",
+        );
+    }
+
+    #[test]
+    fn string_and_byte_tokens() {
+        for text in [
+            "socks5://127.0.0.1:9050",
+            "socks5://u:p@[::1]:9050",
+            "http://u:p@127.0.0.1:8080",
+        ] {
+            assert_encoding(&text.parse::<ProxyProtocol>().unwrap(), text);
         }
     }
 }
