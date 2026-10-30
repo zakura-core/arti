@@ -56,22 +56,13 @@ macro_rules! decl_keyword {
             fn unrecognized() -> Self { $name::UNRECOGNIZED }
             fn ann_unrecognized() -> Self { $name::ANN_UNRECOGNIZED }
             fn from_str(s : &str) -> Self {
-                // Note usage of phf crate to create a perfect hash over
-                // the possible keywords.  It will be even better if someday
-                // the phf crate can find hash functions that are better
-                // than siphash.
-                const KEYWORD: phf::Map<&'static str, $name> = phf::phf_map! {
-                    $( $( $s => $name::$i , )+ )*
-                };
-                match KEYWORD.get(s) {
-                    Some(k) => *k,
-                    None => if s.starts_with('@') {
-                        $name::ANN_UNRECOGNIZED
-                    } else {
-                        $name::UNRECOGNIZED
-                    }
+                match s {
+                    $( $( $s )|+ => $name::$i, )*
+                    _ if s.starts_with('@') => $name::ANN_UNRECOGNIZED,
+                    _ => $name::UNRECOGNIZED,
                 }
             }
+
             fn from_idx(i : usize) -> Option<Self> {
                 // Note looking up the value in a vec.  This may or may
                 // not be faster than a case statement would be.
@@ -128,6 +119,20 @@ pub(crate) mod test {
         assert_eq!(Fruit::from_str("pear"), UNRECOGNIZED);
         assert_eq!(Fruit::from_str("@tasty"), ANN_TASTY);
         assert_eq!(Fruit::from_str("@tastier"), ANN_UNRECOGNIZED);
+        for unknown in [
+            "",
+            "Apple",
+            "apple\0",
+            " apple",
+            "apple ",
+            "applé",
+            "cherry/plum",
+        ] {
+            assert_eq!(Fruit::from_str(unknown), UNRECOGNIZED);
+        }
+        for unknown in ["@", "@@tasty", "@tasty\0", "@tasty "] {
+            assert_eq!(Fruit::from_str(unknown), ANN_UNRECOGNIZED);
+        }
 
         assert_eq!(APPLE.idx(), 0);
         assert_eq!(ORANGE.idx(), 1);
