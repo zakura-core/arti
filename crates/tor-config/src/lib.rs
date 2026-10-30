@@ -49,6 +49,8 @@
 #![allow(recursion_depth_exceeding_limit)] // arti#2715, rust/issues/159228
 //! <!-- @@ end lint list maintained by maint/add_warning @@ -->
 
+#[cfg(feature = "load-config")]
+#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
 pub mod cmdline;
 pub mod derive;
 mod err;
@@ -73,6 +75,7 @@ pub mod testing;
 #[doc(hidden)]
 pub mod deps {
     pub use educe;
+    #[cfg(feature = "load-config")]
     pub use figment;
     pub use itertools::Itertools;
     pub use paste::paste;
@@ -81,16 +84,22 @@ pub mod deps {
     pub use tor_basic_utils::{if_empty, macro_first_nonempty};
 }
 
+#[cfg(feature = "load-config")]
+#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
 pub use cmdline::CmdLine;
 pub use err::{ConfigBuildError, ConfigError, ConfigGetValueError, ReconfigureError};
 pub use flatten::{Flatten, Flattenable};
 pub use list_builder::{MultilineListBuilder, MultilineListBuilderError};
 pub use listen::*;
+#[cfg(feature = "load-config")]
+#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
 pub use load::{resolve, resolve_ignore_warnings, resolve_return_results};
 pub use misc::*;
 pub use mut_cfg::MutCfg;
+#[cfg(feature = "load-config")]
 use serde::de::DeserializeOwned;
 pub use sources::{ConfigurationSource, ConfigurationSources};
+#[cfg(feature = "load-config")]
 use tor_error::into_internal;
 
 #[doc(hidden)]
@@ -105,10 +114,13 @@ derive_deftly::template_export_semver_check! { "0.12.1" }
 ///
 /// (This is a wrapper for an underlying type provided by the library that
 /// actually does our configuration.)
+#[cfg(feature = "load-config")]
+#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
 #[derive(Clone, Debug, Default)]
 #[must_use] // to prevent errors from merge_from.
 pub struct ConfigurationTree(figment::Figment);
 
+#[cfg(feature = "load-config")]
 impl ConfigurationTree {
     #[cfg(test)]
     pub(crate) fn get_string(&self, key: &str) -> Result<String, crate::ConfigError> {
@@ -383,7 +395,7 @@ where
 ///  * `impl Default for $Config`
 ///  * `impl Builder for $ConfigBuilder`
 ///  * a self-test that the `Default` impl actually works
-///  * a test that the `Builder` can be deserialized from an empty [`ConfigurationTree`],
+///  * a test that the `Builder` can be deserialized from an empty map,
 ///    and then built, and that the result is the same as the ordinary default.
 //
 // The implementation munches fake "trait bounds" (`: !Deserialize + !Wombat ...`) off the RHS.
@@ -410,7 +422,7 @@ macro_rules! impl_standard_builder {
         // ^Being processed format:
         @ ( Builder                    )
           ( default                    )
-          ( extract                    ) $Config    :                 $( $( $options    )* )?
+          ( deserialize                ) $Config    :                 $( $( $options    )* )?
         //  ~~~~~~~~~~~~~~~              ^^^^^^^    ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         // present iff not !Builder, !Default
         // present iff not !Default
@@ -487,9 +499,10 @@ macro_rules! impl_standard_builder {
             )?
 
             if let Some(def) = def {
-                $( // expands iff there was $try_deserialize, which is always extract
-                    let empty_config = $crate::deps::figment::Figment::new();
-                    let builder: [< $Config Builder >] = empty_config.$try_deserialize().unwrap();
+                $( // expands iff there was $try_deserialize, which is always deserialize
+                    let empty_config = $crate::deps::serde_value::Value::Map(Default::default());
+                    let builder = <[< $Config Builder >] as $crate::deps::serde::Deserialize>
+                        ::$try_deserialize(empty_config).unwrap();
                     let from_empty = builder.build().unwrap();
                     assert_eq!(def, from_empty);
                 )*
@@ -515,7 +528,9 @@ mod test {
     #![allow(clippy::string_slice)] // See arti#2571
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
     use super::*;
-    use crate::{self as tor_config, sources::MustRead};
+    use crate as tor_config;
+    #[cfg(feature = "load-config")]
+    use crate::sources::MustRead;
     use derive_builder::Builder;
     use serde::{Deserialize, Serialize};
     use serde_json::json;
@@ -606,6 +621,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "load-config")]
     fn get_value() {
         use serde_value::Value as V;
         let to_value = |json_str: &str| {
