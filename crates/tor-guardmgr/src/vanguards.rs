@@ -382,7 +382,7 @@ impl<R: Runtime> VanguardMgr<R> {
 
                 Ok(ShutdownStatus::Continue)
             },
-            _config = config_rx.recv().fuse() => {
+            _config = config_rx.next().fuse() => {
                 if let Some(netdir) = Self::timely_netdir(&netdir_provider)? {
                     // If we have a NetDir, replenish the vanguard sets that don't have enough vanguards.
                     //

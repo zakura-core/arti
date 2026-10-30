@@ -278,7 +278,8 @@ type Continuation = (
 /// ### We're using a barrier as a condition variable
 ///
 /// We want to be signaled when the task exits.  Indeed, *only* when it exits.
-/// The existing [`oneshot_broadcast`] channel signals this when its sender drops.
+/// The existing [`oneshot_broadcast`] channel signals this when its sender
+/// drops.
 ///
 /// ### Nested loops
 ///
@@ -827,7 +828,7 @@ pub(crate) mod test {
                 return ret.clone().map(make);
             }
             loop {
-                match give.recv().await.expect("EOF on mock_global_state stream") {
+                match give.next().await.expect("EOF on mock_global_state stream") {
                     Pending => {}
                     Ready(ret) => return ret.map(make),
                 }

@@ -288,7 +288,8 @@ pub(crate) async fn report_status(
 // Note: We use a wrapper type around watch::Receiver here, in order to hide its
 // implementation type.  We do that because we might want to change the type in
 // the future, and because some of the functionality exposed by Receiver (like
-// `borrow()` and the watch receiver’s other methods) are extraneous to the API we want.
+// `borrow()` and the watch receiver’s other methods) are extraneous to the API
+// we want.
 #[derive(Clone, Educe)]
 #[educe(Debug)]
 pub struct BootstrapEvents {

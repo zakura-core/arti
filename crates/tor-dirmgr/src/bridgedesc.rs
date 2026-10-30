@@ -796,7 +796,8 @@ impl State {
         }
 
         // Restore liveness property *Timeout**
-        // tor_async_utils::watch will tell up the timeout task about the new wake-up time.
+        // tor_async_utils::watch will tell up the timeout task about the new
+        // wake-up time.
         let new_earliest_timeout = [
             // First retry.  These are std Instant.
             self.retry_schedule.peek().map(|re| re.when),
@@ -1415,7 +1416,8 @@ impl State {
     /// `input` should be what was passed to `set_bridges` (or `None` if not known).
     ///
     /// Does not make any changes.
-    /// Only takes `&mut` because tor_async_utils::watch::Sender::borrow` wants it.
+    /// Only takes `&mut` because tor_async_utils::watch::Sender::borrow` wants
+    /// it.
     #[cfg(test)]
     fn check_consistency<'i, R, I>(&mut self, runtime: &R, input: Option<I>)
     where

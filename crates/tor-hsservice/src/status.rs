@@ -279,7 +279,8 @@ impl futures::Stream for OnionServiceStatusStream {
     }
 }
 
-/// A shared handle to a tor_async_utils::watch::Sender that we can use to update an OnionServiceStatus.
+/// A shared handle to a tor_async_utils::watch::Sender that we can use to
+/// update an OnionServiceStatus.
 #[derive(Clone)]
 pub(crate) struct StatusSender(Arc<Mutex<tor_async_utils::watch::Sender<OnionServiceStatus>>>);
 

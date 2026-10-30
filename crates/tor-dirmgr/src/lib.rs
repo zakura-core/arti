@@ -305,7 +305,8 @@ pub struct DirMgr<R: Runtime> {
     /// A receiver handle that gets notified whenever our bootstrapping status
     /// changes.
     ///
-    /// We don't need to keep this drained, since `tor_async_utils::watch` already knows
+    /// We don't need to keep this drained, since `tor_async_utils::watch`
+    /// already knows
     /// to discard unread events.
     receive_status: DirBootstrapEvents,
 

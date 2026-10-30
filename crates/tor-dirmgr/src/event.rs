@@ -288,9 +288,11 @@ impl<F: FlagEvent> Stream for FlagListener<F> {
 /// new information.
 //
 // TODO(nickm): This type has gotten a bit large for being the type we send over
-// a `tor_async_utils::watch`: perhaps we'd be better off having this information stored
+// a `tor_async_utils::watch`: perhaps we'd be better off having this
+// information stored
 // in the guardmgr, and having only a summary of it sent over the
-// `tor_async_utils::watch`.  But for now, let's not, unless it shows up in profiles.
+// `tor_async_utils::watch`.  But for now, let's not, unless it shows up in
+// profiles.
 #[derive(Clone, Debug, Default)]
 pub struct DirBootstrapStatus(StatusEnum);
 

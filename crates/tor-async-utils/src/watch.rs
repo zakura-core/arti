@@ -15,13 +15,21 @@ use std::task::{Context, Poll};
 
 /// The current value and notification for the next update.
 struct State<T> {
+    /// The most recently published value.
     value: T,
+    /// Notification that this value has been replaced, or the sender dropped.
     changed: oneshot_broadcast::Receiver<()>,
 }
 
 /// The single writer of a watched value.
+///
+/// Dropping this sender closes the stream after any pending final value.
+/// Closing its [`Sink`] flushes updates without closing subscriptions.
 pub struct Sender<T> {
+    /// The value and next notification, kept consistent under one lock.
     shared: Arc<RwLock<State<T>>>,
+    /// Notification for the next write; kept here so dropping the sender closes
+    /// it.
     changed: Option<oneshot_broadcast::Sender<()>>,
 }
 
@@ -29,14 +37,25 @@ pub struct Sender<T> {
 ///
 /// Cloning starts a fresh subscription, whose first item is the latest value.
 pub struct Receiver<T> {
+    /// Shared value, also retaining the value after the sender drops.
     shared: Arc<RwLock<State<T>>>,
+    /// Notification captured when this receiver last observed the value.
     changed: ReceiverFuture<()>,
+    /// Whether the receiver still owes its initial snapshot.
     initial: bool,
+    /// Whether this receiver has returned EOF.
     closed: bool,
 }
 
 /// A send failed because no receivers remain.
 pub struct SendError<T>(T);
+
+impl<T> SendError<T> {
+    /// Recover the value that could not be sent.
+    pub fn into_inner(self) -> T {
+        self.0
+    }
+}
 
 /// An immediate receive did not produce a value.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -69,6 +88,8 @@ pub fn channel_with<T: Clone>(value: T) -> (Sender<T>, Receiver<T>) {
 }
 
 impl<T> Sender<T> {
+    /// Start a fresh subscription at the latest value and its next
+    /// notification.
     fn receiver(&self) -> Receiver<T> {
         let state = self.shared.read().unwrap_or_else(|e| e.into_inner());
         Receiver {
@@ -180,7 +201,7 @@ impl<T> Sink<T> for Sender<T> {
     }
 }
 
-/// Recovering a poisoned lock preserves the previous non-poisoning watch behavior.
+/// An immutable value guard, retaining the previous non-poisoning behavior.
 struct ReadGuard<'a, T>(RwLockReadGuard<'a, State<T>>);
 
 impl<T> Deref for ReadGuard<'_, T> {
@@ -190,8 +211,11 @@ impl<T> Deref for ReadGuard<'_, T> {
     }
 }
 
+/// A mutable value guard that notifies only after releasing the write lock.
 struct WriteGuard<'a, T> {
+    /// The lock to release before waking receivers.
     state: Option<RwLockWriteGuard<'a, State<T>>>,
+    /// The sender's current notification, to replace before publishing.
     changed: &'a mut Option<oneshot_broadcast::Sender<()>>,
 }
 
@@ -213,7 +237,8 @@ impl<T> Drop for WriteGuard<'_, T> {
         let (changed_tx, changed_rx) = oneshot_broadcast::channel();
         self.state.as_mut().expect("guard released").changed = changed_rx;
         let previous = self.changed.replace(changed_tx).expect("sender dropped");
-        // Publish the value and next notification atomically, then unlock before
+        // Publish the value and next notification atomically, then unlock
+        // before
         // running arbitrary receiver wakers.
         drop(self.state.take());
         previous.send(());
@@ -249,7 +274,7 @@ impl<T> std::error::Error for SendError<T> {}
 #[cfg(test)]
 mod test {
     use super::*;
-    use futures::{FutureExt as _, SinkExt as _, StreamExt as _};
+    use futures::{SinkExt as _, StreamExt as _};
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::task::{Wake, Waker};
     use tor_rtcompat::SpawnExt as _;
@@ -287,10 +312,11 @@ mod test {
     fn closed_send_and_resubscribe() {
         let (mut tx, rx) = channel_with(1);
         drop(rx);
-        assert!(futures::executor::block_on(tx.send(2)).is_err());
+        let error = futures::executor::block_on(tx.send(2)).expect_err("no receivers");
+        assert_eq!(error.into_inner(), 2);
         assert_eq!(*tx.borrow(), 1);
         let mut rx = tx.subscribe();
-        futures::executor::block_on(tx.send(3)).unwrap();
+        futures::executor::block_on(tx.send(3)).expect("receiver remains");
         assert_eq!(rx.try_recv(), Ok(3));
     }
 
@@ -391,7 +417,7 @@ mod test {
                         }
                         assert_eq!(last, 100);
                     })
-                    .unwrap(),
+                    .expect("spawn reader"),
                 );
             }
             rt.spawn(async move {
@@ -400,9 +426,54 @@ mod test {
                     tor_rtcompat::task::yield_now().await;
                 }
             })
-            .unwrap();
+            .expect("spawn writer");
             for join in joins {
                 join.await;
+            }
+        });
+    }
+
+    #[test]
+    fn parallel_readers_clones_and_sender_drop() {
+        const READERS: usize = 8;
+        const LAST: usize = 10_000;
+        let (mut tx, rx) = channel_with(0);
+        let start = Arc::new(std::sync::Barrier::new(READERS + 1));
+        std::thread::scope(|scope| {
+            let mut readers = Vec::new();
+            for _ in 0..READERS {
+                let mut rx = rx.clone();
+                let start = Arc::clone(&start);
+                readers.push(scope.spawn(move || {
+                    start.wait();
+                    futures::executor::block_on(async move {
+                        let mut last = 0;
+                        while let Some(value) = rx.next().await {
+                            assert!(value >= last);
+                            last = value;
+                            assert!(*rx.borrow() >= value);
+                            // Exercise a fresh subscription while another OS
+                            // thread updates the shared value or drops its
+                            // sender.
+                            let mut cloned = rx.clone();
+                            assert!(cloned.next().await.expect("initial snapshot") >= value);
+                            std::thread::yield_now();
+                        }
+                        assert_eq!(last, LAST);
+                    });
+                }));
+            }
+            drop(rx);
+            start.wait();
+            for value in 1..=LAST {
+                *tx.borrow_mut() = value;
+                if value % 16 == 0 {
+                    std::thread::yield_now();
+                }
+            }
+            drop(tx);
+            for reader in readers {
+                reader.join().expect("reader succeeded");
             }
         });
     }

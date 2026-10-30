@@ -4,19 +4,16 @@ use extend::ext;
 use std::ops::{Deref, DerefMut};
 use void::{ResultVoidExt as _, Void};
 
-/// Extension trait for some `crate::watch::Sender` to provide `maybe_send`
+/// Extension trait for [`crate::watch::Sender`] to provide `maybe_send`.
 ///
-/// Ideally these, or something like them, would be upstream:
-/// See <https://github.com/austinjones/postage-rs/issues/56>.
-///
-/// We provide this as an extension trait became the implementation is a bit fiddly.
-/// This lets us concentrate on the actual logic, when we use it.
+/// The legacy trait name is retained for callers' imports.
 #[ext(name = PostageWatchSenderExt)]
 pub impl<T> crate::watch::Sender<T> {
     /// Update, by calling a fallible function, sending only if necessary
     ///
     /// Calls `update` on the current value in the watch, to obtain a new value.
-    /// If the new value doesn't compare equal, updates the watch, notifying receivers.
+    /// If the new value doesn't compare equal, updates the watch, notifying
+    /// receivers.
     fn try_maybe_send<F, E>(&mut self, update: F) -> Result<(), E>
     where
         T: PartialEq,
@@ -25,10 +22,8 @@ pub impl<T> crate::watch::Sender<T> {
         let lock = self.borrow();
         let new = update(&*lock)?;
         if new != *lock {
-            // We must drop the lock guard, because otherwise borrow_mut will deadlock.
-            // There is no race, because we hold &mut self, so no-one else can get a look in.
-            // (crate::watch::Sender is not one of those facilities which is mereely a
-            // handle, and Clone.)
+            // Release the read lock before acquiring the write lock. Holding
+            // &mut self excludes another writer, since Sender is not Clone.
             drop(lock);
             *self.borrow_mut() = new;
         }
@@ -38,7 +33,8 @@ pub impl<T> crate::watch::Sender<T> {
     /// Update, by calling a function, sending only if necessary
     ///
     /// Calls `update` on the current value in the watch, to obtain a new value.
-    /// If the new value doesn't compare equal, updates the watch, notifying receivers.
+    /// If the new value doesn't compare equal, updates the watch, notifying
+    /// receivers.
     fn maybe_send<F>(&mut self, update: F)
     where
         T: PartialEq,
@@ -50,12 +46,10 @@ pub impl<T> crate::watch::Sender<T> {
 }
 
 #[derive(Debug)]
-/// Wrapper for `crate::watch::Sender` that sends `DropNotifyEof::eof()` when dropped
+/// Wrapper for [`crate::watch::Sender`] that sends
+/// [`DropNotifyEofSignallable::eof`] when dropped.
 ///
 /// Derefs to the inner `Sender`.
-///
-/// Ideally this would be behaviour promised by upstream, or something
-/// See <https://github.com/austinjones/postage-rs/issues/57>.
 pub struct DropNotifyWatchSender<T: DropNotifyEofSignallable>(Option<crate::watch::Sender<T>>);
 
 /// Values that can signal EOF
@@ -90,7 +84,8 @@ impl<T> DropNotifyEofSignallable for Option<T> {
 }
 
 impl<T: DropNotifyEofSignallable> DropNotifyWatchSender<T> {
-    /// Arrange to send `T::Default` when `inner` is dropped
+    /// Arrange to send [`DropNotifyEofSignallable::eof`] when `inner` is
+    /// dropped.
     pub fn new(inner: crate::watch::Sender<T>) -> Self {
         DropNotifyWatchSender(Some(inner))
     }

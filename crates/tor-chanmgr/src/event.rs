@@ -176,7 +176,8 @@ impl Stream for ConnStatusEvents {
 ///
 /// This is a more complex and costly structure than ConnStatus, so we track
 /// this here, and only expose the minimum via ConnStatus over a
-/// `tor_async_utils::watch`.  Later, we might want to expose more of this information.
+/// `tor_async_utils::watch`.  Later, we might want to expose more of this
+/// information.
 //
 // TODO: Eventually we should add some ability to reset our bootstrap status, if
 // our connections start failing.
