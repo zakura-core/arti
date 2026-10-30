@@ -53,12 +53,11 @@ pub(crate) trait FlagEvent: Sized {
 
 /// Implements [`FlagEvent`] for a C-like enum
 ///
-/// Requiremets:
+/// Requirements:
 ///
 ///  * `$ty` must implement [`strum::EnumCount`] [`strum::IntoEnumIterator`]
 ///
-///  * `$ty` type must implement [`Into<u16>`] and [`TryFrom<u16>`]
-///    (for example using the `num_enum` crate).
+///  * `$ty` must implement [`Into<u16>`] and [`TryFrom<u16>`].
 ///
 ///  * The discriminants must be densely allocated.
 ///    This will be done automatically by the compiler
@@ -67,26 +66,9 @@ pub(crate) trait FlagEvent: Sized {
 ///
 ///  * The variants may not contain any data.
 ///    This is required for correctness.
-///    We think it is checked if you use `num_enum::TryFromPrimitive`.
+///    The event enums enforce this with their integer casts.
 ///
-/// # Example
-///
-// Sadly, it does not appear to be possible to doctest a private macro.
-/// ```rust,ignore
-/// use num_enum::{IntoPrimitive, TryFromPrimitive};
-/// use strum::{EnumCount, EnumIter};
-///
-/// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-/// #[derive(EnumIter, EnumCount, IntoPrimitive, TryFromPrimitive)]
-/// #[non_exhaustive]
-/// #[repr(u16)]
-/// pub enum DirEvent {
-///     NewConsensus,
-///     NewDescriptors,
-/// }
-///
-/// impl_FlagEvent!{ DirEvent }
-/// ```
+/// [`DirEvent`] is one supported event type.
 macro_rules! impl_FlagEvent { { $ty:ident } => { paste!{
     impl FlagEvent for $ty {
         const MAXIMUM: u16 = {

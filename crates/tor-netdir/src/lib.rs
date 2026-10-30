@@ -81,7 +81,6 @@ use {hsdir_ring::HsDirRing, std::iter};
 
 use derive_more::{From, Into};
 use futures::{StreamExt, stream::BoxStream};
-use num_enum::{IntoPrimitive, TryFromPrimitive};
 use rand::seq::{IndexedRandom as _, SliceRandom as _, WeightError};
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -546,9 +545,7 @@ impl<D> HsDirs<D> {
 
 /// An event that a [`NetDirProvider`] can broadcast to indicate that a change in
 /// the status of its directory.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, EnumIter, EnumCount, IntoPrimitive, TryFromPrimitive,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter, EnumCount)]
 #[non_exhaustive]
 #[repr(u16)]
 pub enum DirEvent {
@@ -569,6 +566,22 @@ pub enum DirEvent {
     /// We have received updated recommendations and requirements
     /// for which subprotocols we should have to use the network.
     NewProtocolRecommendation,
+}
+
+impl From<DirEvent> for u16 {
+    fn from(event: DirEvent) -> Self {
+        event as Self
+    }
+}
+
+impl TryFrom<u16> for DirEvent {
+    type Error = strum::ParseError;
+
+    fn try_from(value: u16) -> std::result::Result<Self, Self::Error> {
+        <Self as strum::IntoEnumIterator>::iter()
+            .find(|event| u16::from(*event) == value)
+            .ok_or(strum::ParseError::VariantNotFound)
+    }
 }
 
 /// The network directory provider is shutting down without giving us the
@@ -2997,6 +3010,31 @@ mod test {
         for _ in 0..100 {
             let a = items.choose_weighted(&mut rng, only_one);
             assert_eq!(a.unwrap(), &1);
+        }
+    }
+}
+
+#[cfg(test)]
+mod event_conversion_test {
+    use super::DirEvent;
+
+    #[test]
+    fn event_integer_roundtrip() {
+        let vectors = [
+            (0, DirEvent::NewConsensus),
+            (1, DirEvent::NewDescriptors),
+            (2, DirEvent::NewProtocolRecommendation),
+        ];
+        for (value, event) in vectors {
+            assert_eq!(u16::from(event), value);
+            assert_eq!(DirEvent::try_from(value), Ok(event));
+        }
+        for value in 0..=u16::MAX {
+            let expected = vectors.iter().find(|(number, _)| *number == value);
+            assert_eq!(
+                DirEvent::try_from(value).ok(),
+                expected.map(|(_, event)| *event)
+            );
         }
     }
 }
