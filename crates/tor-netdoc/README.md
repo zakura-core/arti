@@ -72,7 +72,6 @@ the parsers for the documents themselves.
 
 `hs-service`: enable support for generating hidden service descriptors.
 
-`hs-pow-full`: Hidden Services proof-of-work schemes.
 Brings in pow support crates as dependencies.
 
 `retain-unknown`: Ability to round-trip network status documents (as eg an authority needs to),

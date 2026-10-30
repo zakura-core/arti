@@ -162,22 +162,6 @@ pub(super) fn build_sign<
         desc = desc.supported_protocols(caps::declared_protocols());
     }
 
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "hs-pow-full")] {
-            let pow_params = pow_manager.get_pow_params(period, &mut rand::rng());
-            match pow_params {
-                Ok(ref pow_params) => {
-                    if config.enable_pow {
-                        desc = desc.pow_params(Some(pow_params));
-                    }
-                },
-                Err(err) => {
-                    warn!(?err, "Couldn't get PoW params");
-                }
-            }
-        }
-    }
-
     let desc = desc.build_sign(rng).map_err(|e| match e {
         tor_bytes::EncodeError::BadLengthValue => FatalError::HsDescTooLong,
         e => into_internal!("failed to build descriptor")(e).into(),

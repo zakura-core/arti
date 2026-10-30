@@ -16,13 +16,6 @@ default = []
 
 keymgr = ["tor-keymgr/keymgr", "__is_experimental"]
 
-# Onion service proof of work schemes
-hs-pow-full = [
-    "tor-hscrypto/hs-pow-full",
-    "tor-netdoc/hs-pow-full",
-    "tor-cell/hs-pow-full",
-    "__is_experimental",
-]
 
 full = [
     "retry-error/full",
@@ -52,7 +45,7 @@ full = [
     "web-time-compat/full",
 ]
 __is_experimental = []
-experimental = ["keymgr", "hs-pow-full", "negotiate-extensions"]
+experimental = ["keymgr", "negotiate-extensions"]
 negotiate-extensions = ["__is_experimental"]
 
 [dependencies]

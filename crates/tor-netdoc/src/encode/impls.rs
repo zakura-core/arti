@@ -150,26 +150,3 @@ pub(crate) mod protovers {
         }
     }
 }
-
-/// HS POW
-#[cfg(feature = "hs-pow-full")]
-mod hs_pow {
-    use super::*;
-    use tor_hscrypto::pow::v1;
-
-    impl ItemArgument for v1::Seed {
-        fn write_arg_onto(&self, out: &mut ItemEncoder<'_>) -> Result<(), Bug> {
-            let mut seed_bytes = vec![];
-            tor_bytes::Writer::write(&mut seed_bytes, &self)?;
-            out.add_arg(&Base64Unpadded::encode_string(&seed_bytes));
-            Ok(())
-        }
-    }
-
-    impl ItemArgument for v1::Effort {
-        fn write_arg_onto(&self, out: &mut ItemEncoder<'_>) -> Result<(), Bug> {
-            out.add_arg(&<Self as Into<u32>>::into(*self));
-            Ok(())
-        }
-    }
-}

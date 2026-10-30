@@ -10,10 +10,6 @@ pub struct OnionServiceStatus {
 
     /// The current high-level state for the descriptor publisher.
     publisher: ComponentStatus,
-
-    /// The current high-level state for the PoW manager.
-    #[cfg(feature = "hs-pow-full")]
-    pow_manager: ComponentStatus,
     // TODO (#1194): Add key expiration
     //
     // NOTE: Do _not_ add general metrics (like failure/success rates , number
@@ -195,11 +191,6 @@ pub enum Problem {
 
     /// We failed to establish one or more introduction points.
     Ipt(Vec<IptError>),
-
-    /// Error in the PowManager subsystem
-    // TODO: add variants for other transient errors?
-    #[cfg(feature = "hs-pow-full")]
-    Pow(crate::pow::v1::PowError),
 }
 
 impl OnionServiceStatus {
@@ -208,8 +199,6 @@ impl OnionServiceStatus {
         Self {
             ipt_mgr: ComponentStatus::new_shutdown(),
             publisher: ComponentStatus::new_shutdown(),
-            #[cfg(feature = "hs-pow-full")]
-            pow_manager: ComponentStatus::new_shutdown(),
         }
     }
 
@@ -220,14 +209,8 @@ impl OnionServiceStatus {
     pub fn state(&self) -> State {
         use State::*;
 
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "hs-pow-full")] {
-                let pow_manager_state = self.pow_manager.state;
-            } else {
-                // This is slightly janky, but should give correct results.
-                let pow_manager_state = Running;
-            }
-        }
+        // This is slightly janky, but should give correct results.
+        let pow_manager_state = Running;
 
         match (self.ipt_mgr.state, self.publisher.state, pow_manager_state) {
             (Shutdown, _, _) | (_, Shutdown, _) => Shutdown,
@@ -245,13 +228,7 @@ impl OnionServiceStatus {
 
     /// Return the most severe current problem
     pub fn current_problem(&self) -> Option<&Problem> {
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "hs-pow-full")] {
-                let pow_manager_error = &self.pow_manager.latest_error;
-            } else {
-                let pow_manager_error = &None;
-            }
-        }
+        let pow_manager_error = &None;
 
         match (
             &self.ipt_mgr.latest_error,
@@ -371,8 +348,6 @@ macro_rules! impl_status_sender {
 
 impl_status_sender!(IptMgrStatusSender, ipt_mgr);
 impl_status_sender!(PublisherStatusSender, publisher);
-#[cfg(feature = "hs-pow-full")]
-impl_status_sender!(PowManagerStatusSender, pow_manager);
 
 impl StatusSender {
     /// Create a new StatusSender with a given initial status.

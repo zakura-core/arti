@@ -40,7 +40,6 @@ Note that the APIs enabled by these features are NOT covered by
 semantic versioning[^1] guarantees: we might break them or remove
 them between patch versions.
 
-* `hs-pow-full` -- Tor Hidden Services Proof of Work.
 
 * `experimental`: Enable all the above experimental features.
 
@@ -52,5 +51,3 @@ features.
 ## License
 
 MIT OR Apache-2.0
-
-When the `hs-pow-full` feature is used, we link with LGPL licensed dependencies.

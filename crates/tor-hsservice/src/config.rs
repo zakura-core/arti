@@ -65,7 +65,10 @@ pub struct OnionServiceConfig {
     #[deftly(tor_config(default = "65535"))]
     max_concurrent_streams_per_circuit: u32,
 
-    /// If true, we will require proof-of-work when we're under heavy load.
+    /// Reserved compatibility setting; this fork does not implement proof of work.
+    ///
+    /// Enabling it is rejected so existing configurations cannot silently lose
+    /// their expected denial-of-service protection.
     #[deftly(tor_config(default = "false"))]
     #[deftly(publisher_view)]
     pub(crate) enable_pow: bool,
@@ -313,13 +316,11 @@ impl OnionServiceConfigBuilder {
                 dos_params_from_token_bucket_config(rate_limit)?;
         }
 
-        cfg_if::cfg_if! {
-            if #[cfg(not(feature = "hs-pow-full"))] {
-                if self.enable_pow == Some(true) {
-                    // TODO (#2020) is it correct for this to raise a error?
-                    return Err(ConfigBuildError::NoCompileTimeSupport { field: "enable_pow".into(), problem: "Arti was built without hs-pow-full feature!".into() });
-                }
-            }
+        if self.enable_pow == Some(true) {
+            return Err(ConfigBuildError::NoCompileTimeSupport {
+                field: "enable_pow".into(),
+                problem: "This fork does not implement onion-service proof of work".into(),
+            });
         }
 
         Ok(())
@@ -370,4 +371,28 @@ fn dos_params_from_token_bucket_config(
     };
     let cast = |n| i32::try_from(n).map_err(|_| err());
     est_intro::DosParams::new(Some(cast(c.rate)?), Some(cast(c.burst)?)).map_err(|_| err())
+}
+
+#[cfg(test)]
+mod pow_config_tests {
+    use super::*;
+
+    #[test]
+    fn enabling_pow_is_rejected() {
+        for enabled in [false, true] {
+            let result = OnionServiceConfigBuilder::default()
+                .nickname("test-pow".parse().expect("valid service nickname"))
+                .enable_pow(enabled)
+                .build();
+            if enabled {
+                assert!(matches!(
+                    result,
+                    Err(ConfigBuildError::NoCompileTimeSupport { field, .. })
+                        if field == "enable_pow"
+                ));
+            } else {
+                result.expect("ordinary onion service configuration is supported");
+            }
+        }
+    }
 }

@@ -1,19 +1,11 @@
-//! `v1` client puzzle using [`equix`]
-//!
-//! This was the first proof-of-work scheme defined for Tor, and currently it's the only one we
-//! have.
-//!
-//! Originally defined in proposal 327, and now part of the main specification:
-//! <https://spec.torproject.org/hspow-spec/index.html>
+//! Unsupported `v1` proof of work scheme. This fork never solves or verifies PoW.
 
-mod challenge;
-mod err;
-mod solve;
-mod types;
-mod verify;
+use void::Void;
 
-pub use equix::{RuntimeOption, SolutionByteArray};
-pub use err::{RuntimeErrorV1, SolutionErrorV1};
-pub use solve::{Solver, SolverInput};
-pub use types::*;
-pub use verify::Verifier;
+/// Stub for the runtime error type when `v1` is disabled
+#[derive(Debug, Clone, derive_more::Display, derive_more::Error)]
+pub struct RuntimeErrorV1(Void);
+
+/// Stub for the solution error type when `v1` is disabled
+#[derive(Debug, Clone, derive_more::Display, derive_more::Error)]
+pub struct SolutionErrorV1(Void);

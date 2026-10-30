@@ -1,7 +1,6 @@
 //! Implementation of [`PowManager`], for tracking proof-of-work seeds and data
 //! for adjusting difficulty.
 
-#[cfg_attr(not(feature = "hs-pow-full"), path = "pow/v1_stub.rs")]
 pub(crate) mod v1;
 
 use std::{pin::Pin, sync::Arc};

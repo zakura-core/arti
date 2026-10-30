@@ -1,6 +1,5 @@
 //! Support for the proof-of-work intro payload extension
 
-#[cfg_attr(not(feature = "hs-pow-full"), path = "pow/v1_stub.rs")]
 pub mod v1;
 
 use self::v1::ProofOfWorkV1;
@@ -91,5 +90,28 @@ impl UnrecognizedProofOfWork {
     pub(super) fn write_onto<B: Writer + ?Sized>(&self, b: &mut B) {
         b.write_u8(self.scheme());
         b.write_all(self.data());
+    }
+}
+
+#[cfg(test)]
+mod unsupported_tests {
+    use super::*;
+
+    #[test]
+    fn v1_proofs_remain_opaque_extensions() {
+        let encoded = [ProofOfWorkType::V1.get(), 0xde, 0xad, 0xbe, 0xef];
+        let mut reader = Reader::from_slice(&encoded);
+        let parsed = ProofOfWork::take_body_from(&mut reader)
+            .expect("unsupported PoW schemes have opaque payloads");
+        let ProofOfWork::Unrecognized(ref proof) = parsed else {
+            panic!("this fork must not interpret v1 proofs");
+        };
+        assert_eq!(proof.scheme(), ProofOfWorkType::V1.get());
+        assert_eq!(proof.data(), &encoded[1..]);
+        let mut roundtrip = Vec::new();
+        parsed
+            .write_body_onto(&mut roundtrip)
+            .expect("opaque extensions are encodable");
+        assert_eq!(roundtrip, encoded);
     }
 }
