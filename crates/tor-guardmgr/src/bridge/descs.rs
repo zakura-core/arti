@@ -142,7 +142,7 @@ impl From<BridgeDescEvent> for u16 {
 impl TryFrom<u16> for BridgeDescEvent {
     type Error = strum::ParseError;
 
-    fn try_from(value: u16) -> Result<Self, Self::Error> {
+    fn try_from(value: u16) -> std::result::Result<Self, Self::Error> {
         <Self as strum::IntoEnumIterator>::iter()
             .find(|event| u16::from(*event) == value)
             .ok_or(strum::ParseError::VariantNotFound)
