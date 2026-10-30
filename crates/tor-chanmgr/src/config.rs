@@ -7,12 +7,11 @@
 use derive_deftly::Deftly;
 use percent_encoding::{AsciiSet, CONTROLS, percent_decode_str, utf8_percent_encode};
 use serde::Deserialize;
-use std::net::{IpAddr, SocketAddr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use tor_config::PaddingLevel;
 use tor_config::derive::prelude::*;
 use tor_socksproto::SocksAuth;
 use tor_socksproto::SocksVersion;
-use url::{Host, Url};
 
 /// Error parsing a proxy URI string
 #[derive(Debug, Clone, thiserror::Error)]
@@ -66,8 +65,9 @@ pub struct HttpConnectAuth {
 /// - Hostnames for the proxy server itself are not supported (applies to all proxy types).
 /// - Credentials must be embedded in the URI; curl's `-U user:pass` style is not supported.
 /// - For `socks4://`, passwords are not supported and will return an error.
-/// - Special characters in credentials are percent-encoded using the `url` crate's
-///   userinfo encoding.
+/// - Special characters in credentials use WHATWG URL userinfo percent-encoding.
+/// - Addresses use standard numeric IPv4 or bracketed IPv6 syntax, without URL
+///   host or path normalization. An explicit HTTP port 80 is retained.
 ///
 /// HTTP CONNECT:
 ///
@@ -103,46 +103,67 @@ impl std::str::FromStr for ProxyProtocol {
     type Err = ProxyProtocolParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let url = Url::parse(s).map_err(|e| match e {
-            url::ParseError::InvalidPort => ProxyProtocolParseError::InvalidPort,
-            url::ParseError::InvalidIpv4Address
-            | url::ParseError::InvalidIpv6Address
-            | url::ParseError::EmptyHost
-            | url::ParseError::InvalidDomainCharacter
-            | url::ParseError::IdnaError => ProxyProtocolParseError::InvalidAddress(s.to_string()),
-            _ => ProxyProtocolParseError::InvalidFormat(s.to_string()),
+        if s.bytes().any(|byte| byte.is_ascii_control()) {
+            return Err(ProxyProtocolParseError::InvalidFormat(
+                "unencoded control character".to_string(),
+            ));
+        }
+        let (scheme, rest) = s.split_once("://").ok_or_else(|| {
+            ProxyProtocolParseError::InvalidFormat("expected scheme://ip:port".to_string())
         })?;
-
-        let scheme_lower = url.scheme().to_ascii_lowercase();
-
-        if url.query().is_some() || url.fragment().is_some() {
-            return Err(ProxyProtocolParseError::InvalidFormat(s.to_string()));
+        if !scheme
+            .as_bytes()
+            .first()
+            .is_some_and(u8::is_ascii_alphabetic)
+            || !scheme
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'+' | b'-' | b'.'))
+        {
+            return Err(ProxyProtocolParseError::InvalidFormat(
+                "invalid proxy scheme".to_string(),
+            ));
         }
-
-        let path = url.path();
-        if !path.is_empty() && path != "/" {
-            return Err(ProxyProtocolParseError::InvalidFormat(s.to_string()));
+        let scheme_lower = scheme.to_ascii_lowercase();
+        let authority = rest.strip_suffix('/').unwrap_or(rest);
+        if authority.contains(['/', '?', '#'])
+            || (scheme_lower == "http" && authority.contains('\\'))
+        {
+            return Err(ProxyProtocolParseError::InvalidFormat(
+                "unexpected proxy URI path, query or fragment".to_string(),
+            ));
         }
-
-        let port = url.port().ok_or(ProxyProtocolParseError::InvalidPort)?;
-        let host = url
-            .host()
-            .ok_or_else(|| ProxyProtocolParseError::InvalidAddress(s.to_string()))?;
-        let ip = match host {
-            Host::Ipv4(ip) => IpAddr::V4(ip),
-            Host::Ipv6(ip) => IpAddr::V6(ip),
-            Host::Domain(domain) => domain
-                .parse::<IpAddr>()
-                .map_err(|_| ProxyProtocolParseError::InvalidAddress(domain.to_string()))?,
+        let (userinfo, address) = authority.rsplit_once('@').unwrap_or(("", authority));
+        let (user, pass) = userinfo
+            .split_once(':')
+            .map_or((userinfo, None), |(user, pass)| (user, Some(pass)));
+        // The previous parser elided empty password fields. Preserve that
+        // normalization, including explicit but empty SOCKS authentication.
+        let pass = pass.filter(|pass| !pass.is_empty());
+        let (host, port) = address
+            .rsplit_once(':')
+            .ok_or(ProxyProtocolParseError::InvalidPort)?;
+        if port.is_empty() || !port.bytes().all(|byte| byte.is_ascii_digit()) {
+            return Err(ProxyProtocolParseError::InvalidPort);
+        }
+        let port = port
+            .parse()
+            .map_err(|_| ProxyProtocolParseError::InvalidPort)?;
+        let invalid_address = || ProxyProtocolParseError::InvalidAddress(host.to_owned());
+        let ip = if let Some(host) = host
+            .strip_prefix('[')
+            .and_then(|host| host.strip_suffix(']'))
+        {
+            IpAddr::V6(host.parse::<Ipv6Addr>().map_err(|_| invalid_address())?)
+        } else {
+            IpAddr::V4(host.parse::<Ipv4Addr>().map_err(|_| invalid_address())?)
         };
         let addr = SocketAddr::new(ip, port);
 
         match scheme_lower.as_str() {
             "http" => {
                 // HTTP CONNECT: optional Basic auth via user:pass@host:port
-                let user = url.username();
-                let pass = url.password();
-                // Reject password-only auth (http://:pass@host:port) - username is required
+                // Reject password-only auth (http://:pass@host:port): a username
+                // is required.
                 if user.is_empty() && pass.is_some() {
                     return Err(ProxyProtocolParseError::InvalidFormat(
                         "password without username not supported".to_string(),
@@ -180,11 +201,9 @@ impl std::str::FromStr for ProxyProtocol {
                     _ => unreachable!(),
                 };
                 // Check for authentication credentials (user:pass@host:port or user@host:port).
-                let user = url.username();
-                let pass = url.password();
                 if version == SocksVersion::V4 && pass.is_some() {
                     return Err(ProxyProtocolParseError::UnsupportedPassword(
-                        url.scheme().to_string(),
+                        scheme_lower.clone(),
                     ));
                 }
                 let user_decoded = percent_decode_str(user).decode_utf8().map_err(|_| {
@@ -221,7 +240,7 @@ impl std::str::FromStr for ProxyProtocol {
                 })
             }
             _ => Err(ProxyProtocolParseError::UnsupportedScheme(
-                url.scheme().to_string(),
+                scheme_lower.clone(),
             )),
         }
     }
@@ -241,28 +260,22 @@ impl std::fmt::Display for ProxyProtocol {
                     SocksAuth::Socks4(user_id) => {
                         // SOCKS4: user@host format (no password in SOCKS4)
                         let user = String::from_utf8_lossy(user_id);
-                        match encode_userinfo(*version, *addr, &user, None) {
-                            Some((user_encoded, _)) => {
-                                write!(f, "{}://{}@{}", version, user_encoded, addr)
-                            }
-                            None => write!(f, "{}://{}@{}", version, user, addr),
-                        }
+                        let (user, _) = encode_userinfo(&user, None);
+                        write!(f, "{}://{}@{}", version, user, addr)
                     }
                     SocksAuth::Username(user, pass) => {
                         // SOCKS5: user:pass@host format
                         let user = String::from_utf8_lossy(user);
                         let pass = String::from_utf8_lossy(pass);
-                        match encode_userinfo(*version, *addr, &user, Some(&pass)) {
-                            Some((user_encoded, pass_encoded)) => {
-                                let pass_encoded = pass_encoded.unwrap_or_default();
-                                write!(
-                                    f,
-                                    "{}://{}:{}@{}",
-                                    version, user_encoded, pass_encoded, addr
-                                )
-                            }
-                            None => write!(f, "{}://{}:{}@{}", version, user, pass, addr),
-                        }
+                        let (user, pass) = encode_userinfo(&user, Some(&pass));
+                        write!(
+                            f,
+                            "{}://{}:{}@{}",
+                            version,
+                            user,
+                            pass.unwrap_or_default(),
+                            addr
+                        )
                     }
                     // Handle potential future auth types
                     _ => write!(f, "{}://{}", version, addr),
@@ -270,22 +283,8 @@ impl std::fmt::Display for ProxyProtocol {
             }
             ProxyProtocol::HttpConnect { addr, credentials } => {
                 if let Some(auth) = credentials {
-                    // encode_userinfo_http should always succeed for valid SocketAddr,
-                    // but if it fails, we still percent-encode to produce a valid URI
                     let (user_encoded, pass_encoded) =
-                        encode_userinfo_http(*addr, &auth.username, auth.password.as_deref())
-                            .unwrap_or_else(|| {
-                                // Fallback: use url crate to percent-encode directly
-                                debug_assert!(
-                                    false,
-                                    "encode_userinfo_http failed for addr={}, user={}",
-                                    addr, auth.username
-                                );
-                                let encoded_user = percent_encode_userinfo(&auth.username);
-                                let encoded_pass =
-                                    auth.password.as_ref().map(|p| percent_encode_userinfo(p));
-                                (encoded_user, encoded_pass)
-                            });
+                        encode_userinfo(&auth.username, auth.password.as_deref());
                     if let Some(p) = pass_encoded {
                         write!(f, "http://{}:{}@{}", user_encoded, p, addr)
                     } else {
@@ -310,68 +309,41 @@ impl ProxyProtocol {
     }
 }
 
-/// Characters that must be percent-encoded in userinfo (RFC 3986 section 3.2.1).
-/// This includes: gen-delims (:/?#[]@) and sub-delims (!$&'()*+,;=) except those allowed.
-/// For userinfo, we encode: : @ / ? # [ ] and space, plus control characters.
+/// Characters in the WHATWG URL userinfo percent-encode set.
+///
+/// <https://url.spec.whatwg.org/#userinfo-percent-encode-set>
 const USERINFO_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b' ')
-    .add(b':')
-    .add(b'@')
-    .add(b'/')
-    .add(b'?')
+    .add(b'"')
+    .add(b'<')
+    .add(b'>')
+    .add(b'`')
     .add(b'#')
+    .add(b'?')
+    .add(b'{')
+    .add(b'}')
+    .add(b'/')
+    .add(b':')
+    .add(b';')
+    .add(b'=')
+    .add(b'@')
     .add(b'[')
-    .add(b']');
+    .add(b'\\')
+    .add(b']')
+    .add(b'^')
+    .add(b'|');
 
-/// Percent-encode a string for use in URI userinfo (username or password).
-fn percent_encode_userinfo(s: &str) -> String {
-    utf8_percent_encode(s, USERINFO_ENCODE_SET).to_string()
+/// Percent-encode credentials, retaining the previous empty-password behavior.
+fn encode_userinfo(username: &str, password: Option<&str>) -> (String, Option<String>) {
+    let encode = |value: &str| utf8_percent_encode(value, USERINFO_ENCODE_SET).to_string();
+    (
+        encode(username),
+        password.filter(|password| !password.is_empty()).map(encode),
+    )
 }
 
-/// URL-encodes username and optional password for a given scheme and address.
-///
-/// Builds a URL from `scheme://addr`, sets username/password, and returns
-/// the percent-encoded forms suitable for URI userinfo display.
-fn encode_userinfo_with_scheme(
-    scheme: &str,
-    addr: SocketAddr,
-    username: &str,
-    password: Option<&str>,
-) -> Option<(String, Option<String>)> {
-    let url_str = format!("{}://{}", scheme, addr);
-    let mut url = Url::parse(&url_str).ok()?;
-    if url.set_username(username).is_err() {
-        return None;
-    }
-    if url.set_password(password).is_err() {
-        return None;
-    }
-    let user_encoded = url.username().to_string();
-    let pass_encoded = url.password().map(str::to_string);
-    Some((user_encoded, pass_encoded))
-}
-
-/// URL-encodes username and optional password for HTTP CONNECT proxy userinfo display.
-fn encode_userinfo_http(
-    addr: SocketAddr,
-    username: &str,
-    password: Option<&str>,
-) -> Option<(String, Option<String>)> {
-    encode_userinfo_with_scheme("http", addr, username, password)
-}
-
-/// URL-encodes username and optional password for SOCKS proxy userinfo display.
-///
-/// Uses `Url` parsing to produce percent-encoded forms suitable for
-/// `socks://user:pass@host:port` style output.
-fn encode_userinfo(
-    version: SocksVersion,
-    addr: SocketAddr,
-    username: &str,
-    password: Option<&str>,
-) -> Option<(String, Option<String>)> {
-    encode_userinfo_with_scheme(&version.to_string(), addr, username, password)
-}
+#[cfg(test)]
+mod previous_proxy;
 
 impl ProxyProtocol {
     /// Create a new SOCKS proxy configuration with no authentication
