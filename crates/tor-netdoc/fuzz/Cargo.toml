@@ -17,6 +17,7 @@ path = ".."
 features = ["hs-service"]
 
 # Prevent this from interfering with workspaces
+package = "zakura-tor-netdoc"
 [workspace]
 members = ["."]
 

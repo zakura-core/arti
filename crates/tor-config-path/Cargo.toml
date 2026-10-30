@@ -1,6 +1,6 @@
 [package]
-name = "tor-config-path"
-version = "0.47.0"
+name = "zakura-tor-config-path"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Low-level file path handling for configuration of the Arti Tor implementation"
 keywords = ["tor", "arti"]
 categories = ["config"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = ["expand-paths", "address"]
@@ -44,8 +44,8 @@ directories = { version = "6", optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
 shellexpand = { version = "3.1", optional = true, features = ["path"] }
 thiserror = "2"
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-general-addr = { path = "../tor-general-addr", version = "0.47.0", optional = true }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
+tor-general-addr = { path = "../tor-general-addr", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-general-addr" }
 
 [dev-dependencies]
 assert_matches = "1.5.0"
@@ -54,7 +54,10 @@ dirs = "6.0.0"
 rmp-serde = "1"
 serde_json = "1.0.154"
 toml = "1.1.8"
-tor-config = { path = "../tor-config", version = "0.47.0", default-features = false, features = ["load-config"] }
+tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, features = ["load-config"], package = "zakura-tor-config" }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_config_path"

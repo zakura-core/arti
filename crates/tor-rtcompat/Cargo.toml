@@ -1,6 +1,6 @@
 [package]
-name = "tor-rtcompat"
-version = "0.47.0"
+name = "zakura-tor-rtcompat"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Compatibility layer for asynchronous runtimes, used by Tor"
 keywords = ["tor", "arti", "async"]
 categories = ["asynchronous"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 [package.metadata.docs.rs]
 all-features = true
 
@@ -105,12 +105,12 @@ tokio-crate = { package = "tokio", version = "1.54.1", optional = true, features
     "time",
 ] }
 tokio-util = { version = "0.7.20", features = ["compat"], optional = true }
-tor-cert-x509 = { version = "0.47.0", path = "../tor-cert-x509", optional = true }
-tor-error = { version = "0.47.0", path = "../tor-error", features = ["tracing"] }
-tor-general-addr = { version = "0.47.0", path = "../tor-general-addr" }
+tor-cert-x509 = { version = "0.47.0-zakura.1", path = "../tor-cert-x509", optional = true, package = "zakura-tor-cert-x509" }
+tor-error = { version = "0.47.0-zakura.1", path = "../tor-error", features = ["tracing"], package = "zakura-tor-error" }
+tor-general-addr = { version = "0.47.0-zakura.1", path = "../tor-general-addr", package = "zakura-tor-general-addr" }
 tracing = "0.1.44"
 void = "1"
-web-time-compat = { version = "0.3.0", path = "../web-time-compat" }
+web-time-compat = { version = "0.3.0-zakura.1", path = "../web-time-compat", package = "zakura-web-time-compat" }
 zeroize = "1"
 
 [target.'cfg(not(all(target_arch="wasm32", target_os="unknown")))'.dependencies]
@@ -123,7 +123,7 @@ libc = "0.2"
 assert_matches = "1.5.0"
 # Used for testing our TLS implementation.
 native-tls-crate = { package = "native-tls", version = "0.2" }
-tor-basic-utils = { version = "0.47.0", path = "../tor-basic-utils" }
+tor-basic-utils = { version = "0.47.0-zakura.1", path = "../tor-basic-utils", package = "zakura-tor-basic-utils" }
 # Ensure that we have aws-lc-rs for testing, but only if we're building with rustls.
 # (We need to do it this way because we can't have conditional dev-dependencies.)
 #
@@ -135,4 +135,7 @@ tor-basic-utils = { version = "0.47.0", path = "../tor-basic-utils" }
 # that any downstream using the .crate won't be able to run the tests.
 #
 # https://github.com/rust-lang/cargo/issues/4242
-tor-rtcompat-testing = { package = "tor-rtcompat", path = ".", features = ["testing"] }
+tor-rtcompat-testing = { package = "zakura-tor-rtcompat", path = ".", features = ["testing"] }
+
+[lib]
+name = "tor_rtcompat"

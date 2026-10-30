@@ -1,6 +1,6 @@
 [package]
-name = "tor-llcrypto"
-version = "0.47.0"
+name = "zakura-tor-llcrypto"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Low level cryptography wrappers used by Tor"
 keywords = ["tor", "arti", "cryptography"]
 categories = ["cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = []
@@ -66,7 +66,7 @@ rand_core_06 = { package = "rand_core", version = "0.6", default-features = fals
 rand_jitter = { version = "0.6", features = ["std"] }
 reseeding_rng = "0.10.7"
 rsa = "0.9.10"
-safelog = { version = "0.10.0", path = "../safelog" }
+safelog = { version = "0.10.0-zakura.1", path = "../safelog", package = "zakura-safelog" }
 serde = "1.0.229"
 sha1 = "0.10.7"
 sha2 = "0.10.9"
@@ -74,8 +74,8 @@ sha3 = "0.10.9"
 signature = "2"
 subtle = "2"
 thiserror = "2"
-tor-error = { version = "0.47.0", path = "../tor-error" }
-tor-memquota-cost = { version = "0.47.0", path = "../tor-memquota-cost", default-features = false, optional = true }
+tor-error = { version = "0.47.0-zakura.1", path = "../tor-error", package = "zakura-tor-error" }
+tor-memquota-cost = { version = "0.47.0-zakura.1", path = "../tor-memquota-cost", default-features = false, optional = true, package = "zakura-tor-memquota-cost" }
 typenum = { version = "1.20.1", optional = true }
 visibility = "0.1.1"
 x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
@@ -86,7 +86,7 @@ cipher = "0.5.2"
 hex-literal = "1.1"
 rand = "0.10.3"
 serde_test = "1.0.177"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
+tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
 [package.metadata.docs.rs]
 all-features = true
 
@@ -104,3 +104,6 @@ getrandom_02 = { package = "getrandom", version = "0.2.17", features = ["js"] }
 # rand_core 0.9 needs this version of getrandom, and we need to tell it to use
 # the wasm_js feature.
 getrandom_03 = { package = "getrandom", version = "0.3.4", features = ["wasm_js"] }
+
+[lib]
+name = "tor_llcrypto"

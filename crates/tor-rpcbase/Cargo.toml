@@ -1,6 +1,6 @@
 [package]
-name = "tor-rpcbase"
-version = "0.47.0"
+name = "zakura-tor-rpcbase"
+version = "0.47.0-zakura.1"
 edition = "2024"
 rust-version = "1.92"
 authors = ["The Tor Project, Inc.", "eta <eta@torproject.org>"]
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Low level functionality for Arti's RPC service"
 keywords = ["tor", "arti", "rpc"]
 categories = ["asynchronous"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [dependencies]
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
@@ -22,8 +22,8 @@ inventory = "0.3.25"
 paste = "1.0.15"
 serde = { version = "1.0.229", features = ["derive"] }
 thiserror = "2"
-tor-async-utils = { path = "../tor-async-utils", version = "0.47.0" }
-tor-error = { path = "../tor-error/", version = "0.47.0", features = ["rpc"] }
+tor-async-utils = { path = "../tor-async-utils", version = "0.47.0-zakura.1", package = "zakura-tor-async-utils" }
+tor-error = { path = "../tor-error/", version = "0.47.0-zakura.1", features = ["rpc"], package = "zakura-tor-error" }
 typetag = "0.2.23"
 void = "1"
 
@@ -39,3 +39,6 @@ describe-methods = []
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_rpcbase"
