@@ -137,7 +137,6 @@ impl<RT: Runtime> AbstractTunnelBuilder<RT> for FakeBuilder<RT> {
             TargetTunnelUsage::Exit {
                 ports,
                 isolation,
-                country_code,
                 require_stability,
             } => SupportedTunnelUsage::Exit {
                 policy: ExitPolicy::from_target_ports(&TargetPorts::from(&ports[..])),
@@ -146,7 +145,6 @@ impl<RT: Runtime> AbstractTunnelBuilder<RT> for FakeBuilder<RT> {
                 } else {
                     Some(isolation.clone())
                 },
-                country_code: *country_code,
                 all_relays_stable: *require_stability,
             },
             #[cfg(feature = "hs-common")]

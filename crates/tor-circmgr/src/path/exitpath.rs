@@ -14,27 +14,11 @@ use tor_linkspec::OwnedChanTarget;
 use tor_netdir::{NetDir, Relay};
 use tor_relay_selection::{RelayExclusion, RelaySelectionConfig, RelaySelector, RelayUsage};
 use tor_rtcompat::Runtime;
-#[cfg(feature = "geoip")]
-use {tor_geoip::CountryCode, tor_relay_selection::RelayRestriction};
 
 /// Internal representation of PathBuilder.
 enum ExitPathBuilderInner {
     /// Request a path that allows exit to the given `TargetPort`s.
     WantsPorts(Vec<TargetPort>),
-
-    /// Request a path that allows exit with a relay in the given country.
-    // TODO GEOIP: refactor this builder to allow conjunction!
-    // See discussion here:
-    // https://gitlab.torproject.org/tpo/core/arti/-/merge_requests/1537#note_2942218
-    #[cfg(feature = "geoip")]
-    ExitInCountry {
-        /// The country to exit in.
-        country: CountryCode,
-        /// Some target ports to use (works like `WantsPorts`).
-        ///
-        /// HACK(eta): This is a horrible hack to work around the lack of conjunction.
-        ports: Vec<TargetPort>,
-    },
 
     /// Request a path that allows exit to _any_ port.
     AnyExit {
@@ -70,24 +54,6 @@ impl ExitPathBuilder {
         }
         Self {
             inner: ExitPathBuilderInner::WantsPorts(ports),
-            compatible_with: None,
-            require_stability: true,
-        }
-    }
-
-    #[cfg(feature = "geoip")]
-    /// Create a new builder that will try to get an exit relay in `country`,
-    /// containing all the ports in `ports`.
-    ///
-    /// If the list of ports is empty, it is disregarded.
-    // TODO GEOIP: this method is hacky, and should be refactored.
-    pub(crate) fn in_given_country(
-        country: CountryCode,
-        wantports: impl IntoIterator<Item = TargetPort>,
-    ) -> Self {
-        let ports: Vec<TargetPort> = wantports.into_iter().collect();
-        Self {
-            inner: ExitPathBuilderInner::ExitInCountry { country, ports },
             compatible_with: None,
             require_stability: true,
         }
@@ -156,16 +122,6 @@ impl AnonymousPathBuilder for ExitPathBuilder {
                 selector
             }
 
-            #[cfg(feature = "geoip")]
-            ExitPathBuilderInner::ExitInCountry { country, ports } => {
-                let mut selector = RelaySelector::new(
-                    RelayUsage::exit_to_all_ports(rs_cfg, ports.clone()),
-                    guard_exclusion,
-                );
-                selector.push_restriction(RelayRestriction::require_country_code(*country));
-                selector
-            }
-
             ExitPathBuilderInner::WantsPorts(wantports) => RelaySelector::new(
                 RelayUsage::exit_to_all_ports(rs_cfg, wantports.clone()),
                 guard_exclusion,
@@ -185,8 +141,7 @@ impl AnonymousPathBuilder for ExitPathBuilder {
         use ExitPathBuilderInner::*;
         match &self.inner {
             WantsPorts(_) => "exit circuit",
-            #[cfg(feature = "geoip")]
-            ExitInCountry { .. } => "country-specific exit circuit",
+
             AnyExit { .. } => "testing circuit",
         }
     }

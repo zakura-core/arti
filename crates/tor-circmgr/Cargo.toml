@@ -34,7 +34,6 @@ full = [
     "tor-persist/full",
     "tor-proto/full",
     "tor-rtcompat/full",
-    "tor-geoip?/full",
     "tor-async-utils/full",
     "tor-protover/full",
     "tor-relay-selection/full",
@@ -55,14 +54,8 @@ testing = ["tor-guardmgr/testing", "__is_experimental"]
 #
 # These APIs are not covered by semantic versioning.  Using this
 # feature voids your "semver warrantee".
-experimental = ["experimental-api", "testing", "geoip", "conflux"]
+experimental = ["experimental-api", "testing", "conflux"]
 conflux = ["__is_experimental", "tor-proto/conflux"]
-geoip = [
-    "tor-geoip",
-    "tor-netdir/geoip",
-    "tor-relay-selection/geoip",
-    "__is_experimental",
-]
 experimental-api = ["visibility", "__is_experimental"]
 send-control-msg = ["tor-proto/send-control-msg"]
 hs-client = ["hs-common"]
@@ -98,7 +91,6 @@ tor-chanmgr = { path = "../tor-chanmgr", version = "0.47.0" }
 tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
 tor-dircommon = { path = "../tor-dircommon", version = "0.47.0" }
 tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
-tor-geoip = { path = "../tor-geoip", version = "0.47.0", optional = true }
 tor-guardmgr = { path = "../tor-guardmgr", version = "0.47.0" }
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
 tor-memquota = { version = "0.47.0", path = "../tor-memquota", default-features = false }
@@ -112,7 +104,6 @@ tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0" }
 tor-units = { path = "../tor-units", version = "0.47.0" }
 tracing = "0.1.44"
 visibility = { version = "0.1.1", optional = true }
-void = "1.0"
 weak-table = "0.4.0"
 web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
 

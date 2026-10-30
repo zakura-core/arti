@@ -55,7 +55,6 @@ full = [
     "tor-rpcbase?/full",
     "tor-keymgr/full",
     "tor-linkspec/full",
-    "tor-geoip?/full",
     "tor-hsservice?/full",
     "tor-memquota/full",
     "tor-config-path/full",
@@ -130,7 +129,6 @@ experimental = [
     "hss-negotiate-extensions",
     "experimental-api",
     "error_detail",
-    "geoip",
     "hs-pow-full",
     "testing",
     "tor-proto/experimental",
@@ -153,7 +151,6 @@ experimental-api = ["__is_experimental"]
 dirfilter = ["tor-dirmgr/dirfilter", "__is_experimental"]
 ephemeral-keystore = ["tor-keymgr/ephemeral-keystore", "__is_experimental"]
 error_detail = ["__is_experimental"]
-geoip = ["tor-circmgr/geoip", "tor-dirmgr/geoip", "tor-geoip", "__is_experimental"]
 hsc-negotiate-extensions = ["tor-hsclient?/negotiate-extensions", "__is_experimental"]
 hss-negotiate-extensions = ["tor-hsservice?/negotiate-extensions", "__is_experimental"]
 
@@ -195,7 +192,6 @@ tor-config-path = { path = "../tor-config-path", version = "0.47.0", features = 
 tor-dircommon = { path = "../tor-dircommon", version = "0.47.0" }
 tor-dirmgr = { path = "../tor-dirmgr", version = "0.47.0", default-features = false, features = ["mmap"] }
 tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
-tor-geoip = { path = "../tor-geoip", version = "0.47.0", optional = true }
 tor-guardmgr = { path = "../tor-guardmgr", version = "0.47.0" }
 tor-hsclient = { path = "../tor-hsclient", version = "0.47.0", optional = true }
 tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0", optional = true }
