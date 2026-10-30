@@ -14,12 +14,23 @@ use std::{
 use extend::ext;
 use std::sync::LazyLock;
 
+#[cfg(all(unix, not(target_arch = "wasm32")))]
+use dirs::home_dir;
+#[cfg(all(windows, not(target_arch = "wasm32")))]
+use dirs::known_folder_profile as home_dir;
+
+/// WebAssembly has no home directory, matching the previous provider.
+#[cfg(target_arch = "wasm32")]
+fn home_dir() -> Option<PathBuf> {
+    None
+}
+
 /// Cached value of our observed home directory.
 static HOMEDIRS: LazyLock<Vec<PathBuf>> = LazyLock::new(default_homedirs);
 
 /// Return a list of home directories in official and canonical forms.
 fn default_homedirs() -> Vec<PathBuf> {
-    if let Some(basic_home) = dirs::home_dir() {
+    if let Some(basic_home) = home_dir() {
         // Build as a HashSet, to de-duplicate.
         let mut homedirs = HashSet::new();
 
@@ -153,14 +164,14 @@ mod test {
 
     #[test]
     fn in_home() {
-        if let Some(home) = dirs::home_dir() {
+        if let Some(home) = home_dir() {
             check_with_home(&home);
         }
     }
 
     #[test]
     fn in_canonical_home() {
-        if let Some(canonical_home) = dirs::home_dir()
+        if let Some(canonical_home) = home_dir()
             .map(std::fs::canonicalize)
             .transpose()
             .ok()
