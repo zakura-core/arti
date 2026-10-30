@@ -16,8 +16,9 @@ The type is declared `pub` because it implements the existing public associated
 type; it is not re-exported as a new top-level API.
 
 REMOVED (crate-visible): `From<async_executors::TokioTp>` for the internal
-`TokioRuntimeHandle`. The existing `From<tokio::runtime::Handle>` conversion,
-runtime constructors, and `is_owned` behavior are unchanged.
+`TokioRuntimeHandle`, including the corresponding blanket `Into` conversion.
+The existing `From<tokio::runtime::Handle>` conversion, runtime constructors,
+and `is_owned` behavior are unchanged.
 
 CHANGED: Runtime construction still returns `io::ErrorKind::Other` on failure,
 but its error payload is the original Tokio builder `io::Error` rather than
@@ -26,6 +27,7 @@ owner's drop, including Tokio's existing panic when dropped in an async context.
 
 Cargo feature names are unchanged. `async_executors` is needed only with
 `async-std`; Tokio-only builds no longer enable its unused process support.
-When both runtimes are enabled, weak feature forwarding preserves the existing
-`async_executors` Tokio features. Async-std's implementations and public types
-are unchanged.
+Its Tokio features are no longer incidentally enabled in mixed-runtime builds
+either. Callers using that provider's `TokioTp` or `BlockingHandle::tokio`
+directly must enable its Tokio features explicitly. Async-std's runtime
+implementations and associated handle type are unchanged.

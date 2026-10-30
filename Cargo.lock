@@ -442,7 +442,6 @@ dependencies = [
  "futures-util",
  "pin-project",
  "rustc_version",
- "tokio",
 ]
 
 [[package]]
