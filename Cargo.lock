@@ -8082,6 +8082,7 @@ dependencies = [
  "extend",
  "futures",
  "itertools 0.15.0",
+ "libc",
  "paste",
  "pin-project",
  "rand 0.10.3",
@@ -8104,6 +8105,7 @@ dependencies = [
  "tracing-test",
  "visibility",
  "void",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
