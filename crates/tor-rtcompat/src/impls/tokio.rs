@@ -517,7 +517,7 @@ mod test {
     /// Launch a task that remains pending until its runtime is shut down.
     fn pending_task(runtime: &TokioRuntimeHandle) -> mpsc::Receiver<()> {
         let (dropped_tx, dropped_rx) = mpsc::channel();
-        let (started_tx, started_rx) = futures::channel::oneshot::channel();
+        let (started_tx, started_rx) = mpsc::channel();
         futures::task::SpawnExt::spawn(runtime, async move {
             let guard = TaskDropped(dropped_tx);
             let _ = started_tx.send(());
@@ -525,13 +525,7 @@ mod test {
             drop(guard);
         })
         .expect("spawn pending task");
-        runtime
-            .block_on(async {
-                tokio_crate::time::timeout(TEST_TIMEOUT, started_rx)
-                    .await
-                    .expect("task starts before deadline")
-            })
-            .expect("task started");
+        started_rx.recv_timeout(TEST_TIMEOUT).expect("task started");
         dropped_rx
     }
 
@@ -603,22 +597,27 @@ mod test {
     #[test]
     fn dropped_blocking_handle_detaches() {
         let runtime = create_runtime().expect("create runtime");
-        runtime.block_on(async {
-            let (started_tx, started_rx) = futures::channel::oneshot::channel();
-            let (finished_tx, finished_rx) = futures::channel::oneshot::channel();
-            let (release_tx, release_rx) = mpsc::channel();
-            let handle = runtime.spawn_blocking(move || {
-                let _ = started_tx.send(());
-                release_rx
-                    .recv_timeout(TEST_TIMEOUT)
-                    .expect("release worker");
-                let _ = finished_tx.send(29);
-            });
-            started_rx.await.expect("blocking callback started");
-            drop(handle);
-            release_tx.send(()).expect("release detached callback");
-            assert_eq!(finished_rx.await.expect("detached callback finished"), 29);
+        let (started_tx, started_rx) = mpsc::channel();
+        let (finished_tx, finished_rx) = mpsc::channel();
+        let (release_tx, release_rx) = mpsc::channel();
+        let handle = runtime.spawn_blocking(move || {
+            let _ = started_tx.send(());
+            release_rx
+                .recv_timeout(TEST_TIMEOUT)
+                .expect("release worker");
+            let _ = finished_tx.send(29);
         });
+        started_rx
+            .recv_timeout(TEST_TIMEOUT)
+            .expect("blocking callback started");
+        drop(handle);
+        release_tx.send(()).expect("release detached callback");
+        assert_eq!(
+            finished_rx
+                .recv_timeout(TEST_TIMEOUT)
+                .expect("detached callback finished"),
+            29
+        );
     }
 
     #[test]
