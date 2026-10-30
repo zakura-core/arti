@@ -264,7 +264,7 @@ impl OnionServiceStatus {
 /// change having occurred.
 ///
 //
-// We define this so that we aren't exposing postage in our public API.
+// This wrapper keeps the channel implementation out of the public API.
 #[derive(Clone)]
 pub struct OnionServiceStatusStream(tor_async_utils::watch::Receiver<OnionServiceStatus>);
 
@@ -279,8 +279,7 @@ impl futures::Stream for OnionServiceStatusStream {
     }
 }
 
-/// A shared handle to a tor_async_utils::watch::Sender that we can use to
-/// update an OnionServiceStatus.
+/// A shared [`tor_async_utils::watch::Sender`] for [`OnionServiceStatus`] updates.
 #[derive(Clone)]
 pub(crate) struct StatusSender(Arc<Mutex<tor_async_utils::watch::Sender<OnionServiceStatus>>>);
 

@@ -74,9 +74,8 @@ impl<T> NotifySender<T> {
 
     /// Notify all [`NotifyReceiver`]s.
     pub(crate) fn notify(&mut self) {
-        // from `tor_async_utils::watch::Sender`:
-        // > Mutably borrows the contained value, blocking the channel while the borrow is held.
-        // > After the borrow is released, receivers will be notified of a new value.
+        // Releasing a mutable watch guard notifies all receivers, even if the
+        // unit value did not change.
         self.sender.borrow_mut();
     }
 

@@ -158,7 +158,7 @@ struct SvcInner {
     /// A oneshot that will be dropped when this object is dropped.
     _shutdown_tx: postage::broadcast::Sender<void::Void>,
 
-    /// Postage sender, used to tell subscribers about changes in the status of
+    /// Watch sender, used to tell subscribers about changes in the status of
     /// this onion service.
     status_tx: StatusSender,
 
