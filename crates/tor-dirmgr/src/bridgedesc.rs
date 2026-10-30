@@ -347,7 +347,7 @@ struct State {
     /// Earliest time from either `retry_schedule` or `refetch_schedule`
     ///
     /// `None` means "wait indefinitely".
-    earliest_timeout: postage::watch::Sender<Option<Instant>>,
+    earliest_timeout: tor_async_utils::watch::Sender<Option<Instant>>,
 }
 
 impl Debug for State {
@@ -543,7 +543,7 @@ impl<R: Runtime, M: Mockable<R>> BridgeDescMgr<R, M> {
         }
 
         let config = config.clone().into();
-        let (earliest_timeout, timeout_update) = postage::watch::channel();
+        let (earliest_timeout, timeout_update) = tor_async_utils::watch::channel();
 
         let state = Mutex::new(State {
             config,
@@ -796,7 +796,7 @@ impl State {
         }
 
         // Restore liveness property *Timeout**
-        // postage::watch will tell up the timeout task about the new wake-up time.
+        // tor_async_utils::watch will tell up the timeout task about the new wake-up time.
         let new_earliest_timeout = [
             // First retry.  These are std Instant.
             self.retry_schedule.peek().map(|re| re.when),
@@ -1193,7 +1193,7 @@ fn process_document<R: Runtime>(
 async fn timeout_task<R: Runtime, M: Mockable<R>>(
     runtime: R,
     inner: Weak<Manager<R, M>>,
-    update: postage::watch::Receiver<Option<Instant>>,
+    update: tor_async_utils::watch::Receiver<Option<Instant>>,
 ) {
     /// Requeue things in `*_schedule` whose time for action has arrived
     ///
@@ -1415,7 +1415,7 @@ impl State {
     /// `input` should be what was passed to `set_bridges` (or `None` if not known).
     ///
     /// Does not make any changes.
-    /// Only takes `&mut` because postage::watch::Sender::borrow` wants it.
+    /// Only takes `&mut` because tor_async_utils::watch::Sender::borrow` wants it.
     #[cfg(test)]
     fn check_consistency<'i, R, I>(&mut self, runtime: &R, input: Option<I>)
     where

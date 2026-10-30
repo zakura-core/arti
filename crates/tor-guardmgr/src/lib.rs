@@ -210,7 +210,7 @@ struct GuardMgrInner {
     storage: DynStorageHandle<GuardSets>,
 
     /// A sender object to publish changes in our estimated clock skew.
-    send_skew: postage::watch::Sender<Option<SkewEstimate>>,
+    send_skew: tor_async_utils::watch::Sender<Option<SkewEstimate>>,
 
     /// A receiver object to hand out to observers who want to know about
     /// changes in our estimated clock skew.
@@ -346,7 +346,7 @@ impl<R: Runtime> GuardMgr<R> {
         // that we're getting at this stage of our (pre-0.1) development.
         let state = storage.load()?.unwrap_or_default();
 
-        let (send_skew, recv_skew) = postage::watch::channel();
+        let (send_skew, recv_skew) = tor_async_utils::watch::channel();
         let recv_skew = ClockSkewEvents { inner: recv_skew };
 
         let inner = Arc::new(Mutex::new(GuardMgrInner {

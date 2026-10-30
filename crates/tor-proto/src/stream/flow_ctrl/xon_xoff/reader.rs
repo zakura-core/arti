@@ -355,7 +355,8 @@ mod test {
 
         // For the flow control logic to send rate limit changes to the stream writer.
         // We don't use this in this test, but the `XonXoffFlowCtrl` needs the tx side.
-        let (rate_limit_tx, _rate_limit_rx) = postage::watch::channel_with(StreamRateLimit::MAX);
+        let (rate_limit_tx, _rate_limit_rx) =
+            tor_async_utils::watch::channel_with(StreamRateLimit::MAX);
 
         // For the flow control logic to request a new drain rate update from the stream reader.
         let mut drain_rate_request_tx = NotifySender::new_typed();

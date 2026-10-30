@@ -167,7 +167,7 @@ struct ClientShared<R: Runtime> {
     bootstrap_in_progress: AsyncMutex<()>,
 
     /// Sender used to update changes in our bootstrap settings.
-    bootstrap_setting_sender: Mutex<postage::watch::Sender<BootstrapSetting>>,
+    bootstrap_setting_sender: Mutex<tor_async_utils::watch::Sender<BootstrapSetting>>,
 
     /// Whether or not we should call `bootstrap` before doing things that require
     /// bootstrapping.
@@ -214,17 +214,17 @@ struct NotConstructedInner<R: Runtime> {
     config: TorClientConfig,
 
     /// A receiver to give to various tasks that want to monitor our dormant status.
-    dormant_recv: postage::watch::Receiver<Option<DormantMode>>,
+    dormant_recv: tor_async_utils::watch::Receiver<Option<DormantMode>>,
 
     /// A sender used to produce updates about our bootstrapping status.
     ///
     /// NOTE: The fact that this type is not Clone is the only reason
     /// that [`RunningInner::new`] needs to take NotConstructedInner by value.
     /// With some redesign we could simplify this, and do away with [`Inner::Poisoned`].
-    status_sender: postage::watch::Sender<BootstrapStatus>,
+    status_sender: tor_async_utils::watch::Sender<BootstrapStatus>,
 
     /// A receiver used to inform the bootstrap status processor about changes in our settings.
-    bootstrap_setting_receiver: postage::watch::Receiver<BootstrapSetting>,
+    bootstrap_setting_receiver: tor_async_utils::watch::Receiver<BootstrapSetting>,
 
     /// A (possibly user-provided) builder used to construct our NetDirProvider.
     dirmgr_builder: Arc<dyn crate::builder::DirProviderBuilder<R>>,
@@ -1009,16 +1009,16 @@ impl<R: Runtime> TorClient<R> {
             running_inner_is_present: false,
         };
         let (bootstrap_setting_sender, bootstrap_setting_receiver) =
-            postage::watch::channel_with(bootstrap_setting);
+            tor_async_utils::watch::channel_with(bootstrap_setting);
         let bootstrap_setting_sender = Mutex::new(bootstrap_setting_sender);
         let (status_sender, status_receiver) =
-            postage::watch::channel_with(BootstrapStatus::from_setting(bootstrap_setting));
+            tor_async_utils::watch::channel_with(BootstrapStatus::from_setting(bootstrap_setting));
         let status_receiver = status::BootstrapEvents {
             inner: status_receiver,
         };
         let timeout_cfg = config.stream_timeouts.clone();
 
-        let (dormant_send, dormant_recv) = postage::watch::channel_with(Some(dormant));
+        let (dormant_send, dormant_recv) = tor_async_utils::watch::channel_with(Some(dormant));
         let dormant_send = DropNotifyWatchSender::new(dormant_send);
         let client_isolation = IsolationToken::new();
         let inert_client = InertTorClient::new(config)?;
@@ -2534,7 +2534,7 @@ impl<R: Runtime> ClientShared<R> {
 /// This function is spawned as a task during client construction.
 // TODO should this perhaps be done by each TaskHandle?
 async fn tasks_monitor_dormant<R: Runtime>(
-    mut dormant_rx: postage::watch::Receiver<Option<DormantMode>>,
+    mut dormant_rx: tor_async_utils::watch::Receiver<Option<DormantMode>>,
     netdir: Arc<dyn NetDirProvider>,
     chanmgr: Arc<tor_chanmgr::ChanMgr<R>>,
     #[cfg(feature = "bridge-client")] bridge_desc_mgr: Arc<Mutex<Option<Arc<BridgeDescMgr<R>>>>>,

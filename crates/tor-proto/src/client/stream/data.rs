@@ -11,7 +11,7 @@ use futures::stream::StreamExt;
 use futures::task::{Context, Poll};
 use futures::{Future, Stream};
 use pin_project::pin_project;
-use postage::watch;
+use tor_async_utils::watch;
 
 #[cfg(feature = "tokio")]
 use tokio_crate::io::ReadBuf;
@@ -178,7 +178,7 @@ pub struct ClientDataStreamCtrl {
 
     /// Shared user-visible information about the state of this stream.
     ///
-    /// TODO RPC: This will probably want to be a `postage::Watch` or something
+    /// TODO RPC: This will probably want to be a watch channel or something
     /// similar, if and when it stops moving around.
     #[cfg(feature = "stream-ctrl")]
     status: Arc<Mutex<DataStreamStatus>>,

@@ -242,7 +242,7 @@ impl fmt::Display for BootstrapStatus {
 /// TODO(nickm): This should eventually close the stream when the client is
 /// dropped.
 pub(crate) async fn report_status(
-    mut sender: postage::watch::Sender<BootstrapStatus>,
+    mut sender: tor_async_utils::watch::Sender<BootstrapStatus>,
     conn_status: ConnStatusEvents,
     dir_status: impl Stream<Item = DirBootstrapStatus> + Send + Unpin,
     skew_status: ClockSkewEvents,
@@ -288,13 +288,13 @@ pub(crate) async fn report_status(
 // Note: We use a wrapper type around watch::Receiver here, in order to hide its
 // implementation type.  We do that because we might want to change the type in
 // the future, and because some of the functionality exposed by Receiver (like
-// `borrow()` and the postage::Stream trait) are extraneous to the API we want.
+// `borrow()` and the watch receiver’s other methods) are extraneous to the API we want.
 #[derive(Clone, Educe)]
 #[educe(Debug)]
 pub struct BootstrapEvents {
     /// The receiver that implements this stream.
     #[educe(Debug(method = "skip_fmt"))]
-    pub(crate) inner: postage::watch::Receiver<BootstrapStatus>,
+    pub(crate) inner: tor_async_utils::watch::Receiver<BootstrapStatus>,
 }
 
 impl Stream for BootstrapEvents {

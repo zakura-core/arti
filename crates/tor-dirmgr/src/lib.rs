@@ -80,8 +80,8 @@ pub use crate::shared_ref::SharedMutArc;
 use crate::storage::{DynStore, Store};
 use bootstrap::AttemptId;
 use event::DirProgress;
-use postage::watch;
 use scopeguard::ScopeGuard;
+use tor_async_utils::watch;
 use tor_circmgr::CircMgr;
 use tor_dirclient::SourceInfo;
 use tor_dircommon::config::DirTolerance;
@@ -305,7 +305,7 @@ pub struct DirMgr<R: Runtime> {
     /// A receiver handle that gets notified whenever our bootstrapping status
     /// changes.
     ///
-    /// We don't need to keep this drained, since `postage::watch` already knows
+    /// We don't need to keep this drained, since `tor_async_utils::watch` already knows
     /// to discard unread events.
     receive_status: DirBootstrapEvents,
 
@@ -908,7 +908,7 @@ impl<R: Runtime> DirMgr<R> {
         let default_parameters = NetParameters::from_map(&config.override_net_params);
         let default_parameters = Mutex::new(Arc::new(default_parameters));
 
-        let (send_status, receive_status) = postage::watch::channel();
+        let (send_status, receive_status) = tor_async_utils::watch::channel();
         let send_status = Mutex::new(send_status);
         let receive_status = DirBootstrapEvents {
             inner: receive_status,

@@ -1,214 +1,409 @@
-//! Extension trait for more efficient use of [`postage::watch`].
+//! Runtime-independent distribution of the most recent state.
+//!
+//! There is one sender and any number of receivers. Each receiver first yields
+//! the current value, then observes updates; intermediate values may coalesce.
+//! Notifications use the existing [`crate::oneshot_broadcast`] primitive.
 
-use extend::ext;
+use crate::oneshot_broadcast::{self, ReceiverFuture};
+use futures::{Future, Sink, Stream};
+use std::fmt;
+use std::future::IntoFuture;
 use std::ops::{Deref, DerefMut};
-use void::{ResultVoidExt as _, Void};
+use std::pin::Pin;
+use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::task::{Context, Poll};
 
-/// Extension trait for some `postage::watch::Sender` to provide `maybe_send`
+/// The current value and notification for the next update.
+struct State<T> {
+    value: T,
+    changed: oneshot_broadcast::Receiver<()>,
+}
+
+/// The single writer of a watched value.
+pub struct Sender<T> {
+    shared: Arc<RwLock<State<T>>>,
+    changed: Option<oneshot_broadcast::Sender<()>>,
+}
+
+/// A stream of snapshots of a watched value.
 ///
-/// Ideally these, or something like them, would be upstream:
-/// See <https://github.com/austinjones/postage-rs/issues/56>.
-///
-/// We provide this as an extension trait became the implementation is a bit fiddly.
-/// This lets us concentrate on the actual logic, when we use it.
-#[ext(name = PostageWatchSenderExt)]
-pub impl<T> postage::watch::Sender<T> {
-    /// Update, by calling a fallible function, sending only if necessary
-    ///
-    /// Calls `update` on the current value in the watch, to obtain a new value.
-    /// If the new value doesn't compare equal, updates the watch, notifying receivers.
-    fn try_maybe_send<F, E>(&mut self, update: F) -> Result<(), E>
-    where
-        T: PartialEq,
-        F: FnOnce(&T) -> Result<T, E>,
-    {
-        let lock = self.borrow();
-        let new = update(&*lock)?;
-        if new != *lock {
-            // We must drop the lock guard, because otherwise borrow_mut will deadlock.
-            // There is no race, because we hold &mut self, so no-one else can get a look in.
-            // (postage::watch::Sender is not one of those facilities which is mereely a
-            // handle, and Clone.)
-            drop(lock);
-            *self.borrow_mut() = new;
+/// Cloning starts a fresh subscription, whose first item is the latest value.
+pub struct Receiver<T> {
+    shared: Arc<RwLock<State<T>>>,
+    changed: ReceiverFuture<()>,
+    initial: bool,
+    closed: bool,
+}
+
+/// A send failed because no receivers remain.
+pub struct SendError<T>(T);
+
+/// An immediate receive did not produce a value.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
+pub enum TryRecvError {
+    /// No update is ready yet.
+    Pending,
+    /// The sender was dropped and all observed updates were consumed.
+    Closed,
+}
+
+/// Create a watch initialized to [`Default::default`].
+pub fn channel<T: Clone + Default>() -> (Sender<T>, Receiver<T>) {
+    channel_with(T::default())
+}
+
+/// Create a watch initialized to `value`.
+pub fn channel_with<T: Clone>(value: T) -> (Sender<T>, Receiver<T>) {
+    let (changed_tx, changed_rx) = oneshot_broadcast::channel();
+    let shared = Arc::new(RwLock::new(State {
+        value,
+        changed: changed_rx,
+    }));
+    let sender = Sender {
+        shared,
+        changed: Some(changed_tx),
+    };
+    let receiver = sender.receiver();
+    (sender, receiver)
+}
+
+impl<T> Sender<T> {
+    fn receiver(&self) -> Receiver<T> {
+        let state = self.shared.read().unwrap_or_else(|e| e.into_inner());
+        Receiver {
+            shared: Arc::clone(&self.shared),
+            changed: state.changed.clone().into_future(),
+            initial: true,
+            closed: false,
         }
+    }
+
+    /// Subscribe, including the current value as the first stream item.
+    pub fn subscribe(&mut self) -> Receiver<T> {
+        self.receiver()
+    }
+
+    /// Borrow the current value without notifying receivers.
+    pub fn borrow(&mut self) -> impl Deref<Target = T> + '_ {
+        ReadGuard(self.shared.read().unwrap_or_else(|e| e.into_inner()))
+    }
+
+    /// Borrow the current value mutably, notifying receivers on release.
+    pub fn borrow_mut(&mut self) -> impl DerefMut<Target = T> + '_ {
+        WriteGuard {
+            state: Some(self.shared.write().unwrap_or_else(|e| e.into_inner())),
+            changed: &mut self.changed,
+        }
+    }
+}
+
+impl<T> Receiver<T> {
+    /// Borrow the latest value without consuming an update.
+    pub fn borrow(&self) -> impl Deref<Target = T> + '_ {
+        ReadGuard(self.shared.read().unwrap_or_else(|e| e.into_inner()))
+    }
+}
+
+impl<T: Clone> Receiver<T> {
+    /// Try to consume the current value or an update without waiting.
+    pub fn try_recv(&mut self) -> Result<T, TryRecvError> {
+        let mut cx = Context::from_waker(futures::task::noop_waker_ref());
+        match Pin::new(self).poll_next(&mut cx) {
+            Poll::Ready(Some(value)) => Ok(value),
+            Poll::Ready(None) => Err(TryRecvError::Closed),
+            Poll::Pending => Err(TryRecvError::Pending),
+        }
+    }
+}
+
+impl<T> Clone for Receiver<T> {
+    fn clone(&self) -> Self {
+        let state = self.shared.read().unwrap_or_else(|e| e.into_inner());
+        Self {
+            shared: Arc::clone(&self.shared),
+            changed: state.changed.clone().into_future(),
+            initial: true,
+            closed: false,
+        }
+    }
+}
+
+impl<T: Clone> Stream for Receiver<T> {
+    type Item = T;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<T>> {
+        if self.closed {
+            return Poll::Ready(None);
+        }
+        if !self.initial {
+            match Pin::new(&mut self.changed).poll(cx) {
+                Poll::Pending => return Poll::Pending,
+                Poll::Ready(Err(_)) => {
+                    self.closed = true;
+                    return Poll::Ready(None);
+                }
+                Poll::Ready(Ok(())) => {}
+            }
+        }
+        let (value, changed) = {
+            let state = self.shared.read().unwrap_or_else(|e| e.into_inner());
+            (state.value.clone(), state.changed.clone().into_future())
+        };
+        self.changed = changed;
+        self.initial = false;
+        Poll::Ready(Some(value))
+    }
+}
+
+impl<T> Sink<T> for Sender<T> {
+    type Error = SendError<T>;
+
+    fn poll_ready(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn start_send(mut self: Pin<&mut Self>, item: T) -> Result<(), Self::Error> {
+        if Arc::strong_count(&self.shared) == 1 {
+            return Err(SendError(item));
+        }
+        *self.borrow_mut() = item;
         Ok(())
     }
 
-    /// Update, by calling a function, sending only if necessary
-    ///
-    /// Calls `update` on the current value in the watch, to obtain a new value.
-    /// If the new value doesn't compare equal, updates the watch, notifying receivers.
-    fn maybe_send<F>(&mut self, update: F)
-    where
-        T: PartialEq,
-        F: FnOnce(&T) -> T,
-    {
-        self.try_maybe_send(|t| Ok::<_, Void>(update(t)))
-            .void_unwrap();
+    fn poll_flush(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn poll_close(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
     }
 }
 
-#[derive(Debug)]
-/// Wrapper for `postage::watch::Sender` that sends `DropNotifyEof::eof()` when dropped
-///
-/// Derefs to the inner `Sender`.
-///
-/// Ideally this would be behaviour promised by upstream, or something
-/// See <https://github.com/austinjones/postage-rs/issues/57>.
-pub struct DropNotifyWatchSender<T: DropNotifyEofSignallable>(Option<postage::watch::Sender<T>>);
+/// Recovering a poisoned lock preserves the previous non-poisoning watch behavior.
+struct ReadGuard<'a, T>(RwLockReadGuard<'a, State<T>>);
 
-/// Values that can signal EOF
-///
-/// Implemented for `Option`, which is usually what you want to use.
-pub trait DropNotifyEofSignallable {
-    /// Generate the EOF value
-    fn eof() -> Self;
-
-    /// Does this value indicate EOF?
-    ///
-    /// ### Deprecated
-    ///
-    /// This method is deprecated.
-    /// It should not be called, or defined, in new programs.
-    /// It is not required by [`DropNotifyWatchSender`].
-    /// The provided implementation always returns `false`.
-    #[deprecated]
-    fn is_eof(&self) -> bool {
-        false
+impl<T> Deref for ReadGuard<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.0.value
     }
 }
 
-impl<T> DropNotifyEofSignallable for Option<T> {
-    fn eof() -> Self {
-        None
-    }
+struct WriteGuard<'a, T> {
+    state: Option<RwLockWriteGuard<'a, State<T>>>,
+    changed: &'a mut Option<oneshot_broadcast::Sender<()>>,
+}
 
-    fn is_eof(&self) -> bool {
-        self.is_none()
+impl<T> Deref for WriteGuard<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.state.as_ref().expect("guard released").value
     }
 }
 
-impl<T: DropNotifyEofSignallable> DropNotifyWatchSender<T> {
-    /// Arrange to send `T::Default` when `inner` is dropped
-    pub fn new(inner: postage::watch::Sender<T>) -> Self {
-        DropNotifyWatchSender(Some(inner))
-    }
-
-    /// Unwrap the inner sender, defusing the drop notification
-    pub fn into_inner(mut self) -> postage::watch::Sender<T> {
-        self.0.take().expect("inner was None")
+impl<T> DerefMut for WriteGuard<'_, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.state.as_mut().expect("guard released").value
     }
 }
 
-impl<T: DropNotifyEofSignallable> Deref for DropNotifyWatchSender<T> {
-    type Target = postage::watch::Sender<T>;
-    fn deref(&self) -> &Self::Target {
-        self.0.as_ref().expect("inner was None")
-    }
-}
-
-impl<T: DropNotifyEofSignallable> DerefMut for DropNotifyWatchSender<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.0.as_mut().expect("inner was None")
-    }
-}
-
-impl<T: DropNotifyEofSignallable> Drop for DropNotifyWatchSender<T> {
+impl<T> Drop for WriteGuard<'_, T> {
     fn drop(&mut self) {
-        if let Some(mut inner) = self.0.take() {
-            // None means into_inner() was called
-            *inner.borrow_mut() = DropNotifyEofSignallable::eof();
-        }
+        let (changed_tx, changed_rx) = oneshot_broadcast::channel();
+        self.state.as_mut().expect("guard released").changed = changed_rx;
+        let previous = self.changed.replace(changed_tx).expect("sender dropped");
+        // Publish the value and next notification atomically, then unlock before
+        // running arbitrary receiver wakers.
+        drop(self.state.take());
+        previous.send(());
     }
 }
+
+impl<T> fmt::Debug for Sender<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Sender").finish()
+    }
+}
+
+impl<T> fmt::Debug for Receiver<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Receiver").finish()
+    }
+}
+
+impl<T> fmt::Debug for SendError<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("SendError")
+    }
+}
+
+impl<T> fmt::Display for SendError<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("watch channel has no receivers")
+    }
+}
+
+impl<T> std::error::Error for SendError<T> {}
 
 #[cfg(test)]
 mod test {
-    // @@ begin test lint list maintained by maint/add_warning @@
-    #![allow(clippy::bool_assert_comparison)]
-    #![allow(clippy::clone_on_copy)]
-    #![allow(clippy::dbg_macro)]
-    #![allow(clippy::mixed_attributes_style)]
-    #![allow(clippy::print_stderr)]
-    #![allow(clippy::print_stdout)]
-    #![allow(clippy::single_char_pattern)]
-    #![allow(clippy::unwrap_used)]
-    #![allow(clippy::unchecked_time_subtraction)]
-    #![allow(clippy::useless_vec)]
-    #![allow(clippy::needless_pass_by_value)]
-    #![allow(clippy::string_slice)] // See arti#2571
-    //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
-
     use super::*;
-    use futures::select_biased;
-    use futures_await_test::async_test;
+    use futures::{FutureExt as _, SinkExt as _, StreamExt as _};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::task::{Wake, Waker};
+    use tor_rtcompat::SpawnExt as _;
 
-    #[async_test]
-    async fn postage_sender_ext() {
-        use futures::FutureExt;
-        use futures::stream::StreamExt;
-
-        let (mut s, mut r) = postage::watch::channel_with(20);
-        // Receiver of a fresh watch wakes once, but let's not rely on this
-        select_biased! {
-            i = r.next().fuse() => assert_eq!(i, Some(20)),
-            _ = futures::future::ready(()) => { }, // tolerate nothing
-        };
-        // Now, not ready
-        select_biased! {
-            _ = r.next().fuse() => panic!(),
-            _ = futures::future::ready(()) => { },
-        };
-
-        s.maybe_send(|i| *i);
-        // Still not ready
-        select_biased! {
-            _ = r.next().fuse() => panic!(),
-            _ = futures::future::ready(()) => { },
-        };
-
-        s.maybe_send(|i| *i + 1);
-        // Ready, with 21
-        select_biased! {
-            i = r.next().fuse() => assert_eq!(i, Some(21)),
-            _ = futures::future::ready(()) => panic!(),
-        };
-
-        let () = s.try_maybe_send(|_i| Err(())).unwrap_err();
-        // Not ready
-        select_biased! {
-            _ = r.next().fuse() => panic!(),
-            _ = futures::future::ready(()) => { },
-        };
+    #[test]
+    fn snapshots_and_subscriptions() {
+        let (mut tx, mut rx) = channel_with(1);
+        assert_eq!(*rx.borrow(), 1);
+        assert_eq!(rx.try_recv(), Ok(1));
+        assert_eq!(rx.try_recv(), Err(TryRecvError::Pending));
+        *tx.borrow_mut() = 2;
+        *tx.borrow_mut() = 3;
+        assert_eq!(*rx.borrow(), 3);
+        assert_eq!(rx.try_recv(), Ok(3));
+        assert_eq!(rx.try_recv(), Err(TryRecvError::Pending));
+        assert_eq!(rx.clone().try_recv(), Ok(3));
+        assert_eq!(tx.subscribe().try_recv(), Ok(3));
     }
 
     #[test]
-    fn postage_drop() {
-        #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-        struct I(i32);
+    fn closure_delivers_last_value() {
+        let (mut tx, mut rx) = channel_with(1);
+        assert_eq!(rx.try_recv(), Ok(1));
+        *tx.borrow_mut() = 2;
+        drop(tx);
+        assert_eq!(rx.try_recv(), Ok(2));
+        assert_eq!(rx.try_recv(), Err(TryRecvError::Closed));
+        assert_eq!(rx.try_recv(), Err(TryRecvError::Closed));
+        let mut after_close = rx.clone();
+        assert_eq!(after_close.try_recv(), Ok(2));
+        assert_eq!(after_close.try_recv(), Err(TryRecvError::Closed));
+    }
 
-        impl DropNotifyEofSignallable for I {
-            fn eof() -> I {
-                I(0)
-            }
-            fn is_eof(&self) -> bool {
-                self.0 == 0
-            }
+    #[test]
+    fn closed_send_and_resubscribe() {
+        let (mut tx, rx) = channel_with(1);
+        drop(rx);
+        assert!(futures::executor::block_on(tx.send(2)).is_err());
+        assert_eq!(*tx.borrow(), 1);
+        let mut rx = tx.subscribe();
+        futures::executor::block_on(tx.send(3)).unwrap();
+        assert_eq!(rx.try_recv(), Ok(3));
+    }
+
+    #[derive(Default)]
+    struct WakeCounter(AtomicUsize);
+
+    impl Wake for WakeCounter {
+        fn wake(self: Arc<Self>) {
+            self.0.fetch_add(1, Ordering::SeqCst);
         }
+    }
 
-        let (s, r) = postage::watch::channel_with(I(20));
-        let s = DropNotifyWatchSender::new(s);
+    #[test]
+    fn cancellation_replaces_and_removes_wakers() {
+        let (mut tx, mut rx) = channel_with(0);
+        assert_eq!(rx.try_recv(), Ok(0));
+        let first = Arc::new(WakeCounter::default());
+        let second = Arc::new(WakeCounter::default());
+        let first_waker = Waker::from(Arc::clone(&first));
+        let second_waker = Waker::from(Arc::clone(&second));
+        assert!(
+            Pin::new(&mut rx)
+                .poll_next(&mut Context::from_waker(&first_waker))
+                .is_pending()
+        );
+        assert!(
+            Pin::new(&mut rx)
+                .poll_next(&mut Context::from_waker(&second_waker))
+                .is_pending()
+        );
+        *tx.borrow_mut() = 1;
+        assert_eq!(first.0.load(Ordering::SeqCst), 0);
+        assert_eq!(second.0.load(Ordering::SeqCst), 1);
+        assert_eq!(rx.try_recv(), Ok(1));
+        assert!(
+            Pin::new(&mut rx)
+                .poll_next(&mut Context::from_waker(&second_waker))
+                .is_pending()
+        );
+        drop(rx);
+        *tx.borrow_mut() = 2;
+        assert_eq!(second.0.load(Ordering::SeqCst), 1);
+    }
 
-        assert_eq!(*r.borrow(), I(20));
-        drop(s);
-        assert_eq!(*r.borrow(), I(0));
+    struct ReadOnWake(Receiver<usize>);
 
-        let (s, r) = postage::watch::channel_with(I(44));
-        let s = DropNotifyWatchSender::new(s);
+    impl Wake for ReadOnWake {
+        fn wake(self: Arc<Self>) {
+            // A notification must run after releasing the value's write lock.
+            assert_eq!(*self.0.borrow(), 1);
+        }
+    }
 
-        assert_eq!(*r.borrow(), I(44));
-        drop(s.into_inner());
-        assert_eq!(*r.borrow(), I(44));
+    #[test]
+    fn wake_can_read_the_published_value() {
+        let (mut tx, mut rx) = channel_with(0);
+        assert_eq!(rx.try_recv(), Ok(0));
+        let waker = Waker::from(Arc::new(ReadOnWake(rx.clone())));
+        assert!(
+            Pin::new(&mut rx)
+                .poll_next(&mut Context::from_waker(&waker))
+                .is_pending()
+        );
+        *tx.borrow_mut() = 1;
+        assert_eq!(rx.try_recv(), Ok(1));
+    }
+
+    #[test]
+    fn writer_unwind_does_not_poison_the_watch() {
+        let (mut tx, mut rx) = channel_with(0);
+        assert_eq!(rx.try_recv(), Ok(0));
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            *tx.borrow_mut() = 1;
+            // Hold a second mutable guard during unwinding.
+            let _guard = tx.borrow_mut();
+            panic!("writer failed");
+        }));
+        assert!(result.is_err());
+        assert_eq!(rx.try_recv(), Ok(1));
+        *tx.borrow_mut() = 2;
+        assert_eq!(rx.try_recv(), Ok(2));
+    }
+
+    #[test]
+    fn multiple_tasks_observe_updates_and_eof() {
+        tor_rtmock::MockRuntime::test_with_various(|rt| async move {
+            let (mut tx, rx) = channel_with(0);
+            let mut joins = Vec::new();
+            for _ in 0..20 {
+                let mut rx = rx.clone();
+                joins.push(
+                    rt.spawn_with_handle(async move {
+                        let mut last = 0;
+                        while let Some(value) = rx.next().await {
+                            assert!(value >= last);
+                            last = value;
+                            tor_rtcompat::task::yield_now().await;
+                        }
+                        assert_eq!(last, 100);
+                    })
+                    .unwrap(),
+                );
+            }
+            rt.spawn(async move {
+                for value in 1..=100 {
+                    *tx.borrow_mut() = value;
+                    tor_rtcompat::task::yield_now().await;
+                }
+            })
+            .unwrap();
+            for join in joins {
+                join.await;
+            }
+        });
     }
 }

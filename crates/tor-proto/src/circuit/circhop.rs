@@ -24,8 +24,8 @@ use crate::util::notify::{NotifyReceiver, NotifySender};
 use crate::{Error, HopNum, Result};
 
 use derive_deftly::Deftly;
-use postage::watch;
 use safelog::sensitive as sv;
+use tor_async_utils::watch;
 use tracing::{debug, trace};
 
 use tor_cell::chancell::{BoxedCellBody, CircId};

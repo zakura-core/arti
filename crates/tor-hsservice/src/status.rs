@@ -266,7 +266,7 @@ impl OnionServiceStatus {
 //
 // We define this so that we aren't exposing postage in our public API.
 #[derive(Clone)]
-pub struct OnionServiceStatusStream(postage::watch::Receiver<OnionServiceStatus>);
+pub struct OnionServiceStatusStream(tor_async_utils::watch::Receiver<OnionServiceStatus>);
 
 impl futures::Stream for OnionServiceStatusStream {
     type Item = OnionServiceStatus;
@@ -279,9 +279,9 @@ impl futures::Stream for OnionServiceStatusStream {
     }
 }
 
-/// A shared handle to a postage::watch::Sender that we can use to update an OnionServiceStatus.
+/// A shared handle to a tor_async_utils::watch::Sender that we can use to update an OnionServiceStatus.
 #[derive(Clone)]
-pub(crate) struct StatusSender(Arc<Mutex<postage::watch::Sender<OnionServiceStatus>>>);
+pub(crate) struct StatusSender(Arc<Mutex<tor_async_utils::watch::Sender<OnionServiceStatus>>>);
 
 /// A handle that can be used by the [`IptManager`]
 /// to update the [`OnionServiceStatus`].
@@ -352,7 +352,7 @@ impl_status_sender!(PublisherStatusSender, publisher);
 impl StatusSender {
     /// Create a new StatusSender with a given initial status.
     pub(crate) fn new(initial_status: OnionServiceStatus) -> Self {
-        let (tx, _) = postage::watch::channel_with(initial_status);
+        let (tx, _) = tor_async_utils::watch::channel_with(initial_status);
         StatusSender(Arc::new(Mutex::new(tx)))
     }
 

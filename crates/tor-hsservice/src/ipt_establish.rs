@@ -288,7 +288,7 @@ impl IptEstablisher {
         params: IptParameters,
         pool: Arc<HsCircPool<R>>,
         keymgr: &Arc<KeyMgr>,
-    ) -> Result<(Self, postage::watch::Receiver<IptStatus>), FatalError> {
+    ) -> Result<(Self, tor_async_utils::watch::Receiver<IptStatus>), FatalError> {
         // This exhaustive deconstruction ensures that we don't
         // accidentally forget to handle any of our inputs.
         let IptParameters {
@@ -343,7 +343,7 @@ impl IptEstablisher {
             replay_log: Arc::new(replay_log.into()),
         };
 
-        let (status_tx, status_rx) = postage::watch::channel_with(IptStatus::new());
+        let (status_tx, status_rx) = tor_async_utils::watch::channel_with(IptStatus::new());
         let (terminate_tx, mut terminate_rx) = oneshot::channel::<Void>();
         let status_tx = DropNotifyWatchSender::new(status_tx);
 

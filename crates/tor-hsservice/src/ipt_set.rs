@@ -147,7 +147,7 @@ pub(crate) struct IptsManagerView {
 
     /// Notification sender
     ///
-    /// We don't wrap the state in a postage::watch,
+    /// We don't wrap the state in a tor_async_utils::watch,
     /// because the publisher needs to be able to mutably borrow the data
     /// without re-notifying itself when it drops the guard.
     notify: mpsc::Sender<()>,

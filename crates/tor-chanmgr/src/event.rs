@@ -3,8 +3,8 @@
 
 use educe::Educe;
 use futures::{Stream, StreamExt};
-use postage::watch;
 use std::fmt;
+use tor_async_utils::watch;
 use tor_basic_utils::skip_fmt;
 use web_time_compat::{Duration, Instant, InstantExt};
 
@@ -176,7 +176,7 @@ impl Stream for ConnStatusEvents {
 ///
 /// This is a more complex and costly structure than ConnStatus, so we track
 /// this here, and only expose the minimum via ConnStatus over a
-/// `postage::watch`.  Later, we might want to expose more of this information.
+/// `tor_async_utils::watch`.  Later, we might want to expose more of this information.
 //
 // TODO: Eventually we should add some ability to reset our bootstrap status, if
 // our connections start failing.

@@ -14,8 +14,7 @@ use std::time::{Duration, SystemTime};
 use futures::stream::BoxStream;
 use futures::{FutureExt as _, future};
 use futures::{StreamExt as _, select_biased};
-use postage::stream::Stream as _;
-use postage::watch;
+use tor_async_utils::watch;
 use tor_rtcompat::SpawnExt as _;
 
 use tor_async_utils::PostageWatchSenderExt as _;

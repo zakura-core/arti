@@ -54,7 +54,8 @@ mod prepare_send;
 mod sink_close_channel;
 mod sink_try_send;
 mod sinkext;
-mod watch;
+pub mod watch;
+mod watch_ext;
 
 pub mod bw_pool;
 pub mod counting_streams;
@@ -75,7 +76,7 @@ pub use sink_close_channel::SinkCloseChannel;
 pub use sink_try_send::{ErasedSinkTrySendError, MpscOtherSinkTrySendError};
 pub use sink_try_send::{SinkTrySend, SinkTrySendError};
 
-pub use watch::{DropNotifyEofSignallable, DropNotifyWatchSender, PostageWatchSenderExt};
+pub use watch_ext::{DropNotifyEofSignallable, DropNotifyWatchSender, PostageWatchSenderExt};
 
 pub use oneshot_fused_workaround as oneshot;
 

@@ -20,7 +20,7 @@ use educe::Educe;
 use futures::stream::{Fuse, FusedStream};
 use futures::{Stream, StreamExt};
 use pin_project::pin_project;
-use postage::watch;
+use tor_async_utils::watch;
 
 /// A [`NotifySender`] which can notify [`NotifyReceiver`]s.
 ///
@@ -74,7 +74,7 @@ impl<T> NotifySender<T> {
 
     /// Notify all [`NotifyReceiver`]s.
     pub(crate) fn notify(&mut self) {
-        // from `postage::watch::Sender`:
+        // from `tor_async_utils::watch::Sender`:
         // > Mutably borrows the contained value, blocking the channel while the borrow is held.
         // > After the borrow is released, receivers will be notified of a new value.
         self.sender.borrow_mut();
@@ -89,13 +89,9 @@ impl<T> NotifySender<T> {
         // a `watch::Receiver` will always return the existing status of the `watch::Sender` as the
         // first stream item, so we need to recv and discard it so that this `NotifyReceiver` begins
         // in the "pending" state
-        use postage::stream::Stream as PostageStream;
-        use postage::stream::TryRecvError;
-        assert_eq!(PostageStream::try_recv(&mut receiver), Ok(()));
-        assert_eq!(
-            PostageStream::try_recv(&mut receiver),
-            Err(TryRecvError::Pending),
-        );
+        use tor_async_utils::watch::TryRecvError;
+        assert_eq!(receiver.try_recv(), Ok(()));
+        assert_eq!(receiver.try_recv(), Err(TryRecvError::Pending),);
 
         NotifyReceiver {
             receiver: receiver.fuse(),

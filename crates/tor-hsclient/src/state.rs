@@ -12,7 +12,7 @@ use futures::task::SpawnError;
 use async_trait::async_trait;
 use educe::Educe;
 use either::Either::{self, *};
-use postage::stream::Stream as _;
+use tor_async_utils::oneshot_broadcast;
 use tracing::{debug, error, instrument, trace};
 
 use safelog::DisplayRedacted as _;
@@ -203,7 +203,7 @@ enum ServiceState<D: MockableConnectorData> {
     /// CachedData is owned by the task.
     Working {
         /// Signals instances of `get_or_launch_connection` when the task completes
-        barrier_recv: postage::barrier::Receiver,
+        barrier_recv: oneshot_broadcast::Receiver<()>,
         /// Where the task will store the error.
         ///
         /// Lock hierarchy: this lock is "inside" the big lock on `Services`.
@@ -224,7 +224,10 @@ impl<D: MockableConnectorData> ServiceState<D> {
 }
 
 /// "Continuation" return type from `obtain_circuit_or_continuation_info`
-type Continuation = (Arc<Mutex<Option<ConnError>>>, postage::barrier::Receiver);
+type Continuation = (
+    Arc<Mutex<Option<ConnError>>>,
+    oneshot_broadcast::Receiver<()>,
+);
 
 /// Obtain a circuit from the `Services` table, or return a continuation
 ///
@@ -275,7 +278,7 @@ type Continuation = (Arc<Mutex<Option<ConnError>>>, postage::barrier::Receiver);
 /// ### We're using a barrier as a condition variable
 ///
 /// We want to be signaled when the task exits.  Indeed, *only* when it exits.
-/// This functionality is most conveniently in a `postage::barrier`.
+/// The existing [`oneshot_broadcast`] channel signals this when its sender drops.
 ///
 /// ### Nested loops
 ///
@@ -341,10 +344,7 @@ fn obtain_circuit_or_continuation_info<D: MockableConnectorData>(
                 barrier_recv,
                 error,
             } => {
-                if !matches!(
-                    barrier_recv.try_recv(),
-                    Err(postage::stream::TryRecvError::Pending)
-                ) {
+                if barrier_recv.is_ready() {
                     // This information is stale; the task no longer exists.
                     // We want information from a fresh task.
                     *state = blank_state();
@@ -362,7 +362,7 @@ fn obtain_circuit_or_continuation_info<D: MockableConnectorData>(
                 return Ok(Left((error, barrier_recv)));
             }
             ServiceState::Closed { .. } => {
-                let (barrier_send, barrier_recv) = postage::barrier::channel();
+                let (barrier_send, barrier_recv) = oneshot_broadcast::channel();
                 let data = match mem::replace(
                     state,
                     ServiceState::Working {
@@ -562,12 +562,12 @@ impl<D: MockableConnectorData> Services<D> {
                 // for the mutex-protected error field in the state,
                 // and, for neatness, barrier_recv.
 
-                let (error, mut barrier_recv) = match got? {
+                let (error, barrier_recv) = match got? {
                     Right(ret) => return Ok(ret),
                     Left(continuation) => continuation,
                 };
 
-                barrier_recv.recv().await;
+                let _ = barrier_recv.borrowed().await;
 
                 let error = error
                     .lock()
@@ -769,7 +769,7 @@ pub(crate) mod test {
     #[derive(Debug, Clone)]
     struct MockGlobalState {
         // things will appear here when we have more sophisticated tests
-        give: postage::watch::Receiver<MockGive>,
+        give: tor_async_utils::watch::Receiver<MockGive>,
     }
 
     #[derive(Clone, Educe)]
@@ -855,7 +855,7 @@ pub(crate) mod test {
     ) -> (
         HsClientConnector<R, MockData>,
         HsClientSecretKeys,
-        postage::watch::Sender<MockGive>,
+        tor_async_utils::watch::Sender<MockGive>,
     ) {
         let chanmgr = tor_chanmgr::ChanMgr::new(
             runtime.clone(),
@@ -883,7 +883,7 @@ pub(crate) mod test {
             .unwrap(),
         );
         let circpool = Arc::new(HsCircPool::new(&circmgr));
-        let (give_send, give) = postage::watch::channel_with(Ready(Ok(())));
+        let (give_send, give) = tor_async_utils::watch::channel_with(Ready(Ok(())));
         let mock_for_state = MockGlobalState { give };
         #[allow(clippy::let_and_return)] // we'll probably add more in this function
         let hscc = HsClientConnector {
