@@ -166,8 +166,8 @@ pub struct PreemptiveCircuitConfig {
 #[derive(Debug, Clone, Eq, PartialEq, Deftly)]
 // TODO Use a getters derive macro which lets us only generate getters
 // for fields we explicitly request, rather than having to mark the rest with `skip`.
-// (amplify::Getters doesn't allow #[getter(skip)] at the type level)
-#[derive(amplify::Getters)]
+// (amplify_derive::Getters doesn't allow #[getter(skip)] at the type level)
+#[derive(amplify_derive::Getters)]
 #[derive_deftly(TorConfig)]
 pub struct CircuitTiming {
     /// How long after a circuit has first been used should we give

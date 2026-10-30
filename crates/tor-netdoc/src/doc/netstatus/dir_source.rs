@@ -47,7 +47,7 @@ define_derive_deftly! {
     // `raw_nickname_string` which would encode surprisingly.
     //
     /// <https://spec.torproject.org/dir-spec/consensus-formats.html#item:dir-source>
-    #[derive(Debug, Clone, Deftly, amplify::Getters)]
+    #[derive(Debug, Clone, Deftly, amplify_derive::Getters)]
     #[derive_deftly(ItemValueEncodable)]
     #[derive_deftly_adhoc] // ignore deftly attrs directed at Constructor
     pub struct SupersededAuthorityKey {

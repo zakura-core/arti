@@ -277,7 +277,7 @@ pub enum InvalidKeyPathComponentValue {
 /// (_not_ from the key data) by a [`KeyPathInfoExtractor`].
 //
 // TODO  maybe the getters should be combined with the builder, or something?
-#[derive(Debug, Clone, PartialEq, derive_builder::Builder, amplify::Getters)]
+#[derive(Debug, Clone, PartialEq, derive_builder::Builder, amplify_derive::Getters)]
 pub struct KeyPathInfo {
     /// A human-readable summary string describing what the [`KeyPath`] is for.
     ///

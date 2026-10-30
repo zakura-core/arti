@@ -33,7 +33,7 @@ const DEFAULT_L3_GUARD_LIFETIME_MAX: Duration = Duration::from_secs(3600 * 48);
 //
 // TODO(#1382): vanguards_enabled and vanguards_hs_service are currently unused,
 // because the vanguard mode is read from the VanguardConfig.
-#[derive(Debug, Clone, amplify::Getters)]
+#[derive(Debug, Clone, amplify_derive::Getters)]
 pub struct VanguardParams {
     /// The type of vanguards to use by default when building onion service circuits.
     #[getter(as_copy)]

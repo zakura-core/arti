@@ -71,7 +71,7 @@ hs-common = []
 __is_experimental = []
 
 [dependencies]
-amplify = { version = "4", default-features = false, features = ["derive"] }
+amplify_derive = "4.0.1"
 async-trait = "0.1.92"
 cfg-if = "1.0.5"
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }

@@ -39,20 +39,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "amplify"
-version = "4.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f7fb4ac7c881e54a8e7015e399b6112a2a5bc958b6c89ac510840ff20273b31"
-dependencies = [
- "amplify_derive",
- "amplify_num",
- "ascii",
- "getrandom 0.2.17",
- "getrandom 0.3.4",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "amplify_derive"
 version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -62,15 +48,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "amplify_num"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afed304556696656d2d71495e1e5f2c4b524a3fb6eb0f2f3778ffc482a40b8a8"
-dependencies = [
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -235,12 +212,6 @@ dependencies = [
  "void",
  "web-time-compat",
 ]
-
-[[package]]
-name = "ascii"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d92bec98840b8f03a5ff5413de5293bfcd8bf96467cf5452609f939ec6f5de16"
 
 [[package]]
 name = "asn1-rs"
@@ -5147,7 +5118,7 @@ dependencies = [
 name = "tor-cell"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "bitflags 2.13.2",
  "bytes",
  "caret",
@@ -5278,7 +5249,7 @@ dependencies = [
 name = "tor-circmgr"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "async-trait",
  "cfg-if",
  "derive-deftly",
@@ -5332,7 +5303,7 @@ dependencies = [
 name = "tor-config"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "assert_matches",
  "cfg-if",
  "derive-deftly",
@@ -5568,7 +5539,7 @@ checksum = "0148a9a955ce4636b949900949aaec01f19210997f1b36b690ff4e524b962751"
 name = "tor-guardmgr"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "base64ct",
  "derive-deftly",
  "derive_builder_fork_arti",
@@ -5702,7 +5673,7 @@ dependencies = [
 name = "tor-hsservice"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "arrayvec",
  "async-trait",
  "base64ct",
@@ -5795,7 +5766,7 @@ dependencies = [
 name = "tor-keymgr"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "arrayvec",
  "cfg-if",
  "data-encoding",
@@ -6014,7 +5985,7 @@ dependencies = [
 name = "tor-netdoc"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "anyhow",
  "arrayvec",
  "assert_matches",
@@ -6074,7 +6045,7 @@ dependencies = [
 name = "tor-persist"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "anyhow",
  "derive-deftly",
  "derive_more",
@@ -6107,7 +6078,7 @@ name = "tor-proto"
 version = "0.47.0"
 dependencies = [
  "aes",
- "amplify",
+ "amplify_derive",
  "assert_matches",
  "async-trait",
  "asynchronous-codec",
@@ -6286,7 +6257,7 @@ dependencies = [
 name = "tor-rtcompat"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "arbitrary",
  "assert_matches",
  "async-io",
@@ -6332,7 +6303,7 @@ dependencies = [
 name = "tor-rtmock"
 version = "0.47.0"
 dependencies = [
- "amplify",
+ "amplify_derive",
  "assert_matches",
  "async-trait",
  "derive-deftly",

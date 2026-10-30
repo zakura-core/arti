@@ -336,7 +336,7 @@ pub trait InstancePurgeHandler {
 }
 
 /// Information about an instance, passed to [`InstancePurgeHandler::dispose`]
-#[derive(Debug, Clone, amplify::Getters, AsRef)]
+#[derive(Debug, Clone, amplify_derive::Getters, AsRef)]
 pub struct InstancePurgeInfo<'i> {
     /// The instance's identity string
     #[as_ref]

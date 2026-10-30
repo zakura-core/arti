@@ -44,7 +44,7 @@ pub impl str {
 /// None of this is checked at compile- or run-time.
 // We could perhaps use lifetimes somehow to enforce this,
 // but `ItemStream` wants `Peeked` to be `'static` and `Clone`.
-#[derive(Debug, Clone, amplify::Getters)]
+#[derive(Debug, Clone, amplify_derive::Getters)]
 pub struct Peeked {
     /// The length of the next line
     //

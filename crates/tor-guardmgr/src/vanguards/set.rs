@@ -23,7 +23,7 @@ use crate::{VanguardMgrError, VanguardMode};
 use super::VanguardParams;
 
 /// A vanguard relay.
-#[derive(Clone, amplify::Getters)]
+#[derive(Clone, amplify_derive::Getters)]
 pub struct Vanguard<'a> {
     /// The relay.
     relay: Relay<'a>,

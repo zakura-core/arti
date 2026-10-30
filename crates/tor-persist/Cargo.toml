@@ -12,6 +12,8 @@ categories = ["config"]
 repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
 
 [features]
+# Preserve the existing optional dependency feature name.
+amplify = ["dep:amplify_derive"]
 # Enable the state_dir module
 state-dir = ["__is_experimental", "amplify"]
 # Enable testing-only APIs.  APIs under this feature are not
@@ -31,7 +33,7 @@ experimental = ["state-dir", "testing"]
 __is_experimental = []
 
 [dependencies]
-amplify = { version = "4", default-features = false, features = ["derive"], optional = true }
+amplify_derive = { version = "4.0.1", optional = true }
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_more = { version = "2.1.1", features = ["full"] }
 extend = "1.2.0"

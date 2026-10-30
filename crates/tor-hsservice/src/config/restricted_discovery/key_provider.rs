@@ -10,7 +10,7 @@ use std::fs::DirEntry;
 use derive_more::{AsRef, Into};
 use fs_mistrust::{CheckedDir, Mistrust, MistrustBuilder};
 
-use amplify::Getters;
+use amplify_derive::Getters;
 use serde_with::DisplayFromStr;
 
 use tor_config::define_list_builder_helper;

@@ -14,7 +14,7 @@ use std::task::{Context, Poll};
 
 use tor_rtcompat::Runtime;
 
-use amplify::Getters;
+use amplify_derive::Getters;
 use notify::{EventKind, Watcher};
 use postage::watch;
 

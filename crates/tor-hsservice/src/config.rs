@@ -2,7 +2,7 @@
 
 use crate::internal_prelude::*;
 
-use amplify::Getters;
+use amplify_derive::Getters;
 use derive_deftly::derive_deftly_adhoc;
 use tor_cell::relaycell::hs::est_intro;
 use tor_config::derive::prelude::*;

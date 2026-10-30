@@ -66,7 +66,7 @@ caret_int! {
 /// This is similar to [`super::UnrecognizedExt`], but specific to an unrecognized scheme
 /// within a known type of extension.
 ///
-#[derive(Debug, Clone, Eq, PartialEq, amplify::Getters, derive_more::Constructor)]
+#[derive(Debug, Clone, Eq, PartialEq, amplify_derive::Getters, derive_more::Constructor)]
 pub struct UnrecognizedProofOfWork {
     /// The `scheme` byte
     ///

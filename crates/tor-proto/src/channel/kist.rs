@@ -2,7 +2,7 @@
 
 /// A set of parameters derived from the consensus document,
 /// controlling the KIST behavior of channels.
-#[derive(Debug, Clone, Copy, PartialEq, amplify::Getters)]
+#[derive(Debug, Clone, Copy, PartialEq, amplify_derive::Getters)]
 pub struct KistParams {
     /// Whether KIST is enabled.
     #[getter(as_copy)]

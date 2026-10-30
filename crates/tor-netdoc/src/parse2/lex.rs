@@ -70,7 +70,7 @@ struct ItemStreamPeeked<'s> {
 }
 
 /// An Item that has been lexed but not parsed
-#[derive(Debug, Clone, amplify::Getters, Deftly)]
+#[derive(Debug, Clone, amplify_derive::Getters, Deftly)]
 #[derive_deftly(ParseOptions)]
 #[deftly(parse_options(field = ".args.options"))]
 pub struct UnparsedItem<'s> {
@@ -109,7 +109,7 @@ pub struct ArgumentStream<'s> {
 }
 
 /// An Object that has been lexed but not parsed
-#[derive(Debug, Clone, amplify::Getters, Deftly)]
+#[derive(Debug, Clone, amplify_derive::Getters, Deftly)]
 #[derive_deftly(ParseOptions)]
 pub struct UnparsedObject<'s> {
     /// The Label

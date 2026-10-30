@@ -17,7 +17,7 @@ use tor_hscrypto::pow::v1::{Effort, Seed};
 /// `pow-params` line includes a 32-byte seed with its own expiration
 /// timestamp, and a suggested effort value that clients may use for
 /// their initial request.
-#[derive(Debug, Clone, derive_more::Constructor, amplify::Getters)]
+#[derive(Debug, Clone, derive_more::Constructor, amplify_derive::Getters)]
 pub struct PowParamsV1 {
     /// Time limited [`Seed`]
     #[getter(as_ref)]
