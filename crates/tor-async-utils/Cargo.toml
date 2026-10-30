@@ -1,6 +1,6 @@
 [package]
-name = "tor-async-utils"
-version = "0.47.0"
+name = "zakura-tor-async-utils"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -10,7 +10,7 @@ description = "Async/futures helpers for use with Tor"
 keywords = ["tor", "arti"]
 # We must put *something* here and this will do
 categories = ["rust-patterns"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -36,26 +36,26 @@ educe = "0.4.23"
 event-listener = "5"
 extend = "1.2.0"
 futures = "0.3.34"
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
+oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0-zakura.1", package = "zakura-oneshot-fused-workaround" }
 pin-project = "1"
-slotmap-careful = { path = "../slotmap-careful", version = "0.9.0" }
+slotmap-careful = { package = "zakura-slotmap-careful", path = "../slotmap-careful", version = "0.9.0-zakura.1" }
 sync_wrapper = "1.0.2"
 thiserror = "2"
 tokio = { version = "1.54.1", optional = true }
 tokio-util = { version = "0.7.20", features = ["compat"], optional = true }
-tor-basic-utils = { version = "0.47.0", path = "../tor-basic-utils" }
-tor-rtcompat = { version = "0.47.0", path = "../tor-rtcompat" }
+tor-basic-utils = { version = "0.47.0-zakura.1", path = "../tor-basic-utils", package = "zakura-tor-basic-utils" }
+tor-rtcompat = { version = "0.47.0-zakura.1", path = "../tor-rtcompat", package = "zakura-tor-rtcompat" }
 tracing = "0.1"
 visibility = { version = "0.1.1", optional = true }
 void = "1"
-web-time-compat = { version = "0.3.0", path = "../web-time-compat" }
+web-time-compat = { version = "0.3.0-zakura.1", path = "../web-time-compat", package = "zakura-web-time-compat" }
 
 [dev-dependencies]
 criterion = "0.8.2"
 futures-await-test = "0.3.0"
 tokio = { version = "1.54.1", features = ["macros", "net", "rt", "rt-multi-thread", "time"] }
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
+tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
+tor-rtmock = { path = "../tor-rtmock", version = "0.47.0-zakura.1", package = "zakura-tor-rtmock" }
 visibility = "0.1.1"
 
 [[bench]]
@@ -66,3 +66,6 @@ harness = false
 name = "bw_pool_slow"
 harness = false
 required-features = ["bench"]
+
+[lib]
+name = "tor_async_utils"

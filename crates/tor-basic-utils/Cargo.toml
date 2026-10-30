@@ -1,6 +1,6 @@
 [package]
-name = "tor-basic-utils"
-version = "0.47.0"
+name = "zakura-tor-basic-utils"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -10,7 +10,7 @@ description = "General helpers used by Tor"
 keywords = ["tor", "arti"]
 # We must put *something* here and this will do
 categories = ["rust-patterns"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [dependencies]
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
@@ -28,7 +28,7 @@ smallvec = "1.16"
 thiserror = "2"
 tracing = "0.1"
 weak-table = "0.4.0"
-web-time-compat = { version = "0.3.0", path = "../web-time-compat" }
+web-time-compat = { version = "0.3.0-zakura.1", path = "../web-time-compat", package = "zakura-web-time-compat" }
 
 [dev-dependencies]
 derive_more = { version = "2.1.1", features = ["full"] }
@@ -48,3 +48,6 @@ getrandom = { version = "0.4", features = ["wasm_js"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = { version = "0.2", default-features = false }
+
+[lib]
+name = "tor_basic_utils"
