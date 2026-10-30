@@ -2,7 +2,7 @@ Processing a `ConfigurationTree` into a validated configuration
 
 This module, and particularly [`resolve`], takes care of:
 
-  * Deserializing a [`ConfigurationTree`] into various `FooConfigBuilder`
+  * Deserializing a [`ConfigurationTree`](crate::ConfigurationTree) into various `FooConfigBuilder`
   * Calling the `build()` methods to get various `FooConfig`.
   * Reporting unrecognised configuration keys
     (eg to help the user detect misspellings).
@@ -34,7 +34,7 @@ into a program of their own.  The example code shown:
  * Establishes some configuration sources
    (the trivial empty [`ConfigurationSources`](crate::ConfigurationSources),
    to avoid clutter in the example)
- * Reads those sources into a single configuration taxonomy [`ConfigurationTree`].
+ * Reads those sources into a single configuration taxonomy [`ConfigurationTree`](crate::ConfigurationTree).
  * Processes that configuration into a 3-tuple of configuration
    structs for the three components, namely:
      - `TorClientConfig`, the configuration for the `arti_client` crate's `TorClient`

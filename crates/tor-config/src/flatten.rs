@@ -1,4 +1,4 @@
-//! Similar to `#[serde(flatten)]` but works with [`serde_ignored`]
+//! Similar to `#[serde(flatten)]` but works with `serde_ignored`
 //!
 //! Our approach to deserialize a [`Flatten`] is as follows:
 //!
@@ -128,7 +128,7 @@ define_derive_deftly! {
 }
 pub use derive_deftly_template_Flattenable;
 
-/// Helper for flattening deserialisation, compatible with [`serde_ignored`]
+/// Helper for flattening deserialisation, compatible with `serde_ignored`
 ///
 /// A combination of two structs `T` and `U`.
 ///

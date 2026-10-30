@@ -292,7 +292,7 @@ where
 /// as described in the [`tor_config` crate-level documentation](crate).
 ///
 /// For an example, see the
-/// [`tor_config::load` module-level documentation](self).
+/// [`tor_config::load` module-level documentation](crate::load).
 pub fn resolve<T>(input: &ConfigurationTree) -> Result<T, ConfigResolveError>
 where
     T: Resolvable,

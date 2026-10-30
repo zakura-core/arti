@@ -131,6 +131,8 @@ pub struct FoundConfigFiles<'srcs> {
     files: Vec<FoundConfigFile>,
 
     /// Our parent, which contains details we need for `load`
+    // Preserve the borrow when discovery is used without file loading.
+    #[cfg_attr(not(feature = "load-config"), allow(dead_code))]
     sources: &'srcs ConfigurationSources,
 }
 
@@ -234,7 +236,7 @@ impl ConfigurationSources {
     /// Options are applied after all configuration files are loaded, in the
     /// order that they are added to this object.
     ///
-    /// The format for `s` is as in [`CmdLine`].
+    /// Use the `key=value` command-line TOML override syntax.
     pub fn push_option(&mut self, option: impl Into<String>) {
         self.options.push(option.into());
     }
