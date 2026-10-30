@@ -13,8 +13,6 @@
 //! a file on disk.
 
 mod ipt;
-#[cfg(feature = "hs-pow-full")]
-mod pow;
 
 use crate::internal_prelude::*;
 
@@ -45,10 +43,6 @@ pub(crate) struct ReplayLog<T> {
 
 /// A [`ReplayLog`] for [`Introduce2`](tor_cell::relaycell::msg::Introduce2) messages.
 pub(crate) type IptReplayLog = ReplayLog<ipt::IptReplayLogType>;
-
-/// A [`ReplayLog`] for Proof-of-Work [`Nonce`](tor_hscrypto::pow::v1::Nonce)s.
-#[cfg(feature = "hs-pow-full")]
-pub(crate) type PowNonceReplayLog = ReplayLog<pow::PowNonceReplayLogType>;
 
 /// The length of the [`ReplayLogType::MAGIC`] constant.
 ///

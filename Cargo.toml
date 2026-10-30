@@ -16,8 +16,6 @@ members = [
     "crates/test-temp-dir",
     "crates/fslock-guard",
     "crates/saturating-time",
-    "crates/hashx",
-    "crates/equix",
     "crates/tor-basic-utils",
     "crates/caret",
     "crates/fs-mistrust",

@@ -88,12 +88,6 @@ pt-client = [
     "tor-ptmgr",
 ]
 
-# Onion service proof of work schemes (specific schemes, full set, default set)
-hs-pow-full = [
-    "tor-hsclient?/hs-pow-full",
-    "tor-hsservice?/hs-pow-full",
-    "__is_experimental",
-]
 
 # Expose interfaces useful for testing
 testing = ["__is_experimental", "visibility"]
@@ -129,7 +123,6 @@ experimental = [
     "hss-negotiate-extensions",
     "experimental-api",
     "error_detail",
-    "hs-pow-full",
     "testing",
     "tor-proto/experimental",
     "tor-netdoc/experimental",

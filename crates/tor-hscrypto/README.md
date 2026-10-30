@@ -34,23 +34,6 @@ onion services.
 
 * `full` -- Enable all features above.
 
-### Experimental and unstable features
-
-Note that the APIs enabled by these features are NOT covered by
-semantic versioning[^1] guarantees: we might break them or remove
-them between patch versions.
-
-* `hs-pow-full` -- Tor Hidden Services Proof of Work.
-
-* `experimental`: Enable all the above experimental features.
-
-[^1]: Remember, semantic versioning is what makes various `cargo`
-features work reliably. To be explicit: if you want `cargo update`
-to _only_ make safe changes, then you cannot enable these
-features.
-
 ## License
 
 MIT OR Apache-2.0
-
-When the `hs-pow-full` feature is used, we link with LGPL licensed dependencies.

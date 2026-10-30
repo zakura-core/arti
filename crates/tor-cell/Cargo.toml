@@ -15,7 +15,7 @@ repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
 default = []
 conflux = ["__is_experimental"]
 
-experimental = ["experimental-udp", "hs", "hs-pow-full", "conflux", "testing"]
+experimental = ["experimental-udp", "hs", "conflux", "testing"]
 # Enable experimental UDP support.
 experimental-udp = ["__is_experimental"]
 
@@ -25,8 +25,6 @@ hs = ["tor-hscrypto", "__is_experimental"]
 # Enable testing only API
 testing = ["experimental-udp", "__is_experimental"]
 
-# Onion service proof of work schemes
-hs-pow-full = ["tor-hscrypto/hs-pow-full", "__is_experimental"]
 
 # Support for relay-only operations
 relay = []

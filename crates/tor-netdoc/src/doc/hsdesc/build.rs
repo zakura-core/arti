@@ -62,10 +62,6 @@ struct HsDesc<'a> {
     intro_auth_key_cert_expiry: SystemTime,
     /// The expiration time of an introduction point encryption key certificate.
     intro_enc_key_cert_expiry: SystemTime,
-    /// Proof-of-work parameters.
-    #[builder(default)]
-    #[cfg(feature = "hs-pow-full")]
-    pow_params: Option<&'a PowParams>,
 
     /// If present, a sendme increment and a set of FlowCtrl capabilities to
     /// advertise with it.
@@ -194,8 +190,6 @@ impl<'a> NetdocBuilder for HsDescBuilder<'a> {
             intro_enc_key_cert_expiry: hs_desc.intro_enc_key_cert_expiry,
             flow_control: hs_desc.flow_control.as_ref(),
             protos: hs_desc.supported_protocols.clone(),
-            #[cfg(feature = "hs-pow-full")]
-            pow_params: hs_desc.pow_params,
         }
         .build_sign(rng)?;
 

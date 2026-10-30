@@ -63,41 +63,6 @@ pub(super) struct HsDescInner<'a> {
 
     /// If present, a set of subprotocol capabilities that we want to advertise.
     pub(super) protos: Protocols,
-
-    /// Proof-of-work parameters
-    #[cfg(feature = "hs-pow-full")]
-    pub(super) pow_params: Option<&'a PowParams>,
-}
-
-/// Encode the pow-params line.
-#[cfg(feature = "hs-pow-full")]
-fn encode_pow_params(
-    encoder: &mut NetdocEncoder,
-    pow_params: &PowParamsV1,
-) -> Result<(), EncodeError> {
-    let mut pow_params_enc = encoder.item(HsInnerKwd::POW_PARAMS);
-    pow_params_enc.add_arg(&"v1");
-
-    // It's safe to call dangerously_into_parts here, since we encode the
-    // expiration alongside the value.
-    let (seed, expiration) = pow_params.seed().clone().dangerously_into_parts();
-    let expiration = expiration.end();
-
-    seed.write_arg_onto(&mut pow_params_enc)?;
-
-    pow_params
-        .suggested_effort()
-        .write_arg_onto(&mut pow_params_enc)?;
-
-    let expiration = if let Some(expiration) = expiration {
-        expiration
-    } else {
-        return Err(internal!("PoW seed should always have expiration").into());
-    };
-
-    Iso8601TimeNoSp::from(expiration).write_arg_onto(&mut pow_params_enc)?;
-
-    Ok(())
 }
 
 impl<'a> NetdocBuilder for HsDescInner<'a> {
@@ -114,8 +79,6 @@ impl<'a> NetdocBuilder for HsDescInner<'a> {
             intro_enc_key_cert_expiry,
             flow_control,
             protos,
-            #[cfg(feature = "hs-pow-full")]
-            pow_params,
         } = self;
 
         let mut encoder = NetdocEncoder::new();
@@ -148,20 +111,6 @@ impl<'a> NetdocBuilder for HsDescInner<'a> {
 
         if !protos.is_empty() {
             encoder.item(PROTO).args_raw_string(&protos.to_string());
-        }
-
-        #[cfg(feature = "hs-pow-full")]
-        if let Some(pow_params) = pow_params {
-            match pow_params {
-                #[cfg(feature = "hs-pow-full")]
-                PowParams::V1(pow_params) => encode_pow_params(&mut encoder, pow_params)?,
-                #[cfg(not(feature = "hs-pow-full"))]
-                PowParams::V1(_) => {
-                    return Err(internal!(
-                        "Got a V1 PoW params but support for V1 is disabled."
-                    ));
-                }
-            }
         }
 
         // We sort the introduction points here so as not to expose
@@ -312,8 +261,6 @@ mod test {
     use std::time::UNIX_EPOCH;
     use tor_basic_utils::test_rng::Config;
     use tor_checkable::timed::TimeRangeBound;
-    #[cfg(feature = "hs-pow-full")]
-    use tor_hscrypto::pow::v1::{Effort, Seed};
     use tor_linkspec::LinkSpec;
 
     /// Build an inner document using the specified parameters.
@@ -338,8 +285,6 @@ mod test {
             intro_enc_key_cert_expiry: UNIX_EPOCH,
             flow_control: flow_control.as_ref(),
             protos,
-            #[cfg(feature = "hs-pow-full")]
-            pow_params,
         }
         .build_sign(&mut rand::rng())
     }
@@ -520,37 +465,6 @@ eNThmyleMYdmFucrbgPcZNDO6S81MZD1r7q61Hectpha37ioha85fpNt+/yDfebh
 -----END ED25519 CERT-----
 "#
         );
-    }
-
-    #[test]
-    #[cfg(feature = "hs-pow-full")]
-    fn inner_hsdesc_pow_params() {
-        use humantime::parse_rfc3339;
-
-        let mut rng = Config::Deterministic.into_rng();
-        let link_specs = &[LinkSpec::OrPort(Ipv4Addr::LOCALHOST.into(), 8080)];
-        let intros = &[create_intro_point_descriptor(&mut rng, link_specs)];
-
-        let pow_expiration = parse_rfc3339("1994-04-29T00:00:00Z").unwrap();
-        let pow_params = PowParams::V1(PowParamsV1::new(
-            TimeRangeBound::new(Seed::from([0; 32]), ..pow_expiration),
-            Effort::new(64),
-        ));
-
-        let hs_desc = create_inner_desc(
-            &[HandshakeType::NTOR], /* create2_formats */
-            None,                   /* auth_required */
-            false,                  /* is_single_onion_service */
-            intros,                 /* intro_points */
-            None,
-            Default::default(),
-            Some(&pow_params),
-        )
-        .unwrap();
-
-        assert!(hs_desc.contains(
-            "\npow-params v1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 64 1994-04-29T00:00:00\n"
-        ));
     }
 
     #[test]

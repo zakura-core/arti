@@ -1,49 +1,23 @@
-//! Implement parsing for the `pow-params v1` scheme
+//! Unsupported `v1` proof of work scheme. This fork never solves or verifies PoW.
 
+use crate::Result;
 use crate::doc::hsdesc::inner::HsInnerKwd;
 use crate::parse::tokenize::Item;
-use crate::types::misc::{B64, Iso8601TimeNoSp};
-use crate::{KeywordEncodable, NetdocErrorKind, Result};
-use std::time::SystemTime;
-use tor_checkable::timed::TimeRangeBound;
-use tor_hscrypto::pow::v1::{Effort, Seed};
 
-/// The contents of a `pow-params v1` line
+/// Marker for a `pow-params v1` line which was not parsed
 ///
-/// These parameters are defined in the specifications for the `v1` proof of work scheme:
-/// <https://spec.torproject.org/hspow-spec/v1-equix.html#parameter-descriptor>
+/// This fork remembers the presence of the advertised scheme without parsing
+/// its parameters or computing a solution. Rebuilding cannot enable PoW.
 ///
-/// In addition to the scheme identifier itself, this type of
-/// `pow-params` line includes a 32-byte seed with its own expiration
-/// timestamp, and a suggested effort value that clients may use for
-/// their initial request.
-#[derive(Debug, Clone, derive_more::Constructor, amplify_derive::Getters)]
-pub struct PowParamsV1 {
-    /// Time limited [`Seed`]
-    #[getter(as_ref)]
-    seed: TimeRangeBound<Seed>,
-    /// Last known suggested [`Effort`]
-    ///
-    /// This can be [`Effort::zero()`] if the puzzle is available but the
-    /// service doesn't recommend using it for an initial connection attempt.
-    #[getter(as_copy)]
-    suggested_effort: Effort,
-}
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct PowParamsV1;
 
 impl PowParamsV1 {
-    /// Parse a single `pow-params v1` line from an `Item`
-    pub(super) fn from_item(item: &Item<'_, HsInnerKwd>) -> Result<Self> {
-        if item.has_obj() {
-            return Err(NetdocErrorKind::UnexpectedObject
-                .with_msg(item.kwd().to_str())
-                .at_pos(item.pos()));
-        }
-        let seed = item.required_arg(1)?.parse::<B64>()?.into_array()?.into();
-        let suggested_effort = item.required_arg(2)?.parse::<u32>()?.into();
-        let expires: SystemTime = item.required_arg(3)?.parse::<Iso8601TimeNoSp>()?.into();
-        Ok(Self {
-            seed: TimeRangeBound::new(seed, ..expires),
-            suggested_effort,
-        })
+    /// Accept any Item as a 'PowParamsV1' without actually parsing it
+    ///
+    #[allow(clippy::unnecessary_wraps)]
+    pub(super) fn from_item(_item: &Item<'_, HsInnerKwd>) -> Result<Self> {
+        Ok(Self)
     }
 }

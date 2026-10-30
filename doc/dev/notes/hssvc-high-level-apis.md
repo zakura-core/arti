@@ -63,9 +63,6 @@ enable_proof_of_work = true
 # mechanism, but tor does it.
 pow_queue_rate = [ 100, 500 ]
 
-# Disable the compiled hashx backend for proof-of-work.
-disable_pow_compilation = false
-
 # Descriptor-based client authentication.  If this is set
 # to any array, even an empty one, then authentication is required.
 encrypt_descriptor = [
