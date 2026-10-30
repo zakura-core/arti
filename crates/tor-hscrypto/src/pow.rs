@@ -1,10 +1,9 @@
 //! Proof of Work schemes for onion services
 //!
-//! Tor supports optional proof-of-work client puzzles, for mitigating denial of
-//! service attacks on onion services. This crate implements the specific puzzle
-//! algorithms we use, and components for client and service integration.
+//! This fork retains the existing feature-off error types for compatibility.
+//! It does not implement onion-service puzzles, solvers or verifiers.
 //!
-//! This fork retains compatibility error types but no puzzle solver or verifier.
+//! Protocol background: <https://spec.torproject.org/hspow-spec/index.html>.
 
 mod err;
 

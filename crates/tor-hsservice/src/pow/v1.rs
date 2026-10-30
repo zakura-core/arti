@@ -27,7 +27,7 @@ pub(crate) struct PowManager<R> {
     runtime: PhantomData<R>,
 }
 
-/// Dummy PoW manager state, feature compiled out
+/// Compatibility state marker; this fork does not read or manage PoW state.
 #[derive(Serialize, Deserialize, Debug)]
 #[non_exhaustive]
 pub(crate) struct PowManagerStateRecord;

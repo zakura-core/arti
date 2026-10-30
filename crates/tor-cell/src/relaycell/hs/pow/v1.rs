@@ -3,9 +3,9 @@
 use tor_bytes::{EncodeResult, Reader, Result, Writer};
 use void::Void;
 
-/// Proof of work using the `v1` scheme, disabled at compile time
+/// Uninhabited compatibility type for the unsupported `v1` scheme
 ///
-/// When disabled, the type can be named but it will never be constructed.
+/// This type can be named but can never be constructed in this fork.
 /// The reader will generate an [`super::UnrecognizedProofOfWork`] instead.
 ///
 #[derive(Debug, Clone, PartialEq)]
