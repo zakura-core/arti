@@ -1,7 +1,5 @@
 //! Define different restrictions that can be applied to relays.
 
-#[cfg(feature = "geoip")]
-use tor_geoip::HasCountryCode;
 use tor_linkspec::{ChanTarget, HasAddrs, HasRelayIds, RelayIdSet};
 use tor_netdir::{FamilyRules, NetDir, Relay, SubnetConfig};
 use tor_netdoc::types::policy::AddrPortPattern;
@@ -47,9 +45,6 @@ enum RestrictionInner<'a> {
     /// Require that, if the relay's contact method uses addresses, the relay
     /// has at least one address matching one of the provided patterns.
     HasAddrInSet(Vec<AddrPortPattern>),
-    /// Require that the relay has a given country code.
-    #[cfg(feature = "geoip")]
-    RequireCountry(tor_geoip::CountryCode),
 }
 
 impl<'a> RelayRestriction<'a> {
@@ -67,15 +62,6 @@ impl<'a> RelayRestriction<'a> {
     pub(crate) fn for_usage(usage: crate::RelayUsage) -> Self {
         RelayRestriction {
             inner: RestrictionInner::SupportsUsage(usage),
-        }
-    }
-
-    /// Require a relay that appears to be in the provided country,
-    /// according ot our geoip subsystem.
-    #[cfg(feature = "geoip")]
-    pub fn require_country_code(cc: tor_geoip::CountryCode) -> Self {
-        RelayRestriction {
-            inner: RestrictionInner::RequireCountry(cc),
         }
     }
 
@@ -121,8 +107,6 @@ impl<'a> RelayRestriction<'a> {
             SupportsUsage(u) => Some(u.rejection_description()),
             Exclude(e) => e.rejection_description(),
             HasAddrInSet(_) => Some("not reachable (according to address filter)"),
-            #[cfg(feature = "geoip")]
-            RequireCountry(_) => Some("not in correct country"),
         }
     }
 }
@@ -135,8 +119,6 @@ impl<'a> LowLevelRelayPredicate for RelayRestriction<'a> {
             SupportsUsage(usage) => usage.low_level_predicate_permits_relay(relay),
             Exclude(exclusion) => exclusion.low_level_predicate_permits_relay(relay),
             HasAddrInSet(patterns) => relay_has_addr_in_set(relay, patterns),
-            #[cfg(feature = "geoip")]
-            RequireCountry(cc) => relay.country_code() == Some(*cc),
         }
     }
 }
@@ -564,6 +546,4 @@ mod test {
         assert!(yes.iter().all(p));
         assert!(no.iter().all(|r| !p(r)));
     }
-
-    // TODO: Write a geoip test?
 }

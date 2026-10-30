@@ -127,8 +127,7 @@ use crate::preemptive::PreemptiveCircuitPredictor;
 use usage::TargetTunnelUsage;
 
 use safelog::sensitive as sv;
-#[cfg(feature = "geoip")]
-use tor_geoip::CountryCode;
+
 pub use tor_guardmgr::{ExternalActivity, FirstHopId};
 use tor_persist::StateMgr;
 use tor_rtcompat::scheduler::{TaskHandle, TaskSchedule};
@@ -248,20 +247,8 @@ impl<R: Runtime> CircMgr<R> {
         netdir: DirInfo<'_>, // TODO: This has to be a NetDir.
         ports: &[TargetPort],
         isolation: StreamIsolation,
-        // TODO GEOIP: this cannot be stabilised like this, since Cargo features need to be
-        //             additive. The function should be refactored to be builder-like.
-        #[cfg(feature = "geoip")] country_code: Option<CountryCode>,
     ) -> Result<ClientDataTunnel> {
-        let tunnel = self
-            .0
-            .get_or_launch_exit(
-                netdir,
-                ports,
-                isolation,
-                #[cfg(feature = "geoip")]
-                country_code,
-            )
-            .await?;
+        let tunnel = self.0.get_or_launch_exit(netdir, ports, isolation).await?;
         Ok(tunnel.into())
     }
 
@@ -572,9 +559,6 @@ impl<B: AbstractTunnelBuilder<R> + 'static, R: Runtime> CircMgrInner<B, R> {
         netdir: DirInfo<'_>, // TODO: This has to be a NetDir.
         ports: &[TargetPort],
         isolation: StreamIsolation,
-        // TODO GEOIP: this cannot be stabilised like this, since Cargo features need to be
-        //             additive. The function should be refactored to be builder-like.
-        #[cfg(feature = "geoip")] country_code: Option<CountryCode>,
     ) -> Result<Arc<B::Tunnel>> {
         self.expire_circuits().await;
         let time = self.mgr.peek_runtime().now();
@@ -596,12 +580,10 @@ impl<B: AbstractTunnelBuilder<R> + 'static, R: Runtime> CircMgrInner<B, R> {
                 .contains(&p.port)
         });
         let ports = ports.iter().map(Clone::clone).collect();
-        #[cfg(not(feature = "geoip"))]
-        let country_code = None;
+
         let usage = TargetTunnelUsage::Exit {
             ports,
             isolation,
-            country_code,
             require_stability,
         };
         self.mgr.get_or_launch(&usage, netdir).await.map(|(c, _)| c)

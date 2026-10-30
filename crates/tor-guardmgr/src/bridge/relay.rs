@@ -89,7 +89,7 @@ impl<'a> HasAddrs for BridgeRelay<'a> {
     /// Note: Remember (from the documentation at [`HasAddrs`]) that these are
     /// not necessarily addresses _at which the Bridge can be reached_. For
     /// those, use `chan_method`.  These addresses are used for establishing
-    /// GeoIp and family info.
+    /// family and subnet comparisons.
     fn addrs(&self) -> impl Iterator<Item = std::net::SocketAddr> {
         self.addrs.iter().copied()
     }
@@ -112,7 +112,7 @@ impl<'a> HasAddrs for BridgeRelayWithDesc<'a> {
     /// Note: Remember (from the documentation at [`HasAddrs`]) that these are
     /// not necessarily addresses _at which the Bridge can be reached_. For
     /// those, use `chan_method`.  These addresses are used for establishing
-    /// GeoIp and family info.
+    /// family and subnet comparisons.
     fn addrs(&self) -> impl Iterator<Item = std::net::SocketAddr> {
         self.0.addrs()
     }

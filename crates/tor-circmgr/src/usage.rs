@@ -5,13 +5,10 @@ use std::fmt::{self, Display};
 use std::sync::Arc;
 use std::time::SystemTime;
 use tracing::{instrument, trace};
-#[cfg(not(feature = "geoip"))]
-use void::Void;
 
 use crate::path::{TorPath, dirpath::DirPathBuilder, exitpath::ExitPathBuilder};
 use tor_chanmgr::ChannelUsage;
-#[cfg(feature = "geoip")]
-use tor_error::internal;
+
 use tor_guardmgr::{GuardMgr, GuardMonitor, GuardUsable};
 use tor_netdir::Relay;
 use tor_netdoc::types::policy::PortPolicy;
@@ -21,19 +18,6 @@ use {crate::HsCircKind, crate::HsCircStemKind, crate::path::hspath::HsPathBuilde
 
 #[cfg(feature = "specific-relay")]
 use tor_linkspec::{HasChanMethod, HasRelayIds};
-
-#[cfg(feature = "geoip")]
-use tor_geoip::CountryCode;
-/// A non-existent country code type, used as a placeholder for the real `tor_geoip::CountryCode`
-/// when the `geoip` crate feature is not present.
-///
-/// This type exists to simplify conditional compilation: without it, we'd have to duplicate a lot
-/// of match patterns and things would suck a lot.
-// TODO GEOIP: propagate this refactor down through the stack (i.e. all the way down to the
-//            `tor-geoip` crate)
-//             We can also get rid of a lot of #[cfg] then.
-#[cfg(not(feature = "geoip"))]
-pub(crate) type CountryCode = Void;
 
 #[cfg(any(feature = "specific-relay", feature = "hs-common"))]
 use tor_linkspec::OwnedChanTarget;
@@ -146,8 +130,6 @@ pub(crate) enum TargetTunnelUsage {
         ports: Vec<TargetPort>,
         /// Isolation group the circuit shall be part of
         isolation: StreamIsolation,
-        /// Restrict the circuit to only exits in the provided country code.
-        country_code: Option<CountryCode>,
         /// If true, all relays on this circuit need to have the Stable flag.
         //
         // TODO #504: It would be good to remove this field, if we can.
@@ -212,8 +194,6 @@ pub(crate) enum SupportedTunnelUsage {
         /// Isolation group the circuit is part of. None when the circuit is not yet assigned to an
         /// isolation group.
         isolation: Option<StreamIsolation>,
-        /// Country code the exit is in, or `None` if no country could be determined.
-        country_code: Option<CountryCode>,
         /// Whether every relay in this circuit has the "Stable" flag.
         //
         // TODO #504: It would be good to remove this field, if we can.
@@ -267,17 +247,13 @@ impl TargetTunnelUsage {
                 let policy = path
                     .exit_policy()
                     .expect("ExitPathBuilder gave us a one-hop circuit?");
-                #[cfg(feature = "geoip")]
-                let country_code = path.country_code();
-                #[cfg(not(feature = "geoip"))]
-                let country_code = None;
+
                 let all_relays_stable = path.appears_stable();
                 Ok((
                     path,
                     SupportedTunnelUsage::Exit {
                         policy,
                         isolation: None,
-                        country_code,
                         all_relays_stable,
                     },
                     Some(mon),
@@ -287,16 +263,8 @@ impl TargetTunnelUsage {
             TargetTunnelUsage::Exit {
                 ports: p,
                 isolation,
-                country_code,
                 require_stability,
             } => {
-                #[cfg(feature = "geoip")]
-                let mut builder = if let Some(cc) = country_code {
-                    ExitPathBuilder::in_given_country(*cc, p.clone())
-                } else {
-                    ExitPathBuilder::from_target_ports(p.clone())
-                };
-                #[cfg(not(feature = "geoip"))]
                 let mut builder = ExitPathBuilder::from_target_ports(p.clone());
 
                 builder.require_stability(*require_stability);
@@ -306,26 +274,13 @@ impl TargetTunnelUsage {
                     .exit_policy()
                     .expect("ExitPathBuilder gave us a one-hop circuit?");
 
-                #[cfg(feature = "geoip")]
-                let resulting_cc = path.country_code();
-                #[cfg(feature = "geoip")]
-                if resulting_cc != *country_code {
-                    internal!(
-                        "asked for a country code of {:?}, got {:?}",
-                        country_code,
-                        resulting_cc
-                    );
-                }
                 let all_relays_stable = path.appears_stable();
 
-                #[cfg(not(feature = "geoip"))]
-                let resulting_cc = *country_code; // avoid unused var warning
                 Ok((
                     path,
                     SupportedTunnelUsage::Exit {
                         policy,
                         isolation: Some(isolation.clone()),
-                        country_code: resulting_cc,
                         all_relays_stable,
                     },
                     Some(mon),
@@ -337,15 +292,11 @@ impl TargetTunnelUsage {
                     .require_stability(false)
                     .pick_path(rng, netdir, guards, config, now)?;
                 let policy = path.exit_policy();
-                #[cfg(feature = "geoip")]
-                let country_code = path.country_code();
-                #[cfg(not(feature = "geoip"))]
-                let country_code = None;
+
                 let usage = match policy {
                     Some(policy) if policy.allows_some_port() => SupportedTunnelUsage::Exit {
                         policy,
                         isolation: None,
-                        country_code,
                         all_relays_stable: path.appears_stable(),
                     },
                     _ => SupportedTunnelUsage::NoUsage,
@@ -389,7 +340,6 @@ impl TargetTunnelUsage {
         TargetTunnelUsage::Exit {
             ports: ports.iter().map(|p| TargetPort::ipv4(*p)).collect(),
             isolation: StreamIsolation::no_isolation(),
-            country_code: None,
             require_stability: false,
         }
     }
@@ -418,13 +368,11 @@ impl SupportedTunnelUsage {
                 Exit {
                     policy: p1,
                     isolation: i1,
-                    country_code: cc1,
                     all_relays_stable,
                 },
                 TargetTunnelUsage::Exit {
                     ports: p2,
                     isolation: i2,
-                    country_code: cc2,
                     require_stability,
                 },
             ) => {
@@ -435,7 +383,6 @@ impl SupportedTunnelUsage {
                     .unwrap_or(true)
                     && (!require_stability || *all_relays_stable)
                     && p2.iter().all(|port| p1.allows_port(*port))
-                    && (cc2.is_none() || cc1 == cc2)
             }
             (
                 Exit {
@@ -633,16 +580,14 @@ pub(crate) mod test {
                     Exit {
                         ports: p1,
                         isolation: is1,
-                        country_code: cc1,
                         ..
                     },
                     Exit {
                         ports: p2,
                         isolation: is2,
-                        country_code: cc2,
                         ..
                     },
-                ) => p1 == p2 && cc1 == cc2 && is1.isol_eq(is2),
+                ) => p1 == p2 && is1.isol_eq(is2),
                 (TimeoutTesting, TimeoutTesting) => true,
                 (
                     Preemptive {
@@ -670,16 +615,14 @@ pub(crate) mod test {
                     Exit {
                         policy: p1,
                         isolation: is1,
-                        country_code: cc1,
                         ..
                     },
                     Exit {
                         policy: p2,
                         isolation: is2,
-                        country_code: cc2,
                         ..
                     },
-                ) => p1 == p2 && is1.isol_eq(is2) && cc1 == cc2,
+                ) => p1 == p2 && is1.isol_eq(is2),
                 (NoUsage, NoUsage) => true,
                 _ => false,
             }
@@ -768,19 +711,16 @@ pub(crate) mod test {
         let supp_exit = SupportedTunnelUsage::Exit {
             policy: policy.clone(),
             isolation: Some(isolation.clone()),
-            country_code: None,
             all_relays_stable: true,
         };
         let supp_exit_iso2 = SupportedTunnelUsage::Exit {
             policy: policy.clone(),
             isolation: Some(isolation2.clone()),
-            country_code: None,
             all_relays_stable: true,
         };
         let supp_exit_no_iso = SupportedTunnelUsage::Exit {
             policy,
             isolation: None,
-            country_code: None,
             all_relays_stable: true,
         };
         let supp_none = SupportedTunnelUsage::NoUsage;
@@ -788,32 +728,27 @@ pub(crate) mod test {
         let targ_80_v4 = TargetTunnelUsage::Exit {
             ports: vec![TargetPort::ipv4(80)],
             isolation: isolation.clone(),
-            country_code: None,
             require_stability: false,
         };
         let targ_80_v4_iso2 = TargetTunnelUsage::Exit {
             ports: vec![TargetPort::ipv4(80)],
             isolation: isolation2,
-            country_code: None,
             require_stability: false,
         };
         let targ_80_23_v4 = TargetTunnelUsage::Exit {
             ports: vec![TargetPort::ipv4(80), TargetPort::ipv4(23)],
             isolation: isolation.clone(),
-            country_code: None,
             require_stability: false,
         };
 
         let targ_80_23_mixed = TargetTunnelUsage::Exit {
             ports: vec![TargetPort::ipv4(80), TargetPort::ipv6(23)],
             isolation: isolation.clone(),
-            country_code: None,
             require_stability: false,
         };
         let targ_999_v6 = TargetTunnelUsage::Exit {
             ports: vec![TargetPort::ipv6(999)],
             isolation,
-            country_code: None,
             require_stability: false,
         };
         let targ_testing = TargetTunnelUsage::TimeoutTesting;
@@ -864,32 +799,27 @@ pub(crate) mod test {
         let supp_exit = SupportedTunnelUsage::Exit {
             policy: policy.clone(),
             isolation: Some(isolation.clone()),
-            country_code: None,
             all_relays_stable: true,
         };
         let supp_exit_iso2 = SupportedTunnelUsage::Exit {
             policy: policy.clone(),
             isolation: Some(isolation2.clone()),
-            country_code: None,
             all_relays_stable: true,
         };
         let supp_exit_no_iso = SupportedTunnelUsage::Exit {
             policy,
             isolation: None,
-            country_code: None,
             all_relays_stable: true,
         };
         let supp_none = SupportedTunnelUsage::NoUsage;
         let targ_exit = TargetTunnelUsage::Exit {
             ports: vec![TargetPort::ipv4(80)],
             isolation,
-            country_code: None,
             require_stability: false,
         };
         let targ_exit_iso2 = TargetTunnelUsage::Exit {
             ports: vec![TargetPort::ipv4(80)],
             isolation: isolation2,
-            country_code: None,
             require_stability: false,
         };
         let targ_testing = TargetTunnelUsage::TimeoutTesting;
@@ -994,7 +924,6 @@ pub(crate) mod test {
             let exit_usage = TargetTunnelUsage::Exit {
                 ports: vec![TargetPort::ipv4(995)],
                 isolation: isolation.clone(),
-                country_code: None,
                 require_stability: false,
             };
             let (p_exit, u_exit, _, _) = exit_usage
@@ -1048,7 +977,6 @@ pub(crate) mod test {
                 SupportedTunnelUsage::Exit {
                     policy,
                     isolation: None,
-                    country_code: None,
                     all_relays_stable: true
                 }
             );

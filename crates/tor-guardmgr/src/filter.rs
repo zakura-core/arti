@@ -11,8 +11,7 @@ use tor_relay_selection::{LowLevelRelayPredicate, RelayRestriction, RelaySelecto
 /// We _always_ restrict the set of possible guards to be the set of
 /// relays currently listed in the consensus directory document, and
 /// tagged with the `Guard` flag.  But clients may narrow the eligible set
-/// even further—for example, to those supporting only a given set of ports,
-/// or to those in a given country.
+/// even further, for example to relays with reachable network addresses.
 #[derive(Debug, Clone, Default, Eq, PartialEq)]
 pub struct GuardFilter {
     /// A list of filters to apply to guard or fallback selection.  Each filter

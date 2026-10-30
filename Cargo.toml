@@ -25,7 +25,6 @@ members = [
     "crates/retry-error",
     "crates/tor-error",
     "crates/tor-general-addr",
-    "crates/tor-geoip",
     "crates/tor-memquota-cost",
     "crates/tor-llcrypto",
     "crates/tor-cert-x509",

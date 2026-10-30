@@ -1921,12 +1921,10 @@ mod test {
             TargetTunnelUsage::Exit {
                 ports,
                 isolation,
-                country_code,
                 require_stability,
             } => SupportedTunnelUsage::Exit {
                 policy: ExitPolicy::from_target_ports(&TargetPorts::from(&ports[..])),
                 isolation: Some(isolation.clone()),
-                country_code: country_code.clone(),
                 all_relays_stable: *require_stability,
             },
             _ => unimplemented!(),
@@ -1995,7 +1993,6 @@ mod test {
             let dnsport_restrict = TargetTunnelUsage::Exit {
                 ports: vec![TargetPort::ipv4(53)],
                 isolation: StreamIsolation::builder().build().unwrap(),
-                country_code: None,
                 require_stability: false,
             };
 
@@ -2227,7 +2224,6 @@ mod test {
                     .owner_token(IsolationToken::new())
                     .build()
                     .unwrap(),
-                country_code: None,
                 require_stability: false,
             };
             let iso2 = TargetTunnelUsage::Exit {
@@ -2236,7 +2232,6 @@ mod test {
                     .owner_token(IsolationToken::new())
                     .build()
                     .unwrap(),
-                country_code: None,
                 require_stability: false,
             };
             let no_iso1 = TargetTunnelUsage::new_from_ipv4_ports(&[443]);
@@ -2466,7 +2461,6 @@ mod test {
             SupportedTunnelUsage::Exit {
                 policy: ep_none,
                 isolation: None,
-                country_code: None,
                 all_relays_stable: true,
             },
             fake_circ.clone(),
@@ -2477,7 +2471,6 @@ mod test {
             SupportedTunnelUsage::Exit {
                 policy: ep_web,
                 isolation: None,
-                country_code: None,
                 all_relays_stable: true,
             },
             fake_circ.clone(),
@@ -2488,7 +2481,6 @@ mod test {
             SupportedTunnelUsage::Exit {
                 policy: ep_full,
                 isolation: None,
-                country_code: None,
                 all_relays_stable: true,
             },
             fake_circ,
