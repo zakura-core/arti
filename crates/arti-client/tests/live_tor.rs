@@ -3,7 +3,11 @@
 //! Ordinary tests stay offline; the shared Linux CI job explicitly runs this
 //! ignored test with the wallet's Tokio/Rustls feature selection.
 
-#![cfg(all(feature = "tokio", feature = "rustls"))]
+#![cfg(all(
+    feature = "tokio",
+    feature = "rustls",
+    not(all(target_arch = "wasm32", target_os = "unknown"))
+))]
 
 use anyhow::{Context, Result, ensure};
 use arti_client::{TorClient, config::TorClientConfigBuilder};
@@ -54,9 +58,10 @@ fn public_tor_bootstrap_and_https_request() -> Result<()> {
                 .connect(CHECK_HOST, stream)
                 .await
                 .context("authenticate the Tor check HTTPS endpoint over Tor")?;
-            tls.write_all(
-                b"GET /api/ip HTTP/1.0\r\nHost: check.torproject.org\r\nAccept: application/json\r\nConnection: close\r\n\r\n",
-            )
+            let request = format!(
+                "GET /api/ip HTTP/1.0\r\nHost: {CHECK_HOST}\r\nAccept: application/json\r\nConnection: close\r\n\r\n"
+            );
+            tls.write_all(request.as_bytes())
             .await
             .context("write the HTTPS request through Tor")?;
             tls.flush().await.context("flush the Tor stream")?;
