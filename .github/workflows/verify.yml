@@ -53,3 +53,9 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       - name: Test memory quotas and native memory oracle
         run: cargo test --locked -p zakura-tor-memquota
+      - name: Check BSD memory-query bindings
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          rustup target add x86_64-unknown-freebsd x86_64-unknown-netbsd
+          cargo check --locked -p zakura-tor-memquota --lib --no-default-features --target x86_64-unknown-freebsd
+          cargo check --locked -p zakura-tor-memquota --lib --no-default-features --target x86_64-unknown-netbsd
