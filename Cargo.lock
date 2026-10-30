@@ -3841,15 +3841,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sanitize-filename"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc984f4f9ceb736a7bb755c3e3bd17dc56370af2600c9780dcc48c66453da34d"
-dependencies = [
- "regex",
-]
-
-[[package]]
 name = "saturating-time"
 version = "0.5.0"
 dependencies = [
@@ -5738,7 +5729,6 @@ dependencies = [
  "itertools 0.15.0",
  "oneshot-fused-workaround",
  "paste",
- "sanitize-filename",
  "serde",
  "serde_json",
  "tempfile",
