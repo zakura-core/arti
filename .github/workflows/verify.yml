@@ -36,9 +36,7 @@ jobs:
       - name: Check guard-state provenance
         run: cargo test --locked -p zakura-tor-guardmgr crate_id
       - name: Check embedded Tor and onion-service client
-        run: |
-          cargo check --locked -p zakura-arti-client --no-default-features \
-            --features tokio,rustls,onion-service-client
+        run: python3 maint/zakura/check-client-graph.py
       - name: Test proxy URI parsing and legacy oracle
         run: cargo test --locked -p zakura-tor-chanmgr
 
