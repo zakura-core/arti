@@ -60,7 +60,6 @@ dyn-clone = "1.0.20"
 fs-mistrust = { path = "../fs-mistrust", version = "0.16.0", features = ["serde", "walkdir"] }
 glob-match = "0.2.1"
 humantime = "2"
-inventory = "0.3.25"
 itertools = "0.15.0"
 rand = "0.10.3"
 safelog = { path = "../safelog", version = "0.10.0" }

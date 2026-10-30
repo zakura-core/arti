@@ -4,8 +4,8 @@
 
 use crate::raw::RawEntryId;
 use crate::{
-    ArtiPath, BoxedKeystore, KeyPath, KeyPathError, KeyPathInfo, KeyPathInfoExtractor,
-    KeyPathPattern, KeySpecifier, KeystoreCorruptionError, KeystoreId, KeystoreSelector, Result,
+    ArtiPath, BoxedKeystore, KeyPath, KeyPathError, KeyPathPattern, KeySpecifier,
+    KeystoreCorruptionError, KeystoreId, KeystoreSelector, Result,
 };
 
 use itertools::Itertools;
@@ -50,12 +50,6 @@ pub struct KeyMgr {
     /// The secondary key stores.
     #[builder(default, setter(custom))]
     secondary_stores: Vec<BoxedKeystore>,
-    /// The key info extractors.
-    ///
-    /// These are initialized internally by [`KeyMgrBuilder::build`], using the values collected
-    /// using `inventory`.
-    #[builder(default, setter(skip))]
-    key_info_extractors: Vec<&'static dyn KeyPathInfoExtractor>,
 }
 
 /// A keystore entry descriptor.
@@ -102,18 +96,13 @@ impl KeyMgrBuilder {
     pub fn build(self) -> StdResult<KeyMgr, KeyMgrBuilderError> {
         use itertools::Itertools as _;
 
-        let mut keymgr = self.build_unvalidated()?;
+        let keymgr = self.build_unvalidated()?;
 
         if !keymgr.all_stores().map(|s| s.id()).all_unique() {
             return Err(KeyMgrBuilderError::ValidationError(
                 "the keystore IDs are not pairwise unique".into(),
             ));
         }
-
-        keymgr.key_info_extractors = inventory::iter::<&'static dyn KeyPathInfoExtractor>
-            .into_iter()
-            .copied()
-            .collect();
 
         Ok(keymgr)
     }
@@ -153,8 +142,6 @@ impl KeyMgrBuilder {
         &mut self.secondary_stores
     }
 }
-
-inventory::collect!(&'static dyn crate::KeyPathInfoExtractor);
 
 impl KeyMgr {
     /// Read a key from one of the key stores, and try to deserialize it as `K::Key`.
@@ -382,24 +369,6 @@ impl KeyMgr {
             })
             .flatten_ok()
             .collect::<Result<Vec<_>>>()
-    }
-
-    /// Describe the specified key.
-    ///
-    /// Returns `None` if none of the registered
-    /// [`KeyPathInfoExtractor`]s is able to parse the specified [`KeyPath`].
-    ///
-    /// This function uses the [`KeyPathInfoExtractor`]s registered using
-    /// [`register_key_info_extractor`](crate::register_key_info_extractor),
-    /// or by [`DefaultKeySpecifier`](crate::derive_deftly_template_KeySpecifier).
-    pub fn describe(&self, path: &KeyPath) -> Option<KeyPathInfo> {
-        for info_extractor in &self.key_info_extractors {
-            if let Ok(info) = info_extractor.describe(path) {
-                return Some(info);
-            }
-        }
-
-        None
     }
 
     /// Attempt to retrieve a key from one of the specified `stores`.

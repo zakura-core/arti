@@ -5461,7 +5461,6 @@ dependencies = [
  "fs-mistrust",
  "glob-match",
  "humantime",
- "inventory",
  "itertools 0.15.0",
  "paste",
  "rand 0.10.3",

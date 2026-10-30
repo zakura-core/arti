@@ -79,8 +79,8 @@ pub use err::{
 pub use key_specifier::{
     ArtiPathError, ArtiPathRange, ArtiPathUnavailableError, CTorKeySpecifier, CTorPath,
     CTorPathError, InvalidKeyPathComponentValue, KeyCertificateSpecifier, KeyPath, KeyPathError,
-    KeyPathInfo, KeyPathInfoBuilder, KeyPathInfoExtractor, KeyPathPattern, KeySpecifier,
-    KeySpecifierComponent, KeySpecifierComponentViaDisplayFromStr, KeySpecifierPattern,
+    KeyPathPattern, KeySpecifier, KeySpecifierComponent, KeySpecifierComponentViaDisplayFromStr,
+    KeySpecifierPattern,
 };
 
 #[cfg(feature = "experimental-api")]
@@ -115,7 +115,7 @@ pub use dummy::*;
 pub(crate) type BoxedKeystore = Box<dyn Keystore>;
 
 #[doc(hidden)]
-pub use {derive_deftly, inventory};
+pub use derive_deftly;
 
 use derive_more::{AsRef, Display, From};
 use serde::{Deserialize, Serialize};

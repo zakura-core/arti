@@ -1,6 +1,5 @@
 //! The [`KeySpecifier`] trait and its implementations.
 
-use std::collections::BTreeMap;
 use std::fmt::{self, Debug, Display};
 use std::ops::Range;
 use std::result::Result as StdResult;
@@ -160,9 +159,7 @@ pub trait CertSpecifierPattern {
     fn arti_pattern(&self) -> Result<KeyPathPattern, Bug>;
 }
 
-/// An error while attempting to extract information about a key given its path
-///
-/// For example, from a [`KeyPathInfoExtractor`].
+/// An error while parsing a key path into a key specifier
 ///
 /// See also `crate::keystore::arti::MalformedPathError`,
 /// which occurs at a lower level.
@@ -271,80 +268,6 @@ pub enum InvalidKeyPathComponentValue {
     Bug(#[from] tor_error::Bug),
 }
 
-/// Information about a [`KeyPath`].
-///
-/// The information is extracted from the [`KeyPath`] itself
-/// (_not_ from the key data) by a [`KeyPathInfoExtractor`].
-//
-// TODO  maybe the getters should be combined with the builder, or something?
-#[derive(Debug, Clone, PartialEq, derive_builder::Builder, amplify_derive::Getters)]
-pub struct KeyPathInfo {
-    /// A human-readable summary string describing what the [`KeyPath`] is for.
-    ///
-    /// This should *not* recapitulate information in the `extra_info`.
-    summary: String,
-    /// The key role, ie its official name in the Tor Protocols.
-    ///
-    /// This should usually start with `KS_`.
-    //
-    // TODO (#1195): see the comment for #[deftly(role)] in derive.rs
-    role: String,
-    /// Additional information, in the form of key-value pairs.
-    ///
-    /// This will contain human-readable information that describes the individual
-    /// components of a KeyPath. For example, for the [`ArtiPath`]
-    /// `hs/foo/KS_hs_id.expanded_ed25519_private`, the extra information could
-    /// be `("kind", "service)`, `("nickname", "foo")`, etc.
-    #[builder(default, setter(custom))]
-    extra_info: BTreeMap<String, String>,
-}
-
-impl KeyPathInfo {
-    /// Start to build a [`KeyPathInfo`]: return a fresh [`KeyPathInfoBuilder`]
-    pub fn builder() -> KeyPathInfoBuilder {
-        KeyPathInfoBuilder::default()
-    }
-}
-
-impl KeyPathInfoBuilder {
-    /// Initialize the additional information of this builder with the specified values.
-    ///
-    /// Erases the preexisting `extra_info`.
-    pub fn set_all_extra_info(
-        &mut self,
-        all_extra_info: impl Iterator<Item = (String, String)>,
-    ) -> &mut Self {
-        self.extra_info = Some(all_extra_info.collect());
-        self
-    }
-
-    /// Append the specified key-value pair to the `extra_info`.
-    ///
-    /// The preexisting `extra_info` is preserved.
-    pub fn extra_info(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
-        let extra_info = self.extra_info.get_or_insert_default();
-        extra_info.insert(key.into(), value.into());
-        self
-    }
-}
-
-/// A trait for extracting info out of a [`KeyPath`]s.
-///
-/// This trait is used by [`KeyMgr::describe`](crate::KeyMgr::describe)
-/// to extract information out of [`KeyPath`]s.
-pub trait KeyPathInfoExtractor: Send + Sync {
-    /// Describe the specified `path`.
-    fn describe(&self, path: &KeyPath) -> StdResult<KeyPathInfo, KeyPathError>;
-}
-
-/// Register a [`KeyPathInfoExtractor`] for use with [`KeyMgr`](crate::KeyMgr).
-#[macro_export]
-macro_rules! register_key_info_extractor {
-    ($kv:expr) => {{
-        $crate::inventory::submit!(&$kv as &dyn $crate::KeyPathInfoExtractor);
-    }};
-}
-
 /// A pattern that can be used to match [`ArtiPath`]s or [`CTorPath`]s.
 ///
 /// Create a new `KeyPathPattern`.
@@ -431,11 +354,10 @@ pub trait KeySpecifier {
 /// validation rules. A `Slug` is not always a valid `KeySpecifierComponent`
 /// instance.
 ///
-/// If you are deriving [`DefaultKeySpecifier`](crate::derive_deftly_template_KeySpecifier) for a
-/// struct, all of its fields must implement this trait.
+/// Fields processed by the [`KeySpecifier` derive template] must implement this
+/// trait. Manual [`KeySpecifier`] implementations do not require it.
 ///
-/// If you are implementing [`KeySpecifier`] and [`KeyPathInfoExtractor`] manually rather than by
-/// deriving `DefaultKeySpecifier`, you do not need to implement this trait.
+/// [`KeySpecifier` derive template]: crate::derive_deftly_template_KeySpecifier
 pub trait KeySpecifierComponent {
     /// Return the [`Slug`] representation of this type.
     fn to_slug(&self) -> Result<Slug, Bug>;
@@ -625,9 +547,11 @@ impl KeySpecifierComponent for HsId {
     }
 }
 
-/// Wrapper for `KeySpecifierComponent` that `Displays` via `fmt_pretty`
+/// [`Display`] wrapper using [`KeySpecifierComponent::fmt_pretty`].
+#[cfg(test)]
 struct KeySpecifierComponentPrettyHelper<'c>(&'c dyn KeySpecifierComponent);
 
+#[cfg(test)]
 impl Display for KeySpecifierComponentPrettyHelper<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         KeySpecifierComponent::fmt_pretty(self.0, f)
@@ -728,7 +652,6 @@ mod test {
     use crate::test_utils::check_key_specifier;
     use derive_deftly::Deftly;
     use humantime::parse_rfc3339;
-    use itertools::Itertools;
     use serde::{Deserialize, Serialize};
     use std::fmt::Debug;
     use std::time::Duration;
@@ -790,7 +713,6 @@ mod test {
         #[derive_deftly(KeySpecifier)]
         #[deftly(prefix = "encabulator")]
         #[deftly(role = "marzlevane")]
-        #[deftly(summary = "test key")]
         struct TestSpecifier {
             // The remaining fields
             kind: String,
@@ -814,28 +736,6 @@ mod test {
             &key_spec,
             "encabulator/hydrocoptic/waneshaft/logarithmic/marzlevane+6+18519_1440_3600",
         );
-
-        let info = TestSpecifierInfoExtractor
-            .describe(&KeyPath::Arti(key_spec.arti_path().unwrap()))
-            .unwrap();
-
-        assert_eq!(
-            format!("{info:#?}"),
-            r##"
-KeyPathInfo {
-    summary: "test key",
-    role: "marzlevane",
-    extra_info: {
-        "base": "waneshaft",
-        "casing": "logarithmic",
-        "count": "6",
-        "kind": "hydrocoptic",
-        "tp": "#18519 2020-09-14T01:00:00Z..+24:00",
-    },
-}
-            "##
-            .trim()
-        );
     }
 
     #[test]
@@ -844,7 +744,6 @@ KeyPathInfo {
         #[derive_deftly(KeySpecifier)]
         #[deftly(prefix = "encabulator")]
         #[deftly(role = "marzlevane")]
-        #[deftly(summary = "test key")]
         struct TestSpecifier {}
 
         let key_spec = TestSpecifier {};
@@ -863,7 +762,6 @@ KeyPathInfo {
         #[derive_deftly(KeySpecifier)]
         #[deftly(prefix = "encabulator")]
         #[deftly(role = "marzlevane")]
-        #[deftly(summary = "test key")]
         struct TestSpecifier {
             #[deftly(denotator)]
             count: usize,
@@ -885,7 +783,6 @@ KeyPathInfo {
         #[derive_deftly(KeySpecifier)]
         #[deftly(prefix = "encabulator")]
         #[deftly(role = "fan")]
-        #[deftly(summary = "test key")]
         struct TestSpecifier {
             casing: String,
             /// A doc comment.
@@ -925,7 +822,6 @@ KeyPathInfo {
         #[derive_deftly(KeySpecifier)]
         #[deftly(prefix = "encabulator")]
         #[deftly(role = "fan")]
-        #[deftly(summary = "test key")]
         struct TestSpecifier {
             casing: String,
             /// A doc comment.
@@ -971,7 +867,6 @@ KeyPathInfo {
         #[derive(Deftly, Debug, Eq, PartialEq)]
         #[derive_deftly(KeySpecifier)]
         #[deftly(prefix = "prefix")]
-        #[deftly(summary = "test key")]
         struct TestSpecifier {
             #[deftly(role)]
             role: String,
@@ -997,7 +892,6 @@ KeyPathInfo {
         #[deftly(prefix = "p")]
         #[deftly(role = "r")]
         #[deftly(ctor_path = HsIdPublicKey)]
-        #[deftly(summary = "test key")]
         struct TestSpecifier {
             nickname: HsNickname,
         }
@@ -1047,7 +941,6 @@ KeyPathInfo {
         #[derive_deftly(KeySpecifier)]
         #[deftly(prefix = "prefix")]
         #[deftly(role = "role")]
-        #[deftly(summary = "test key")]
         struct TestSpecifier {
             x: usize,
             #[deftly(fixed_path_component = "fixed")]
@@ -1064,7 +957,6 @@ KeyPathInfo {
         #[derive_deftly(KeySpecifier)]
         #[deftly(prefix = "encabulator")]
         #[deftly(role = "fan")]
-        #[deftly(summary = "test key")]
         struct TestKeySpecifier {
             casing: String,
             bearings: String,
@@ -1112,69 +1004,5 @@ KeyPathInfo {
 
         assert_eq!(hsid_slug.to_string(), b32);
         assert_eq!(hsid, HsId::from_slug(&hsid_slug).unwrap());
-    }
-
-    #[test]
-    fn key_info_builder() {
-        // A helper to check the extra_info of a `KeyPathInfo`
-        macro_rules! assert_extra_info_eq {
-            ($key_info:expr, [$(($k:expr, $v:expr),)*]) => {{
-                assert_eq!(
-                    $key_info.extra_info.into_iter().collect_vec(),
-                    vec![
-                        $(($k.into(), $v.into()),)*
-                    ]
-                );
-            }}
-        }
-        let extra_info = vec![("nickname".into(), "bar".into())];
-
-        let key_info = KeyPathInfo::builder()
-            .summary("test summary".into())
-            .role("KS_vote".to_string())
-            .set_all_extra_info(extra_info.clone().into_iter())
-            .build()
-            .unwrap();
-
-        assert_eq!(key_info.extra_info.into_iter().collect_vec(), extra_info);
-
-        let key_info = KeyPathInfo::builder()
-            .summary("test summary".into())
-            .role("KS_vote".to_string())
-            .set_all_extra_info(extra_info.clone().into_iter())
-            .extra_info("type", "service")
-            .extra_info("time period", "100")
-            .build()
-            .unwrap();
-
-        assert_extra_info_eq!(
-            key_info,
-            [
-                ("nickname", "bar"),
-                ("time period", "100"),
-                ("type", "service"),
-            ]
-        );
-
-        let key_info = KeyPathInfo::builder()
-            .summary("test summary".into())
-            .role("KS_vote".to_string())
-            .extra_info("type", "service")
-            .extra_info("time period", "100")
-            .set_all_extra_info(extra_info.clone().into_iter())
-            .build()
-            .unwrap();
-
-        assert_extra_info_eq!(key_info, [("nickname", "bar"),]);
-
-        let key_info = KeyPathInfo::builder()
-            .summary("test summary".into())
-            .role("KS_vote".to_string())
-            .extra_info("type", "service")
-            .extra_info("time period", "100")
-            .build()
-            .unwrap();
-
-        assert_extra_info_eq!(key_info, [("time period", "100"), ("type", "service"),]);
     }
 }

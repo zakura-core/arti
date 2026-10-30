@@ -137,5 +137,3 @@ impl KeyMgr {
     // would only find out at *runtime* about what is essentially a *build* issue
     // (the build issue being that the application was built with an incoherent feature set).
 }
-
-inventory::collect!(&'static dyn crate::KeyPathInfoExtractor);

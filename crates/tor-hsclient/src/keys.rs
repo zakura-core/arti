@@ -150,7 +150,6 @@ impl HsClientSecretKeysBuilder {
 #[derive_deftly(KeySpecifier)]
 #[deftly(prefix = "client")]
 #[deftly(role = "KS_hsc_desc_enc")]
-#[deftly(summary = "Descriptor decryption key")]
 #[deftly(ctor_path = HsClientDescEncKeypair)]
 /// A key for deriving keys for decrypting HS descriptors (KS_hsc_desc_enc).
 pub struct HsClientDescEncKeypairSpecifier {
