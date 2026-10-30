@@ -670,7 +670,13 @@ mod test {
             let caller = tokio_crate::runtime::Builder::new_current_thread()
                 .build()
                 .expect("create caller runtime");
-            caller.block_on(async move { drop(runtime) });
+            let dropped = caller.block_on(async move {
+                std::panic::catch_unwind(AssertUnwindSafe(|| drop(runtime)))
+            });
+            assert!(
+                dropped.is_err(),
+                "dropping an owner in async context panics"
+            );
             return;
         }
         let (_, module) = module_path!().split_once("::").expect("test module path");
@@ -683,9 +689,8 @@ mod test {
             .env(CHILD_ENV, "1")
             .output()
             .expect("run runtime-drop child test");
-        assert!(!output.status.success());
         assert!(
-            String::from_utf8_lossy(&output.stderr).contains("Cannot drop a runtime"),
+            output.status.success(),
             "{}",
             String::from_utf8_lossy(&output.stderr),
         );
