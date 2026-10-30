@@ -72,7 +72,7 @@ ssh-key = { version = "0.6.7", package = "ssh-key-fork-arti", features = ["std"]
 thiserror = "2"
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-bytes = { path = "../tor-bytes", version = "0.47.0", default-features = false }
-tor-config = { path = "../tor-config", version = "0.47.0" }
+tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
 tor-config-path = { path = "../tor-config-path", version = "0.47.0" }
 tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
 tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0" }
@@ -92,7 +92,7 @@ tempfile = "3"
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-cert = { path = "../tor-cert", version = "0.47.0" }
 tor-checkable = { path = "../tor-checkable", version = "0.47.0" }
-tor-config = { path = "../tor-config", version = "0.47.0", features = ["testing"] }
+tor-config = { path = "../tor-config", version = "0.47.0", features = ["testing"], default-features = false }
 tor-llcrypto = { version = "0.47.0", path = "../tor-llcrypto", features = ["testing"] }
 
 [package.metadata.docs.rs]
