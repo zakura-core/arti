@@ -37,10 +37,14 @@ pub enum Error {
 
     /// Error coming from the tor-key-forgecrate
     #[error("{0}")]
+    #[cfg(feature = "key-encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
     KeyForge(#[from] tor_key_forge::Error),
 
     /// An error caused by an invalid certificate.
     #[error("{0}")]
+    #[cfg(feature = "key-encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "key-encoding")))]
     InvalidCert(#[from] tor_key_forge::InvalidCertError),
 
     /// An error returned when the [`KeyMgr`](crate::KeyMgr) is unable to
@@ -70,7 +74,9 @@ impl HasKind for Error {
             E::Corruption(_) => EK::KeystoreCorrupted,
             E::KeyAlreadyExists => EK::BadApiUsage, // TODO: not strictly right
             E::KeystoreNotFound(_) => EK::BadApiUsage, // TODO: not strictly right
+            #[cfg(feature = "key-encoding")]
             E::KeyForge(_) => EK::BadApiUsage,
+            #[cfg(feature = "key-encoding")]
             E::InvalidCert(_) => EK::BadApiUsage, // TODO: not strictly right
             E::Bug(e) => e.kind(),
         }

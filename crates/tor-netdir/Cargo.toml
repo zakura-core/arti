@@ -74,7 +74,7 @@ time = { version = "0.3.55", features = ["macros"], optional = true }
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
 tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
 tor-geoip = { path = "../tor-geoip", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-geoip" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
+tor-hscrypto = { default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
 tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", package = "zakura-tor-llcrypto" }
 tor-netdoc = { path = "../tor-netdoc", version = "0.47.0-zakura.1", package = "zakura-tor-netdoc" }

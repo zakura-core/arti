@@ -82,3 +82,10 @@ to _only_ make safe changes, then you cannot enable these
 features.
 
 [#902]: https://gitlab.torproject.org/tpo/core/arti/-/issues/902
+
+## Key encoding features
+
+The default `keymgr` feature enables functional key stores and `key-encoding`.
+Disable defaults for configuration, key-path specifiers and the existing dummy
+key manager without SSH parsing. Enable `key-encoding` independently if you need
+the key-conversion re-exports without a key-store backend.

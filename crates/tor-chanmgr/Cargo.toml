@@ -22,7 +22,6 @@ full = [
     "tor-cell/full",
     "tor-config/full",
     "tor-error/full",
-    "tor-keymgr/full",
     "tor-linkspec/full",
     "tor-llcrypto/full",
     "tor-netdir/full",
@@ -67,7 +66,6 @@ tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", pa
 tor-cell = { path = "../tor-cell", version = "0.47.0-zakura.1", package = "zakura-tor-cell" }
 tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
 tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", features = ["tracing"], package = "zakura-tor-error" }
-tor-keymgr = { path = "../tor-keymgr", version = "0.47.0-zakura.1", features = ["keymgr"], package = "zakura-tor-keymgr" }
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
 tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", package = "zakura-tor-llcrypto" }
 tor-memquota = { version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false, package = "zakura-tor-memquota" }

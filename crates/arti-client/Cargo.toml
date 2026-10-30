@@ -200,7 +200,7 @@ tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", features = ["t
 tor-geoip = { path = "../tor-geoip", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-geoip" }
 tor-guardmgr = { path = "../tor-guardmgr", version = "0.47.0-zakura.1", package = "zakura-tor-guardmgr" }
 tor-hsclient = { path = "../tor-hsclient", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hsclient" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
+tor-hscrypto = { default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
 tor-hsservice = { path = "../tor-hsservice", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hsservice" }
 tor-keymgr = { path = "../tor-keymgr", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-keymgr" }
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }

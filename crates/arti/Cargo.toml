@@ -269,7 +269,7 @@ tor-config-shared = { path = "../tor-config-shared", version = "0.47.0-zakura.1"
 tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", default-features = false, features = ["tracing"], package = "zakura-tor-error" }
 tor-general-addr = { path = "../tor-general-addr", version = "0.47.0-zakura.1", package = "zakura-tor-general-addr" }
 tor-hsclient = { path = "../tor-hsclient", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hsclient" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
+tor-hscrypto = { default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
 tor-hsrproxy = { path = "../tor-hsrproxy", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hsrproxy" }
 tor-hsservice = { path = "../tor-hsservice", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hsservice" }
 tor-key-forge = { path = "../tor-key-forge", version = "0.47.0-zakura.1", package = "zakura-tor-key-forge" }

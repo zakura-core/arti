@@ -110,7 +110,7 @@ tor-cell = { path = "../tor-cell", version = "0.47.0-zakura.1", package = "zakur
 tor-cert = { path = "../tor-cert", version = "0.47.0-zakura.1", package = "zakura-tor-cert" }
 tor-checkable = { path = "../tor-checkable", version = "0.47.0-zakura.1", package = "zakura-tor-checkable" }
 tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
+tor-hscrypto = { default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-hscrypto" }
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", optional = true, package = "zakura-tor-linkspec" }
 tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["cvt-x25519"], package = "zakura-tor-llcrypto" }
 tor-protover = { path = "../tor-protover", version = "0.47.0-zakura.1", features = ["serde"], package = "zakura-tor-protover" }

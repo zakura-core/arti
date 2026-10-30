@@ -137,7 +137,7 @@ tor-cert = { path = "../tor-cert", version = "0.47.0-zakura.1", package = "zakur
 tor-checkable = { path = "../tor-checkable", version = "0.47.0-zakura.1", package = "zakura-tor-checkable" }
 tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
 tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"], optional = true, package = "zakura-tor-hscrypto" }
+tor-hscrypto = { default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"], optional = true, package = "zakura-tor-hscrypto" }
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
 tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"], package = "zakura-tor-llcrypto" }
 tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0-zakura.1", package = "zakura-tor-log-ratelim" }

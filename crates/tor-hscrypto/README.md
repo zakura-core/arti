@@ -54,3 +54,9 @@ features.
 MIT OR Apache-2.0
 
 When the `hs-pow-full` feature is used, we link with LGPL licensed dependencies.
+
+## Key encoding features
+
+The default `key-encoding` feature provides `ToEncodableKey` conversions for
+onion keys. Disable defaults to use the same in-memory key types, cryptographic
+operations and authentication-key parsing without key-store encoding support.

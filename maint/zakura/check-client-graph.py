@@ -61,6 +61,8 @@ def main():
         forbidden = {
             "url", "idna", "idna_adapter", "sysinfo", "notify", "notify-types",
             "figment", "toml", "serde_ignored", "pear", "uncased",
+            "zakura-tor-key-forge", "ssh-key-fork-arti", "ssh-cipher-fork-arti",
+            "ssh-encoding-fork-arti", "p256", "p384", "p521",
             "criterion", "criterion-cycles-per-byte", "tor-rtmock", "zakura-tor-rtmock",
             "liblzma", "liblzma-sys", "zstd", "zstd-safe", "zstd-sys", "jobserver",
         }
