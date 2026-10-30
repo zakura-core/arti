@@ -69,7 +69,6 @@ pub(crate) trait FlagEvent: Sized {
 ///    The event enums enforce this with their integer casts.
 ///
 /// [`DirEvent`] is one supported event type.
-
 macro_rules! impl_FlagEvent { { $ty:ident } => { paste!{
     impl FlagEvent for $ty {
         const MAXIMUM: u16 = {
