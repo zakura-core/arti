@@ -2,23 +2,34 @@
 //!
 //! There is one sender and any number of receivers. Each receiver first yields
 //! the current value, then observes updates; intermediate values may coalesce.
-//! Notifications use the existing [`crate::oneshot_broadcast`] primitive.
+//! Notifications use [`event_listener`], as in the directory event publisher.
 
-use crate::oneshot_broadcast::{self, ReceiverFuture};
+use event_listener::{Event, EventListener};
 use futures::{Future, Sink, Stream};
 use std::fmt;
-use std::future::IntoFuture;
 use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::task::{Context, Poll};
 
-/// The current value and notification for the next update.
+/// The current value and its publication state.
 struct State<T> {
     /// The most recently published value.
     value: T,
-    /// Notification that this value has been replaced, or the sender dropped.
-    changed: oneshot_broadcast::Receiver<()>,
+    /// Changes whenever a writer releases a mutable value guard.
+    ///
+    /// Wrapping is intentional: receivers compare for inequality, not order.
+    version: usize,
+    /// Whether the unique sender has been dropped.
+    closed: bool,
+}
+
+/// Value and notifications shared by the sender and receivers.
+struct Shared<T> {
+    /// Value, version and closure are observed atomically under one lock.
+    state: RwLock<State<T>>,
+    /// Wakes receivers to recheck the publication state.
+    event: Event,
 }
 
 /// The single writer of a watched value.
@@ -26,11 +37,8 @@ struct State<T> {
 /// Dropping this sender closes the stream after any pending final value.
 /// Closing its [`Sink`] flushes updates without closing subscriptions.
 pub struct Sender<T> {
-    /// The value and next notification, kept consistent under one lock.
-    shared: Arc<RwLock<State<T>>>,
-    /// Notification for the next write; kept here so dropping the sender closes
-    /// it.
-    changed: Option<oneshot_broadcast::Sender<()>>,
+    /// The value and its publication state.
+    shared: Arc<Shared<T>>,
 }
 
 /// A stream of snapshots of a watched value.
@@ -38,13 +46,11 @@ pub struct Sender<T> {
 /// Cloning starts a fresh subscription, whose first item is the latest value.
 pub struct Receiver<T> {
     /// Shared value, also retaining the value after the sender drops.
-    shared: Arc<RwLock<State<T>>>,
-    /// Notification captured when this receiver last observed the value.
-    changed: ReceiverFuture<()>,
-    /// Whether the receiver still owes its initial snapshot.
-    initial: bool,
-    /// Whether this receiver has returned EOF.
-    closed: bool,
+    shared: Arc<Shared<T>>,
+    /// Registered before checking publication state to prevent lost wakeups.
+    listener: EventListener,
+    /// Last observed version, or None before the initial snapshot.
+    version: Option<usize>,
 }
 
 /// A send failed because no receivers remain.
@@ -74,15 +80,15 @@ pub fn channel<T: Clone + Default>() -> (Sender<T>, Receiver<T>) {
 
 /// Create a watch initialized to `value`.
 pub fn channel_with<T: Clone>(value: T) -> (Sender<T>, Receiver<T>) {
-    let (changed_tx, changed_rx) = oneshot_broadcast::channel();
-    let shared = Arc::new(RwLock::new(State {
-        value,
-        changed: changed_rx,
-    }));
-    let sender = Sender {
-        shared,
-        changed: Some(changed_tx),
-    };
+    let shared = Arc::new(Shared {
+        state: RwLock::new(State {
+            value,
+            version: 0,
+            closed: false,
+        }),
+        event: Event::new(),
+    });
+    let sender = Sender { shared };
     let receiver = sender.receiver();
     (sender, receiver)
 }
@@ -91,12 +97,10 @@ impl<T> Sender<T> {
     /// Start a fresh subscription at the latest value and its next
     /// notification.
     fn receiver(&self) -> Receiver<T> {
-        let state = self.shared.read().unwrap_or_else(|e| e.into_inner());
         Receiver {
             shared: Arc::clone(&self.shared),
-            changed: state.changed.clone().into_future(),
-            initial: true,
-            closed: false,
+            listener: self.shared.event.listen(),
+            version: None,
         }
     }
 
@@ -107,22 +111,33 @@ impl<T> Sender<T> {
 
     /// Borrow the current value without notifying receivers.
     pub fn borrow(&mut self) -> impl Deref<Target = T> + '_ {
-        ReadGuard(self.shared.read().unwrap_or_else(|e| e.into_inner()))
+        ReadGuard(self.shared.state.read().unwrap_or_else(|e| e.into_inner()))
     }
 
     /// Borrow the current value mutably, notifying receivers on release.
     pub fn borrow_mut(&mut self) -> impl DerefMut<Target = T> + '_ {
         WriteGuard {
-            state: Some(self.shared.write().unwrap_or_else(|e| e.into_inner())),
-            changed: &mut self.changed,
+            state: Some(self.shared.state.write().unwrap_or_else(|e| e.into_inner())),
+            event: &self.shared.event,
         }
+    }
+}
+
+impl<T> Drop for Sender<T> {
+    fn drop(&mut self) {
+        self.shared
+            .state
+            .write()
+            .unwrap_or_else(|e| e.into_inner())
+            .closed = true;
+        self.shared.event.notify(usize::MAX);
     }
 }
 
 impl<T> Receiver<T> {
     /// Borrow the latest value without consuming an update.
     pub fn borrow(&self) -> impl Deref<Target = T> + '_ {
-        ReadGuard(self.shared.read().unwrap_or_else(|e| e.into_inner()))
+        ReadGuard(self.shared.state.read().unwrap_or_else(|e| e.into_inner()))
     }
 }
 
@@ -140,12 +155,10 @@ impl<T: Clone> Receiver<T> {
 
 impl<T> Clone for Receiver<T> {
     fn clone(&self) -> Self {
-        let state = self.shared.read().unwrap_or_else(|e| e.into_inner());
         Self {
             shared: Arc::clone(&self.shared),
-            changed: state.changed.clone().into_future(),
-            initial: true,
-            closed: false,
+            listener: self.shared.event.listen(),
+            version: None,
         }
     }
 }
@@ -154,26 +167,27 @@ impl<T: Clone> Stream for Receiver<T> {
     type Item = T;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<T>> {
-        if self.closed {
-            return Poll::Ready(None);
-        }
-        if !self.initial {
-            match Pin::new(&mut self.changed).poll(cx) {
+        loop {
+            // Register the listener before reading the state: a concurrent
+            // writer must either make the value ready or notify this listener.
+            let (value, version, closed) = {
+                let state = self.shared.state.read().unwrap_or_else(|e| e.into_inner());
+                let value = (self.version != Some(state.version)).then(|| state.value.clone());
+                (value, state.version, state.closed)
+            };
+            if let Some(value) = value {
+                self.version = Some(version);
+                return Poll::Ready(Some(value));
+            }
+            // Deliver a final unseen snapshot before returning EOF.
+            if closed {
+                return Poll::Ready(None);
+            }
+            match Pin::new(&mut self.listener).poll(cx) {
                 Poll::Pending => return Poll::Pending,
-                Poll::Ready(Err(_)) => {
-                    self.closed = true;
-                    return Poll::Ready(None);
-                }
-                Poll::Ready(Ok(())) => {}
+                Poll::Ready(()) => self.listener = self.shared.event.listen(),
             }
         }
-        let (value, changed) = {
-            let state = self.shared.read().unwrap_or_else(|e| e.into_inner());
-            (state.value.clone(), state.changed.clone().into_future())
-        };
-        self.changed = changed;
-        self.initial = false;
-        Poll::Ready(Some(value))
     }
 }
 
@@ -215,8 +229,8 @@ impl<T> Deref for ReadGuard<'_, T> {
 struct WriteGuard<'a, T> {
     /// The lock to release before waking receivers.
     state: Option<RwLockWriteGuard<'a, State<T>>>,
-    /// The sender's current notification, to replace before publishing.
-    changed: &'a mut Option<oneshot_broadcast::Sender<()>>,
+    /// The event to notify after publishing the value and releasing the lock.
+    event: &'a Event,
 }
 
 impl<T> Deref for WriteGuard<'_, T> {
@@ -234,14 +248,12 @@ impl<T> DerefMut for WriteGuard<'_, T> {
 
 impl<T> Drop for WriteGuard<'_, T> {
     fn drop(&mut self) {
-        let (changed_tx, changed_rx) = oneshot_broadcast::channel();
-        self.state.as_mut().expect("guard released").changed = changed_rx;
-        let previous = self.changed.replace(changed_tx).expect("sender dropped");
-        // Publish the value and next notification atomically, then unlock
-        // before
-        // running arbitrary receiver wakers.
+        let state = self.state.as_mut().expect("guard released");
+        state.version = state.version.wrapping_add(1);
+        // Publish the value and version atomically, then unlock before running
+        // arbitrary receiver wakers.
         drop(self.state.take());
-        previous.send(());
+        self.event.notify(usize::MAX);
     }
 }
 
@@ -309,6 +321,20 @@ mod test {
     }
 
     #[test]
+    fn version_wraparound_preserves_updates_and_eof() {
+        let (mut tx, mut rx) = channel_with(1);
+        tx.shared.state.write().expect("state lock").version = usize::MAX;
+        assert_eq!(rx.try_recv(), Ok(1));
+        *tx.borrow_mut() = 2;
+        assert_eq!(tx.shared.state.read().expect("state lock").version, 0);
+        assert_eq!(rx.try_recv(), Ok(2));
+        *tx.borrow_mut() = 3;
+        drop(tx);
+        assert_eq!(rx.try_recv(), Ok(3));
+        assert_eq!(rx.try_recv(), Err(TryRecvError::Closed));
+    }
+
+    #[test]
     fn closed_send_and_resubscribe() {
         let (mut tx, rx) = channel_with(1);
         drop(rx);
@@ -327,6 +353,22 @@ mod test {
         fn wake(self: Arc<Self>) {
             self.0.fetch_add(1, Ordering::SeqCst);
         }
+    }
+
+    #[test]
+    fn dropping_an_idle_sender_wakes_the_receiver() {
+        let (tx, mut rx) = channel_with(0);
+        assert_eq!(rx.try_recv(), Ok(0));
+        let counter = Arc::new(WakeCounter::default());
+        let waker = Waker::from(Arc::clone(&counter));
+        assert!(
+            Pin::new(&mut rx)
+                .poll_next(&mut Context::from_waker(&waker))
+                .is_pending()
+        );
+        drop(tx);
+        assert_eq!(counter.0.load(Ordering::SeqCst), 1);
+        assert_eq!(rx.try_recv(), Err(TryRecvError::Closed));
     }
 
     #[test]

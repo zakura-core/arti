@@ -4837,6 +4837,7 @@ dependencies = [
  "criterion",
  "derive-deftly",
  "educe",
+ "event-listener 5.4.2",
  "extend",
  "futures",
  "futures-await-test",
