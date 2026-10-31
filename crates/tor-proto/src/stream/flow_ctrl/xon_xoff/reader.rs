@@ -202,9 +202,8 @@ mod test {
 
     use crate::stream::flow_ctrl::params::FlowCtrlParameters;
     use crate::stream::flow_ctrl::state::{
-        FlowCtrlHooks, StreamRateLimit, WithSidechannelMitigations,
+        FlowCtrlHooks, StreamFlowCtrl, StreamRateLimit, WithSidechannelMitigations,
     };
-    use crate::stream::flow_ctrl::xon_xoff::state::XonXoffFlowCtrl;
     use crate::util::notify::NotifySender;
 
     use futures::channel::mpsc::{self, TryRecvError};
@@ -349,12 +348,12 @@ mod test {
         WriterWithLength<Compat<DuplexStream>>,
         XonXoffReader<ReaderWithLength<Compat<DuplexStream>>, TestingDrainRateUpdates>,
         mpsc::UnboundedReceiver<XonKBpsEwma>,
-        XonXoffFlowCtrl,
+        StreamFlowCtrl,
     ) {
         let params = FlowCtrlParameters::defaults_for_tests();
 
         // For the flow control logic to send rate limit changes to the stream writer.
-        // We don't use this in this test, but the `XonXoffFlowCtrl` needs the tx side.
+        // We don't use this in this test, but the flow control state needs the tx side.
         let (rate_limit_tx, _rate_limit_rx) =
             tor_async_utils::watch::channel_with(StreamRateLimit::MAX);
 
@@ -363,7 +362,7 @@ mod test {
         let drain_rate_request_rx = drain_rate_request_tx.subscribe();
 
         // The flow control logic.
-        let flow_ctrl = XonXoffFlowCtrl::new(
+        let flow_ctrl = StreamFlowCtrl::new_xon_xoff(
             Arc::new(params),
             with_sidechannel_mitigations,
             rate_limit_tx,
@@ -401,7 +400,7 @@ mod test {
     async fn buffer_incoming_data(
         writer: &mut WriterWithLength<impl AsyncWrite + Unpin>,
         mut num_bytes: usize,
-        flow_ctrl: &mut XonXoffFlowCtrl,
+        flow_ctrl: &mut StreamFlowCtrl,
     ) -> bool {
         let mut wants_to_send_xoff = false;
 
