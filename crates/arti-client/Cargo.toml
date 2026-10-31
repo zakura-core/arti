@@ -50,7 +50,7 @@ full = [
     "tor-netdir/full",
     "tor-persist/full",
     "tor-ptmgr?/full",
-    "tor-keymgr/full",
+    "tor-keymgr?/full",
     "tor-linkspec/full",
     "tor-memquota/full",
     "tor-config-path/full",
@@ -96,7 +96,7 @@ accel-sha1-asm = ["tor-llcrypto/with-sha1-asm", "__is_nonadditive"]
 
 onion-service-client = ["tor-hsclient", "tor-hscrypto"]
 
-keymgr = ["tor-keymgr/keymgr", "tor-hsclient/keymgr"]
+keymgr = ["dep:tor-keymgr", "tor-keymgr/keymgr", "tor-hsclient?/keymgr"]
 vanguards = ["tor-guardmgr/vanguards", "tor-circmgr/vanguards"]
 
 
@@ -117,7 +117,7 @@ experimental = [
     "tor-circmgr/experimental",
     "tor-config/experimental",
     "tor-guardmgr/experimental",
-    "tor-keymgr/experimental",
+    "tor-keymgr?/experimental",
     "smol",
 ]
 
@@ -127,7 +127,7 @@ experimental = [
 # feature voids your "semver warrantee".
 experimental-api = ["__is_experimental"]
 dirfilter = ["tor-dirmgr/dirfilter", "__is_experimental"]
-ephemeral-keystore = ["tor-keymgr/ephemeral-keystore", "__is_experimental"]
+ephemeral-keystore = ["keymgr", "tor-keymgr/ephemeral-keystore", "__is_experimental"]
 error_detail = ["__is_experimental"]
 hsc-negotiate-extensions = ["tor-hsclient?/negotiate-extensions", "__is_experimental"]
 __is_experimental = []
@@ -164,7 +164,7 @@ tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] 
 tor-guardmgr = { path = "../tor-guardmgr", version = "0.47.0" }
 tor-hsclient = { path = "../tor-hsclient", version = "0.47.0", optional = true }
 tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0", optional = true }
-tor-keymgr = { path = "../tor-keymgr", version = "0.47.0", default-features = false }
+tor-keymgr = { path = "../tor-keymgr", version = "0.47.0", default-features = false, optional = true }
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
 tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0" }
 tor-memquota = { path = "../tor-memquota", version = "0.47.0" }

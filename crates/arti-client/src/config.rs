@@ -31,6 +31,7 @@ pub use tor_guardmgr::bridge::BridgeConfigBuilder;
 pub use tor_guardmgr::bridge::BridgeParseError;
 
 use tor_guardmgr::bridge::BridgeConfig;
+#[cfg(feature = "keymgr")]
 use tor_keymgr::config::{ArtiKeystoreConfig, ArtiKeystoreConfigBuilder};
 
 /// Types for configuring how Tor circuits are built.
@@ -255,16 +256,10 @@ impl StorageConfig {
     ) -> Result<PathBuf, ConfigBuildError> {
         expand_dir!(self, cache_dir, path_resolver)
     }
-    /// Return the keystore config
-    #[allow(clippy::unnecessary_wraps)]
+    /// Return the keystore config.
+    #[cfg(feature = "keymgr")]
     pub(crate) fn keystore(&self) -> ArtiKeystoreConfig {
-        cfg_if::cfg_if! {
-            if #[cfg(feature="keymgr")] {
-                self.keystore.clone()
-            } else {
-                Default::default()
-            }
-        }
+        self.keystore.clone()
     }
     /// Return the FS permissions to use for state and cache directories.
     pub(crate) fn permissions(&self) -> &Mistrust {
@@ -745,7 +740,9 @@ impl TorClientConfig {
         self.storage.permissions()
     }
 
-    /// Return the keystore config
+    /// Return the keystore config.
+    #[cfg(feature = "keymgr")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "keymgr")))]
     pub fn keystore(&self) -> ArtiKeystoreConfig {
         self.storage.keystore()
     }
@@ -773,10 +770,10 @@ impl TorClientConfig {
 }
 
 impl TorClientConfigBuilder {
-    /// Returns a `TorClientConfigBuilder` using the specified state and cache directories.
+    /// Return a builder using the specified state and cache directories.
     ///
-    /// All other configuration options are set to their defaults, except `storage.keystore.path`,
-    /// which is derived from the specified state directory.
+    /// All other configuration options use their defaults. With `keymgr`
+    /// enabled, the keystore location is derived from the state directory.
     pub fn from_directories<P, Q>(state_dir: P, cache_dir: Q) -> Self
     where
         P: AsRef<Path>,

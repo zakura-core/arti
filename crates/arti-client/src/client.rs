@@ -21,6 +21,9 @@ use tor_dirmgr::bridgedesc::BridgeDescMgr;
 use tor_dirmgr::{DirMgrStore, Timeliness};
 use tor_error::{Bug, error_report, internal};
 use tor_guardmgr::{GuardMgr, RetireCircuits};
+#[cfg(all(feature = "onion-service-client", not(feature = "keymgr")))]
+use tor_hsclient::HsClientSecretKeys;
+#[cfg(feature = "keymgr")]
 use tor_keymgr::Keystore;
 use tor_memquota::MemoryQuotaTracker;
 use tor_netdir::{NetDirProvider, params::NetParameters};
@@ -32,15 +35,24 @@ use tor_proto::client::stream::{DataStream, IpVersionPreference, StreamParameter
 use tor_rtcompat::PreferredRuntime;
 use tor_rtcompat::{Runtime, SleepProviderExt};
 #[cfg(feature = "onion-service-client")]
+use {tor_hsclient::HsClientConnector, tor_netdir::DirEvent};
+#[cfg(all(feature = "onion-service-client", feature = "keymgr"))]
 use {
-    tor_hsclient::{HsClientConnector, HsClientDescEncKeypairSpecifier, HsClientSecretKeysBuilder},
-    tor_hscrypto::pk::{HsClientDescEncKey, HsClientDescEncKeypair, HsClientDescEncSecretKey},
+    tor_hsclient::{HsClientDescEncKeypairSpecifier, HsClientSecretKeysBuilder},
+    tor_hscrypto::pk::HsClientDescEncKeypair,
     tor_keymgr::CTorClientKeystore,
-    tor_netdir::DirEvent,
 };
-#[cfg(all(feature = "onion-service-client", feature = "experimental-api"))]
-use {tor_hscrypto::pk::HsId, tor_keymgr::KeystoreSelector};
+#[cfg(all(
+    feature = "onion-service-client",
+    feature = "experimental-api",
+    feature = "keymgr"
+))]
+use {
+    tor_hscrypto::pk::{HsClientDescEncKey, HsClientDescEncSecretKey, HsId},
+    tor_keymgr::KeystoreSelector,
+};
 
+#[cfg(feature = "keymgr")]
 use tor_keymgr::{ArtiNativeKeystore, KeyMgr, KeyMgrBuilder, config::ArtiKeystoreKind};
 
 #[cfg(feature = "ephemeral-keystore")]
@@ -103,6 +115,7 @@ struct ClientShared<R: Runtime> {
     /// A handle to this client's [`InertTorClient`].
     ///
     /// Used for accessing the key manager and other persistent state.
+    #[cfg(feature = "keymgr")]
     inert_client: InertTorClient,
 
     /// Location on disk where we store persistent data (cooked state manager).
@@ -248,6 +261,8 @@ struct RunningInner<R: Runtime> {
 /// Can be used to access the state that would be used by a running [`TorClient`].
 ///
 /// An `InertTorClient` never connects to the network.
+#[cfg(feature = "keymgr")]
+#[cfg_attr(docsrs, doc(cfg(feature = "keymgr")))]
 #[derive(Clone)]
 pub struct InertTorClient {
     /// The key manager.
@@ -256,16 +271,11 @@ pub struct InertTorClient {
     /// example, for retrieving the keys necessary for connecting to hidden services that are
     /// running in restricted discovery mode).
     ///
-    /// If this crate is compiled _with_ the `keymgr` feature, [`TorClient`] will use a functional
-    /// key manager implementation.
-    ///
-    /// If this crate is compiled _without_ the `keymgr` feature, then [`TorClient`] will use a
-    /// no-op key manager implementation instead.
-    ///
     /// See the [`KeyMgr`] documentation for more details.
     keymgr: Option<Arc<KeyMgr>>,
 }
 
+#[cfg(feature = "keymgr")]
 impl InertTorClient {
     /// Create an `InertTorClient` from a `TorClientConfig`.
     pub(crate) fn new(config: &TorClientConfig) -> StdResult<Self, ErrorDetail> {
@@ -435,10 +445,18 @@ impl InertTorClient {
     /// Return the service discovery public key for the service with the specified `hsid`.
     ///
     /// See [`TorClient::get_service_discovery_key`].
-    #[cfg(all(feature = "onion-service-client", feature = "experimental-api"))]
+    #[cfg(all(
+        feature = "onion-service-client",
+        feature = "experimental-api",
+        feature = "keymgr"
+    ))]
     #[cfg_attr(
         docsrs,
-        doc(cfg(all(feature = "onion-service-client", feature = "experimental-api")))
+        doc(cfg(all(
+            feature = "onion-service-client",
+            feature = "experimental-api",
+            feature = "keymgr"
+        )))
     )]
     pub fn get_service_discovery_key(
         &self,
@@ -936,6 +954,7 @@ impl<R: Runtime> TorClient<R> {
         let (dormant_send, dormant_recv) = tor_async_utils::watch::channel_with(Some(dormant));
         let dormant_send = DropNotifyWatchSender::new(dormant_send);
         let client_isolation = IsolationToken::new();
+        #[cfg(feature = "keymgr")]
         let inert_client = InertTorClient::new(config)?;
 
         let dirmgr_store = DirMgrStore::new(&config.dir_mgr_config()?, runtime.clone(), false)
@@ -956,6 +975,7 @@ impl<R: Runtime> TorClient<R> {
             runtime,
             inner,
             memquota,
+            #[cfg(feature = "keymgr")]
             inert_client,
             statemgr,
             dirmgr_store,
@@ -1518,6 +1538,7 @@ impl<R: Runtime> TorClient<R> {
                 hostname,
                 port,
             } => {
+                #[cfg(feature = "keymgr")]
                 use safelog::DisplayRedacted as _;
 
                 let running = self
@@ -1527,26 +1548,23 @@ impl<R: Runtime> TorClient<R> {
 
                 let netdir = self.netdir(Timeliness::Timely, "connect to a hidden service")?;
 
-                let mut hs_client_secret_keys_builder = HsClientSecretKeysBuilder::default();
-
-                if let Some(keymgr) = &self.client.inert_client.keymgr {
-                    let desc_enc_key_spec = HsClientDescEncKeypairSpecifier::new(hsid);
-
-                    let ks_hsc_desc_enc =
-                        keymgr.get::<HsClientDescEncKeypair>(&desc_enc_key_spec)?;
-
-                    if let Some(ks_hsc_desc_enc) = ks_hsc_desc_enc {
-                        debug!(
-                            "Found descriptor decryption key for {}",
-                            hsid.display_redacted()
-                        );
-                        hs_client_secret_keys_builder.ks_hsc_desc_enc(ks_hsc_desc_enc);
+                #[cfg(feature = "keymgr")]
+                let hs_client_secret_keys = {
+                    let mut builder = HsClientSecretKeysBuilder::default();
+                    if let Some(keymgr) = &self.client.inert_client.keymgr {
+                        let spec = HsClientDescEncKeypairSpecifier::new(hsid);
+                        if let Some(key) = keymgr.get::<HsClientDescEncKeypair>(&spec)? {
+                            debug!(
+                                "Found descriptor decryption key for {}",
+                                hsid.display_redacted()
+                            );
+                            builder.ks_hsc_desc_enc(key);
+                        }
                     }
+                    builder.build().map_err(ErrorDetail::Configuration)?
                 };
-
-                let hs_client_secret_keys = hs_client_secret_keys_builder
-                    .build()
-                    .map_err(ErrorDetail::Configuration)?;
+                #[cfg(not(feature = "keymgr"))]
+                let hs_client_secret_keys = HsClientSecretKeys::none();
 
                 let tunnel = running
                     .hsclient
@@ -1965,10 +1983,18 @@ impl<R: Runtime> TorClient<R> {
     /// Returns `Ok(None)` if no such key exists.
     ///
     /// This function does not require the `TorClient` to be running or bootstrapped.
-    #[cfg(all(feature = "onion-service-client", feature = "experimental-api"))]
+    #[cfg(all(
+        feature = "onion-service-client",
+        feature = "experimental-api",
+        feature = "keymgr"
+    ))]
     #[cfg_attr(
         docsrs,
-        doc(cfg(all(feature = "onion-service-client", feature = "experimental-api")))
+        doc(cfg(all(
+            feature = "onion-service-client",
+            feature = "experimental-api",
+            feature = "keymgr"
+        )))
     )]
     pub fn get_service_discovery_key(
         &self,
@@ -2353,6 +2379,43 @@ mod test {
     use super::*;
     use crate::config::TorClientConfigBuilder;
     use crate::{ErrorKind, HasKind};
+
+    #[test]
+    #[cfg(all(
+        feature = "onion-service-client",
+        feature = "experimental-api",
+        feature = "keymgr"
+    ))]
+    fn persistent_service_discovery_key() {
+        let directories = tempfile::tempdir().unwrap();
+        let config = TorClientConfigBuilder::from_directories(
+            directories.path().join("state"),
+            directories.path().join("cache"),
+        )
+        .build()
+        .unwrap();
+        let hsid = HsId::from([42; 32]);
+        let client = InertTorClient::new(&config).unwrap();
+        assert!(config.keystore().is_enabled());
+        assert_eq!(client.get_service_discovery_key(hsid).unwrap(), None);
+        let public = client
+            .generate_service_discovery_key(KeystoreSelector::Primary, hsid)
+            .unwrap();
+        drop(client);
+
+        let reopened = InertTorClient::new(&config).unwrap();
+        assert_eq!(
+            reopened.get_service_discovery_key(hsid).unwrap(),
+            Some(public)
+        );
+        assert_eq!(
+            reopened
+                .remove_service_discovery_key(KeystoreSelector::Primary, hsid)
+                .unwrap(),
+            Some(())
+        );
+        assert_eq!(reopened.get_service_discovery_key(hsid).unwrap(), None);
+    }
 
     #[test]
     fn create_unbootstrapped() {

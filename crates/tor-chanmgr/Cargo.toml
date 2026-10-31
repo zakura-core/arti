@@ -22,7 +22,6 @@ full = [
     "tor-cell/full",
     "tor-config/full",
     "tor-error/full",
-    "tor-keymgr/full",
     "tor-linkspec/full",
     "tor-llcrypto/full",
     "tor-netdir/full",
@@ -66,7 +65,6 @@ tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-cell = { path = "../tor-cell", version = "0.47.0" }
 tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
 tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
-tor-keymgr = { path = "../tor-keymgr", version = "0.47.0", features = ["keymgr"] }
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
 tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0" }
 tor-memquota = { version = "0.47.0", path = "../tor-memquota", default-features = false }

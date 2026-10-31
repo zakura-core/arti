@@ -306,11 +306,13 @@ enum ErrorDetail {
 
     /// A key store access failed.
     #[error("Error while trying to access a key store")]
+    #[cfg(feature = "keymgr")]
     Keystore(#[from] tor_keymgr::Error),
 
     /// Attempted to use a `TorClient` for something that
     /// requires the keystore to be enabled in the configuration.
     #[error("Cannot {action} without enabling storage.keystore")]
+    #[cfg(feature = "keymgr")]
     KeystoreRequired {
         /// What we were trying to do that required the keystore to be enabled.
         action: &'static str
@@ -318,6 +320,7 @@ enum ErrorDetail {
 
     /// Encountered a malformed client specifier.
     #[error("Bad client specifier")]
+    #[cfg(feature = "keymgr")]
     BadClientSpecifier(#[from] tor_keymgr::ArtiPathSyntaxError),
 
     /// We tried to parse an onion address, but we found that it was invalid.
@@ -431,8 +434,11 @@ impl tor_error::HasKind for ErrorDetail {
             E::NoRoutableAddress => EK::RemoteHostNotFound,
             E::ChanMgrSetup(e) => e.kind(),
             E::NoDir { error, .. } => error.kind(),
+            #[cfg(feature = "keymgr")]
             E::Keystore(e) => e.kind(),
+            #[cfg(feature = "keymgr")]
             E::KeystoreRequired { .. } => EK::InvalidConfig,
+            #[cfg(feature = "keymgr")]
             E::BadClientSpecifier(_) => EK::InvalidConfig,
             E::FsMistrust(_) => EK::FsPermissions,
             E::MissingProtocol(_) => EK::SoftwareDeprecated,
@@ -447,6 +453,7 @@ impl From<TorAddrError> for Error {
     }
 }
 
+#[cfg(feature = "keymgr")]
 impl From<tor_keymgr::Error> for Error {
     fn from(e: tor_keymgr::Error) -> Error {
         ErrorDetail::Keystore(e).into()

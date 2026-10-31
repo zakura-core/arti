@@ -58,6 +58,7 @@ jobs:
       - name: Test wallet client and optional protocol implementations
         run: |
           cargo test --locked --manifest-path crates/arti-client/Cargo.toml --no-default-features --features tokio,rustls,onion-service-client
+          cargo test --locked --manifest-path crates/arti-client/Cargo.toml --no-default-features --features tokio,rustls,onion-service-client,keymgr,experimental-api
           cargo test --locked --manifest-path crates/tor-netdoc/Cargo.toml --all-features
           cargo test --locked --manifest-path crates/tor-netdir/Cargo.toml --all-features
           cargo test --locked --manifest-path crates/tor-chanmgr/Cargo.toml --features pt-client
@@ -66,7 +67,7 @@ jobs:
       - name: Check fresh wallet feature graph
         run: |
           python3 maint/zakura/check-client-graph.py \
-            --forbid sysinfo url idna idna_adapter figment toml serde_ignored pear uncased async_executors blanket native-tls async-native-tls schannel security-framework --forbid-icu
+            --forbid glob-match sysinfo url idna idna_adapter figment toml serde_ignored pear uncased async_executors blanket native-tls async-native-tls schannel security-framework --forbid-icu
       - name: Exercise the public Tor network
         if: matrix.os == 'ubuntu-24.04' && github.event_name != 'pull_request'
         run: |

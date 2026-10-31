@@ -2,9 +2,9 @@
 
 #![allow(missing_docs, clippy::missing_docs_in_private_items)]
 
-use crate::{
-    BootstrapBehavior, InertTorClient, Result, TorClient, TorClientConfig, err::ErrorDetail,
-};
+#[cfg(feature = "keymgr")]
+use crate::InertTorClient;
+use crate::{BootstrapBehavior, Result, TorClient, TorClientConfig, err::ErrorDetail};
 use std::{result::Result as StdResult, sync::Arc};
 use tor_dirmgr::{DirMgrConfig, DirMgrStore};
 use tor_error::{ErrorKind, HasKind as _};
@@ -310,7 +310,8 @@ impl<R: Runtime> TorClientBuilder<R> {
     /// directories.
     //
     // TODO(#1576): reach a decision here.
-    #[allow(clippy::unnecessary_wraps)]
+    #[cfg(feature = "keymgr")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "keymgr")))]
     pub fn create_inert(&self) -> Result<InertTorClient> {
         Ok(InertTorClient::new(&self.config)?)
     }
