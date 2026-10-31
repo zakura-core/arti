@@ -4062,7 +4062,6 @@ dependencies = [
  "assert_matches",
  "cfg-if",
  "derive-deftly",
- "derive_builder_fork_arti",
  "educe",
  "either",
  "extend",

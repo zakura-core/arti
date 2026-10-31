@@ -56,21 +56,6 @@ pub enum ConfigBuildError {
     },
 }
 
-impl From<derive_builder::UninitializedFieldError> for ConfigBuildError {
-    fn from(val: derive_builder::UninitializedFieldError) -> Self {
-        ConfigBuildError::MissingField {
-            field: val.field_name().to_string(),
-        }
-    }
-}
-
-impl From<derive_builder::SubfieldBuildError<ConfigBuildError>> for ConfigBuildError {
-    fn from(e: derive_builder::SubfieldBuildError<ConfigBuildError>) -> Self {
-        let (field, problem) = e.into_parts();
-        problem.within(field)
-    }
-}
-
 impl From<void::Void> for ConfigBuildError {
     fn from(value: void::Void) -> Self {
         void::unreachable(value)
@@ -179,6 +164,8 @@ mod test {
     #![allow(clippy::string_slice)] // See arti#2571
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
     use super::*;
+    use crate::derive::prelude::*;
+    use derive_deftly::Deftly;
 
     #[test]
     fn within() {
@@ -208,13 +195,16 @@ mod test {
         );
     }
 
-    #[derive(derive_builder::Builder, Debug, Clone)]
-    #[builder(build_fn(error = "ConfigBuildError"))]
+    #[derive(Deftly, Debug, Clone, PartialEq)]
+    #[derive_deftly(TorConfig)]
+    #[deftly(tor_config(no_default_trait))]
     #[allow(dead_code)]
     struct Cephalopod {
         // arms have suction cups for their whole length
+        #[deftly(tor_config(no_default))]
         arms: u8,
         // Tentacles have suction cups at the ends
+        #[deftly(tor_config(no_default))]
         tentacles: u8,
     }
 
@@ -233,11 +223,12 @@ mod test {
         );
     }
 
-    #[derive(derive_builder::Builder, Debug)]
-    #[builder(build_fn(error = "ConfigBuildError"))]
+    #[derive(Deftly, Debug, Clone, PartialEq)]
+    #[derive_deftly(TorConfig)]
+    #[deftly(tor_config(no_default_trait))]
     #[allow(dead_code)]
     struct Pet {
-        #[builder(sub_builder)]
+        #[deftly(tor_config(sub_builder))]
         best_friend: Cephalopod,
     }
 
