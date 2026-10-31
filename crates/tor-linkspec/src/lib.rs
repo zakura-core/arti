@@ -74,7 +74,4 @@ pub use traits::{
     ChanTarget, CircTarget, DirectChanMethodsHelper, HasAddrs, HasChanMethod, HasRelayIds,
     HasRelayIdsLegacy,
 };
-pub use transport::{BridgeAddr, BridgeAddrError, ChannelMethod, TransportId, TransportIdError};
-pub use transport::{
-    PtTarget, PtTargetAddr, PtTargetInvalidSetting, PtTargetSettings, PtTransportName,
-};
+pub use transport::ChannelMethod;

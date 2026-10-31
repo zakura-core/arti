@@ -19,10 +19,6 @@ locations where [`shadow.yaml`](./shadow.yaml) expects to find them.
 * Ensure [`tor`](https://gitlab.torproject.org/tpo/core/tor) is on your PATH.
   Typically you can install it using your host system's package manager.
 
-* Ensure [`obfs4proxy`](https://gitlab.com/yawning/obfs4) is located at
-  `/usr/bin/obfs4proxy`. Typically you can install it using your host system's
-  package manager.
-
 * Build an `arti` client. This test assumes that `arti` has been built with the
   `quicktest` profile, putting it at
 `../../target/x86_64-unknown-linux-gnu/quicktest/arti`. In the CI this is done

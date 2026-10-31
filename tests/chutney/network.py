@@ -13,13 +13,8 @@ def make_network(config: config_module.Config) -> chutney.TorNet.Network:
     LAUNCH_PHASE_DIR_AUTHS = 1
     # Need dirauths.
     LAUNCH_PHASE_RELAYS = 2
-    # Needs dirauths, and to a lesser extent some exit relay.
-    LAUNCH_PHASE_BRIDGE_AUTH = 3
-    # Needs bridge authority.
-    LAUNCH_PHASE_BRIDGES = 4
-    # Clients need everything else up (including bridges, for bridge-clients) to
-    # bootstrap cleanly.
-    LAUNCH_PHASE_CLIENTS = 5
+    # Clients bootstrap after the relays.
+    LAUNCH_PHASE_CLIENTS = 3
 
     # arti bins we're testing, keyed by tag-fragment.
     artis = dict(
@@ -62,28 +57,6 @@ def make_network(config: config_module.Config) -> chutney.TorNet.Network:
             client=True,
             enable_dnsport=True,
             backend=NodeBackend.ARTI,
-            launch_phase=LAUNCH_PHASE_CLIENTS,
-        ).getN(1)
-    # bridge authority
-    configs += NodeConfig(
-        tag="ba",
-        authority=True,
-        bridgeauthority=True,
-        relay=True,
-        launch_phase=LAUNCH_PHASE_BRIDGE_AUTH,
-    ).getN(1)
-    # Bridge
-    configs += NodeConfig(
-        tag="br", bridge=True, relay=True, launch_phase=LAUNCH_PHASE_BRIDGES
-    ).getN(2)
-    # arti bridge clients
-    for tag, path in artis.items():
-        configs += NodeConfig(
-            tag="bc" + tag,
-            arti=path,
-            client=True,
-            backend=NodeBackend.ARTI,
-            bridgeclient=True,
             launch_phase=LAUNCH_PHASE_CLIENTS,
         ).getN(1)
     # hidden services

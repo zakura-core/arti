@@ -14,8 +14,6 @@ repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
 [features]
 default = []
 full = [
-    "bridge-client",
-    "pt-client",
     "vanguards",
     "safelog/full",
     "tor-basic-utils/full",
@@ -27,7 +25,6 @@ full = [
     "tor-netdoc/full",
     "tor-persist/full",
     "tor-proto/full",
-    "tor-protover?/full",
     "tor-rtcompat/full",
     "tor-units/full",
     "tor-async-utils/full",
@@ -39,12 +36,6 @@ full = [
 ]
 experimental = ["testing"]
 
-# Support for using bridges as a client. Note that this is not the same as
-# the pt-client feature, since here we are not concerned with
-# pluggable transports necessarily.
-bridge-client = ["tor-protover"]
-# Support for pluggable transports.
-pt-client = ["bridge-client", "tor-linkspec/pt-client"]
 # Vanguards support
 vanguards = ["tor-relay-selection/vanguards"]
 
@@ -89,7 +80,6 @@ tor-netdir = { path = "../tor-netdir", version = "0.47.0" }
 tor-netdoc = { path = "../tor-netdoc", version = "0.47.0" }                              # for address pattern
 tor-persist = { path = "../tor-persist", version = "0.47.0" }
 tor-proto = { path = "../tor-proto", version = "0.47.0" }
-tor-protover = { path = "../tor-protover", version = "0.47.0", optional = true }
 tor-relay-selection = { path = "../tor-relay-selection", version = "0.47.0" }
 tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0" }
 tor-rtmock = { path = "../tor-rtmock", version = "0.47.0", optional = true }

@@ -1,47 +1,21 @@
 //! Connect to relays via a proxy.
 //!
-//! This code is here for two reasons:
-//!   1. To connect via external pluggable transports (for which we use SOCKS to
-//!      build our connections).
-//!   2. To support users who are behind a firewall that requires them to use a
-//!      SOCKS proxy to connect.
-//!
 //! Supports SOCKS4/4a/5 and HTTP CONNECT proxies.
-//
-// TODO: Maybe refactor this so that tor-ptmgr can exist in a more freestanding
-// way, with fewer arti dependencies.
 #![allow(dead_code)]
 
-use std::{
-    net::{IpAddr, SocketAddr},
-    sync::Arc,
-};
+use std::{net::SocketAddr, sync::Arc};
 
 use base64ct::{Base64, Encoding};
 use futures::io::{AsyncBufReadExt, BufReader};
 use futures::{AsyncReadExt, AsyncWriteExt};
 use httparse;
 use safelog::Sensitive;
-use tor_linkspec::PtTargetAddr;
 use tor_rtcompat::NetStreamProvider;
 use tor_socksproto::{
     Handshake as _, SocksAddr, SocksAuth, SocksClientHandshake, SocksCmd, SocksRequest,
     SocksStatus, SocksVersion,
 };
 use tracing::trace;
-
-#[cfg(feature = "pt-client")]
-use super::TransportImplHelper;
-#[cfg(feature = "pt-client")]
-use async_trait::async_trait;
-#[cfg(feature = "pt-client")]
-use safelog::sensitive as sv;
-#[cfg(feature = "pt-client")]
-use tor_error::bad_api_usage;
-#[cfg(feature = "pt-client")]
-use tor_linkspec::{ChannelMethod, HasChanMethod, OwnedChanTarget};
-#[cfg(feature = "pt-client")]
-use tor_proto::peer::PeerAddr;
 
 /// Information about what proxy protocol to use, and how to use it.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -56,8 +30,6 @@ pub enum Protocol {
     },
 }
 
-/// An address to use when told to connect to "no address."
-const NO_ADDR: IpAddr = IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 1));
 /// Maximum number of bytes allowed in HTTP response headers from proxy.
 const MAX_HTTP_HEADER_BYTES: usize = 16 * 1024;
 
@@ -81,7 +53,7 @@ pub(crate) async fn connect_via_proxy<R: NetStreamProvider + Send + Sync>(
     runtime: &R,
     proxy: &SocketAddr,
     protocol: &Protocol,
-    target: &PtTargetAddr,
+    target: &SocketAddr,
 ) -> Result<R::Stream, ProxyError> {
     trace!(
         "Launching a proxied connection to {} via proxy at {} using {:?}",
@@ -109,23 +81,10 @@ async fn do_socks_handshake<R: NetStreamProvider + Send + Sync>(
     mut stream: R::Stream,
     version: &SocksVersion,
     auth: &SocksAuth,
-    target: &PtTargetAddr,
+    target: &SocketAddr,
 ) -> Result<R::Stream, ProxyError> {
-    let (target_addr, target_port): (SocksAddr, u16) = match target {
-        PtTargetAddr::IpPort(a) => (SocksAddr::Ip(a.ip()), a.port()),
-        #[cfg(feature = "pt-client")]
-        PtTargetAddr::HostPort(host, port) => (
-            SocksAddr::Hostname(
-                host.clone()
-                    .try_into()
-                    .map_err(ProxyError::InvalidSocksAddr)?,
-            ),
-            *port,
-        ),
-        #[cfg(feature = "pt-client")]
-        PtTargetAddr::None => (SocksAddr::Ip(NO_ADDR), 1),
-        _ => return Err(ProxyError::UnrecognizedAddr),
-    };
+    let target_addr = SocksAddr::Ip(target.ip());
+    let target_port = target.port();
 
     let request = SocksRequest::new(
         *version,
@@ -168,21 +127,8 @@ async fn do_socks_handshake<R: NetStreamProvider + Send + Sync>(
 }
 
 /// Format target address for HTTP CONNECT request line and Host header.
-fn format_connect_target(target: &PtTargetAddr) -> Result<String, ProxyError> {
-    match target {
-        PtTargetAddr::IpPort(a) => {
-            let host = match a.ip() {
-                IpAddr::V4(ip) => ip.to_string(),
-                IpAddr::V6(ip) => format!("[{}]", ip),
-            };
-            Ok(format!("{}:{}", host, a.port()))
-        }
-        #[cfg(feature = "pt-client")]
-        PtTargetAddr::HostPort(host, port) => Ok(format!("{}:{}", host, port)),
-        #[cfg(feature = "pt-client")]
-        PtTargetAddr::None => Err(ProxyError::UnrecognizedAddr),
-        _ => Err(ProxyError::UnrecognizedAddr),
-    }
+fn format_connect_target(target: &SocketAddr) -> String {
+    target.to_string()
 }
 
 /// Build HTTP CONNECT request string with optional Basic auth.
@@ -258,9 +204,9 @@ async fn send_http_connect_request<R: NetStreamProvider + Send + Sync>(
 async fn do_http_connect_handshake<R: NetStreamProvider + Send + Sync>(
     mut stream: R::Stream,
     auth: &Option<(Sensitive<String>, Sensitive<String>)>,
-    target: &PtTargetAddr,
+    target: &SocketAddr,
 ) -> Result<R::Stream, ProxyError> {
-    let target_str = format_connect_target(target)?;
+    let target_str = format_connect_target(target);
     send_http_connect_request::<R>(&mut stream, auth, &target_str).await?;
 
     // Read response until we see the double CRLF that terminates headers,
@@ -316,14 +262,6 @@ pub enum ProxyError {
     /// We had an IO error while talking to the proxy.
     #[error("Problem while communicating with proxy")]
     ProxyIo(#[source] Arc<std::io::Error>),
-
-    /// We tried to use an address which socks doesn't support.
-    #[error("SOCKS proxy does not support target address")]
-    InvalidSocksAddr(#[source] tor_socksproto::Error),
-
-    /// We tried to use an address type which _we_ don't recognize.
-    #[error("Got an address type we don't recognize")]
-    UnrecognizedAddr,
 
     /// Our SOCKS implementation told us that this request cannot be encoded.
     #[error("Tried to make an invalid SOCKS request")]
@@ -381,8 +319,7 @@ impl tor_error::HasKind for ProxyError {
         use tor_error::ErrorKind as EK;
         match self {
             E::ProxyConnect(_) | E::ProxyIo(_) => EK::LocalNetworkError,
-            E::InvalidSocksAddr(_) | E::InvalidSocksRequest(_) => EK::BadApiUsage,
-            E::UnrecognizedAddr => EK::NotImplemented,
+            E::InvalidSocksRequest(_) => EK::BadApiUsage,
             E::SocksProto(_) => EK::LocalProtocolViolation,
             E::Bug(e) => e.kind(),
             E::UnexpectedData => EK::NotImplemented,
@@ -399,8 +336,6 @@ impl tor_error::HasRetryTime for ProxyError {
         use tor_error::RetryTime as RT;
         match self {
             E::ProxyConnect(_) | E::ProxyIo(_) => RT::AfterWaiting,
-            E::InvalidSocksAddr(_) => RT::Never,
-            E::UnrecognizedAddr => RT::Never,
             E::InvalidSocksRequest(_) => RT::Never,
             E::SocksProto(_) => RT::AfterWaiting,
             E::Bug(_) => RT::Never,
@@ -424,160 +359,6 @@ impl tor_error::HasRetryTime for ProxyError {
             E::HttpConnectMalformed => RT::Never,
         }
     }
-}
-
-#[cfg(feature = "pt-client")]
-/// An object that connects to a Tor bridge via an external pluggable transport
-/// that provides a proxy.
-#[derive(Clone, Debug)]
-pub struct ExternalProxyPlugin<R> {
-    /// The runtime to use for connections.
-    runtime: R,
-    /// The location of the proxy.
-    proxy_addr: SocketAddr,
-    /// The SOCKS protocol version to use.
-    proxy_version: SocksVersion,
-}
-
-#[cfg(feature = "pt-client")]
-impl<R: NetStreamProvider + Send + Sync> ExternalProxyPlugin<R> {
-    /// Make a new `ExternalProxyPlugin`.
-    pub fn new(rt: R, proxy_addr: SocketAddr, proxy_version: SocksVersion) -> Self {
-        Self {
-            runtime: rt,
-            proxy_addr,
-            proxy_version,
-        }
-    }
-}
-
-#[cfg(feature = "pt-client")]
-#[async_trait]
-impl<R: NetStreamProvider + Send + Sync> TransportImplHelper for ExternalProxyPlugin<R> {
-    type Stream = R::Stream;
-
-    async fn connect(&self, target: &OwnedChanTarget) -> crate::Result<(PeerAddr, R::Stream)> {
-        let pt_target = match target.chan_method() {
-            ChannelMethod::Direct(_) => {
-                return Err(crate::Error::UnusableTarget(bad_api_usage!(
-                    "Used pluggable transport for a TCP connection."
-                )));
-            }
-            ChannelMethod::Pluggable(target) => target,
-            other => {
-                return Err(crate::Error::UnusableTarget(bad_api_usage!(
-                    "Used unknown, unsupported, transport {:?} for a TCP connection.",
-                    other,
-                )));
-            }
-        };
-
-        let into_err = |e: ProxyError| crate::Error::Connect {
-            addresses: vec![(sv(pt_target.to_string()), e.into())],
-        };
-        let protocol =
-            settings_to_protocol(self.proxy_version, encode_settings(pt_target.settings()))
-                .map_err(into_err)?;
-        let stream =
-            connect_via_proxy(&self.runtime, &self.proxy_addr, &protocol, pt_target.addr())
-                .await
-                .map_err(into_err)?;
-
-        Ok((pt_target.into(), stream))
-    }
-}
-
-/// Encode the PT settings from `IT` in a format that a pluggable transport can use.
-#[cfg(feature = "pt-client")]
-fn encode_settings<'a, IT>(settings: IT) -> String
-where
-    IT: Iterator<Item = (&'a str, &'a str)>,
-{
-    /// Escape a character in the way expected by pluggable transports.
-    ///
-    /// This escape machinery is a mirror of that in the standard library.
-    enum EscChar {
-        /// Return a backslash then a character.
-        Backslash(char),
-        /// Return a character.
-        Literal(char),
-        /// Return nothing.
-        Done,
-    }
-    impl EscChar {
-        /// Create an iterator to escape one character.
-        fn new(ch: char, in_key: bool) -> Self {
-            match ch {
-                '\\' | ';' => EscChar::Backslash(ch),
-                '=' if in_key => EscChar::Backslash(ch),
-                _ => EscChar::Literal(ch),
-            }
-        }
-    }
-    impl Iterator for EscChar {
-        type Item = char;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            match *self {
-                EscChar::Backslash(ch) => {
-                    *self = EscChar::Literal(ch);
-                    Some('\\')
-                }
-                EscChar::Literal(ch) => {
-                    *self = EscChar::Done;
-                    Some(ch)
-                }
-                EscChar::Done => None,
-            }
-        }
-    }
-
-    /// escape a key or value string.
-    fn esc(s: &str, in_key: bool) -> impl Iterator<Item = char> + '_ {
-        s.chars().flat_map(move |c| EscChar::new(c, in_key))
-    }
-
-    let mut result = String::new();
-    for (k, v) in settings {
-        result.extend(esc(k, true));
-        result.push('=');
-        result.extend(esc(v, false));
-        result.push(';');
-    }
-    result.pop(); // remove the final ';' if any. Yes this is ugly.
-
-    result
-}
-
-/// Transform a string into a representation that can be sent as SOCKS
-/// authentication.
-// NOTE(eta): I am very unsure of the logic in here.
-#[cfg(feature = "pt-client")]
-pub fn settings_to_protocol(vers: SocksVersion, s: String) -> Result<Protocol, ProxyError> {
-    let mut bytes: Vec<_> = s.into();
-    Ok(if bytes.is_empty() {
-        Protocol::Socks(vers, SocksAuth::NoAuth)
-    } else if vers == SocksVersion::V4 {
-        if bytes.contains(&0) {
-            return Err(ProxyError::InvalidSocksRequest(
-                tor_socksproto::Error::NotImplemented(
-                    "SOCKS 4 doesn't support internal NUL bytes (for PT settings list)".into(),
-                ),
-            ));
-        } else {
-            Protocol::Socks(SocksVersion::V4, SocksAuth::Socks4(bytes))
-        }
-    } else if bytes.len() <= 255 {
-        // The [0] here is mandatory according to the pt-spec.
-        Protocol::Socks(SocksVersion::V5, SocksAuth::Username(bytes, vec![0]))
-    } else if bytes.len() <= (255 * 2) {
-        let password = bytes.split_off(255);
-        Protocol::Socks(SocksVersion::V5, SocksAuth::Username(bytes, password))
-    } else {
-        return Err(ProxyError::InvalidSocksRequest(
-            tor_socksproto::Error::NotImplemented("PT settings list too long for SOCKS 5".into()),
-        ));
-    })
 }
 
 #[cfg(test)]
@@ -614,95 +395,12 @@ mod test {
         assert!(!formatted.contains("pass_word"));
     }
 
-    #[cfg(feature = "pt-client")]
     #[test]
-    fn setting_encoding() {
-        fn check(settings: Vec<(&str, &str)>, expected: &str) {
-            assert_eq!(encode_settings(settings.into_iter()), expected);
+    fn connect_target_uses_numeric_relay_address() {
+        for address in ["192.0.2.1:9001", "[2001:db8::1]:443"] {
+            let target = address.parse().unwrap();
+            assert_eq!(format_connect_target(&target), address);
         }
-
-        // Easy cases, no escapes.
-        check(vec![], "");
-        check(vec![("hello", "world")], "hello=world");
-        check(
-            vec![("hey", "verden"), ("hello", "world")],
-            "hey=verden;hello=world",
-        );
-        check(
-            vec![("hey", "verden"), ("hello", "world"), ("selv", "tak")],
-            "hey=verden;hello=world;selv=tak",
-        );
-
-        check(
-            vec![("semi;colon", "equals=sign")],
-            r"semi\;colon=equals=sign",
-        );
-        check(
-            vec![("equals=sign", "semi;colon")],
-            r"equals\=sign=semi\;colon",
-        );
-        check(
-            vec![("semi;colon", "equals=sign"), ("also", "back\\slash")],
-            r"semi\;colon=equals=sign;also=back\\slash",
-        );
-    }
-
-    #[cfg(feature = "pt-client")]
-    #[test]
-    fn split_settings() {
-        use SocksVersion::*;
-        let long_string = "examplestrg".to_owned().repeat(50);
-        assert_eq!(long_string.len(), 550);
-        let sv = |v, a, b| settings_to_protocol(v, long_string[a..b].to_owned()).unwrap();
-        let s = |a, b| sv(V5, a, b);
-        let v = |a, b| long_string.as_bytes()[a..b].to_vec();
-
-        assert_eq!(s(0, 0), Protocol::Socks(V5, SocksAuth::NoAuth));
-        assert_eq!(
-            s(0, 50),
-            Protocol::Socks(V5, SocksAuth::Username(v(0, 50), vec![0]))
-        );
-        assert_eq!(
-            s(0, 255),
-            Protocol::Socks(V5, SocksAuth::Username(v(0, 255), vec![0]))
-        );
-        assert_eq!(
-            s(0, 256),
-            Protocol::Socks(V5, SocksAuth::Username(v(0, 255), v(255, 256)))
-        );
-        assert_eq!(
-            s(0, 300),
-            Protocol::Socks(V5, SocksAuth::Username(v(0, 255), v(255, 300)))
-        );
-        assert_eq!(
-            s(0, 510),
-            Protocol::Socks(V5, SocksAuth::Username(v(0, 255), v(255, 510)))
-        );
-
-        // This one needs to use socks4, or it won't fit. :P
-        assert_eq!(
-            sv(V4, 0, 511),
-            Protocol::Socks(V4, SocksAuth::Socks4(v(0, 511)))
-        );
-
-        // Small requests with "0" bytes work fine...
-        assert_eq!(
-            settings_to_protocol(V5, "\0".to_owned()).unwrap(),
-            Protocol::Socks(V5, SocksAuth::Username(vec![0], vec![0]))
-        );
-        assert_eq!(
-            settings_to_protocol(V5, "\0".to_owned().repeat(510)).unwrap(),
-            Protocol::Socks(V5, SocksAuth::Username(vec![0; 255], vec![0; 255]))
-        );
-
-        // Huge requests with "0" simply can't be encoded.
-        assert!(settings_to_protocol(V5, "\0".to_owned().repeat(511)).is_err());
-
-        // Huge requests without "0" can't be encoded as V5
-        assert!(settings_to_protocol(V5, long_string[0..512].to_owned()).is_err());
-
-        // Requests with "0" can't be encoded as V4.
-        assert!(settings_to_protocol(V4, "\0".to_owned()).is_err());
     }
 
     #[test]

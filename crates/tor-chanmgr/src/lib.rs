@@ -119,18 +119,8 @@ pub struct ChanMgr<R: Runtime> {
     ///
     /// This internal manager is parameterized over an
     /// [`mgr::AbstractChannelFactory`], which here is instantiated with a [`factory::CompoundFactory`].
-    /// The `CompoundFactory` itself holds:
-    ///   * A `dyn` [`factory::AbstractPtMgr`] that can provide a `dyn`
-    ///     [`factory::ChannelFactory`] for each supported pluggable transport.
-    ///     This starts out as `None`, but can be replaced with [`ChanMgr::set_pt_mgr`].
-    ///     The `TorClient` code currently sets this using `tor_ptmgr::PtMgr`.
-    ///     `PtMgr` currently returns `ChannelFactory` implementations that are
-    ///     built using [`transport::proxied::ExternalProxyPlugin`], which implements
-    ///     [`transport::TransportImplHelper`], which in turn is wrapped into a
-    ///     `ChanBuilder` to implement `ChannelFactory`.
-    ///   * A generic [`factory::ChannelFactory`] that it uses for everything else
-    ///     We instantiate this with a
-    ///     [`builder::ChanBuilder`] using a [`transport::default::DefaultTransport`].
+    /// The factory shares a [`builder::ChanBuilder`] using a
+    /// [`transport::default::DefaultTransport`] between channel requests.
     // This type is a bit long, but I think it's better to just state it here explicitly rather than
     // hiding parts of it behind a type alias to make it look nicer.
     mgr: mgr::AbstractChanMgr<
@@ -251,11 +241,7 @@ impl<R: Runtime> ChanMgr<R> {
             }
         };
 
-        let factory = factory::CompoundFactory::new(
-            Arc::new(builder),
-            #[cfg(feature = "pt-client")]
-            None,
-        );
+        let factory = factory::CompoundFactory::new(Arc::new(builder));
 
         // Warn if outbound_proxy is configured to a non-loopback address
         if let Some(ref proxy) = config.cfg.outbound_proxy {
@@ -400,18 +386,6 @@ impl<R: Runtime> ChanMgr<R> {
         let _: Option<&tor_error::Bug> = r.as_ref().err();
 
         Ok(r?)
-    }
-
-    /// Replace the transport registry with one that may know about
-    /// more transports.
-    ///
-    /// Note that the [`ChannelFactory`](factory::ChannelFactory) instances returned by `ptmgr` are
-    /// required to time-out channels that take too long to build.  You'll get
-    /// this behavior by default if the factories implement [`ChannelFactory`](factory::ChannelFactory) using
-    /// [`transport::proxied::ExternalProxyPlugin`], which `tor-ptmgr` does.
-    #[cfg(feature = "pt-client")]
-    pub fn set_pt_mgr(&self, ptmgr: Arc<dyn factory::AbstractPtMgr + 'static>) {
-        self.mgr.with_mut_builder(|f| f.replace_ptmgr(ptmgr));
     }
 
     /// Replace the relay auth material used for building new channels.

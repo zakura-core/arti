@@ -95,14 +95,8 @@ document.
 
 ## Compile-time features
 
-* `bridge-client`: Build with support for bridges. (Bridges are relays
-  that are not listed in the Tor network directory, which can be
-  used for anti-censorship purposes.)
+* `vanguards`: Build with support for onion-service vanguards.
 
-* `pt-client`: Build with support for guards that can be contacted
-   using pluggable transports. (A pluggable transport is an alternative
-   mechanism for contacting a Tor relay, for censorship avoidance.)
-
-* `full`: Enable all features above.
+* `full`: Enable all stable additive features.
 
 License: MIT OR Apache-2.0

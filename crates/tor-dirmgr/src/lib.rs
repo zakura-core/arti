@@ -66,8 +66,6 @@ mod storage;
 
 #[cfg(feature = "dir-plugin")]
 mod as_plugin;
-#[cfg(feature = "bridge-client")]
-pub mod bridgedesc;
 #[cfg(feature = "dirfilter")]
 pub mod filter;
 

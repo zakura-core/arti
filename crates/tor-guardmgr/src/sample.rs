@@ -23,7 +23,7 @@ use tracing::{debug, info, trace};
 use web_time_compat::{Instant, SystemTime};
 
 #[allow(unused_imports)]
-pub(crate) use candidate::{Candidate, CandidateStatus, Universe, UniverseRef, WeightThreshold};
+pub(crate) use candidate::{Candidate, CandidateStatus, Universe, WeightThreshold};
 
 /// A set of sampled guards, along with various orderings on subsets
 /// of the sample.
@@ -78,35 +78,12 @@ pub(crate) struct GuardSet {
     ///    we can combine the entries.
     ///    Justification: the netdir is authoritative for netdir-based relays.
     ///
-    ///  * For a configured bridge, if our configuration links some identities,
-    ///    we must insist on all those identities.
-    ///    So we combine them.
-    ///
     /// ### Handling of conflicting entries:
     ///
     /// `ByRelayIds` will implicitly delete conflicting entries,
     /// simply forgetting about them.
     /// This is OK for netdir relays, since we do not expect this to occur in practice.
     ///
-    /// For bridges, conflicts may in fact occur,
-    /// since bridge lines are not issued by a single authority,
-    /// and should be afforded limited trust.
-    ///
-    ///  * If the configuration contains bridge lines that mutually conflict,
-    ///    affected bridge lines should be disregarded,
-    ///    or the configuration rejected.
-    ///
-    ///  * If the configuration contains information which is inconsistent with
-    ///    our past experience, we should discard the past experiences which
-    ///    aren't reconcilable with the configuration.
-    ///
-    ///  * We may discover a linkage which demonstrates that the configuration
-    ///    is wrong: for example, two bridge lines for identities X and Y,
-    ///    but in fact there is only one bridge with both identities.
-    ///    In this situation it is OK to effectively disregard some the configuration
-    ///    entries which are at variance with reality, maybe with a warning,
-    ///    but keeping at least one of every usable id set (actually existing bridge)
-    ///    would be good.
     guards: ByRelayIds<Guard>,
     /// Identities of all the guards in the sample, in sample order.
     ///
@@ -962,42 +939,6 @@ impl GuardSet {
                 })
             }
         }
-    }
-
-    /// Return the guards whose bridge descriptors we should request, given our
-    /// current configuration and status.
-    ///
-    /// (The output of this function is not reasonable unless this is a Bridge
-    /// sample.)
-    #[cfg(feature = "bridge-client")]
-    pub(crate) fn descriptors_to_request(&self, now: Instant, params: &GuardParams) -> Vec<&Guard> {
-        /// This constant is here to improve our odds that we can get a working
-        /// bridge if we have any per-circuit filters that would prevent us from
-        /// using our preferred bridge.
-        const MINIMUM: usize = 2;
-
-        let maximum = std::cmp::max(params.data_parallelism, MINIMUM);
-        let data_usage = GuardUsage::default();
-
-        // Here we duplicate some but not all of the restrictions above in
-        // pick_guard_id.  We skip those restrictions that are specific to only
-        // certain kinds of circuits, and those that are temporary restrictions
-        // encouraging us to try more guards.
-        //
-        // TODO: we may want to refactor this code and the code in pick_guard_id
-        // above to share a single function.  Before we do that, however, I want
-        // to experiment with this logic a bit to make sure that it works and
-        // doesn't give us surprising results.
-        self.preference_order()
-            .filter(|(_, g)| {
-                g.usable()
-                    && g.reachable() != Reachable::Unreachable
-                    && g.ready_for_usage(&data_usage, now)
-                    && self.active_filter.permits(*g)
-            })
-            .take(maximum)
-            .map(|(_, g)| g)
-            .collect()
     }
 }
 
