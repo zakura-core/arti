@@ -10,8 +10,6 @@
 
 mod desc_enc;
 
-#[cfg(feature = "hs-service")]
-mod build;
 mod inner;
 mod middle;
 mod outer;
@@ -30,7 +28,6 @@ use tor_linkspec::EncodedLinkSpec;
 use tor_llcrypto::pk::curve25519;
 use tor_units::IntegerMinutes;
 
-use derive_builder::Builder;
 use smallvec::SmallVec;
 
 use std::num::NonZeroU8;
@@ -38,9 +35,6 @@ use std::result::Result as StdResult;
 use std::time::SystemTime;
 
 pub use {inner::HsDescInner, middle::HsDescMiddle, outer::HsDescOuter};
-
-#[cfg(feature = "hs-service")]
-pub use build::{HsDescBuilder, create_desc_sign_key_cert};
 
 /// Metadata about an onion service descriptor, as stored at an HsDir.
 ///
@@ -131,8 +125,7 @@ pub enum IntroAuthType {
 
 /// Information in an onion service descriptor about a single
 /// introduction point.
-#[derive(Debug, Clone, getset::Getters, Builder)]
-#[builder(pattern = "owned")] // mirrors HsDescBuilder
+#[derive(Debug, Clone, getset::Getters)]
 pub struct IntroPointDesc {
     /// The list of link specifiers needed to extend a circuit to the introduction point.
     ///
@@ -141,19 +134,15 @@ pub struct IntroPointDesc {
     /// Note that we do not enforce the presence of any link specifiers here;
     /// this means that you can't assume that an `IntroPointDesc` is a meaningful
     /// `ChanTarget` without some processing.
-    //
-    // The builder setter takes a `Vec` directly.  This seems fine.
     link_specifiers: Vec<EncodedLinkSpec>,
 
     /// The key to be used to extend a circuit _to the introduction point_, using the
     /// ntor or ntor3 handshakes.  (`KP_ntor`)
-    #[builder(setter(name = "ipt_kp_ntor"))] // TODO rename the internal variable too
     #[getset(get = "pub")]
     ipt_ntor_key: curve25519::PublicKey,
 
     /// The key to be used to identify the onion service at this introduction point.
     /// (`KP_hs_ipt_sid`)
-    #[builder(setter(name = "kp_hs_ipt_sid"))] // TODO rename the internal variable too
     #[getset(get = "pub")]
     ipt_sid_key: HsIntroPtSessionIdKey,
 
@@ -163,7 +152,6 @@ pub struct IntroPointDesc {
     /// The onion service uses a separate key of this type with each
     /// introduction point as part of its strategy for preventing replay
     /// attacks.
-    #[builder(setter(name = "kp_hss_ntor"))] // TODO rename the internal variable too
     #[getset(get = "pub")]
     svc_ntor_key: HsSvcNtorKey,
 }
@@ -465,11 +453,6 @@ impl HsDescError {
 }
 
 impl IntroPointDesc {
-    /// Start building a description of an intro point
-    pub fn builder() -> IntroPointDescBuilder {
-        IntroPointDescBuilder::default()
-    }
-
     /// The list of link specifiers needed to extend a circuit to the introduction point.
     ///
     /// These can include public keys and network addresses.
@@ -746,6 +729,19 @@ mod test {
         let subcredential = TEST_SUBCREDENTIAL_2.into();
         let with_no_auth = encrypted.decrypt(&subcredential, None);
         assert!(with_no_auth.is_err());
+    }
+
+    #[test]
+    fn parse_desc_auth_wrong_key() {
+        let encrypted = get_test2_encrypted();
+        let subcredential = TEST_SUBCREDENTIAL_2.into();
+        let secret = curve25519::StaticSecret::from([42; 32]);
+        let public = curve25519::PublicKey::from(&secret);
+        let key = HsClientDescEncKeypair::new(public.into(), secret.into());
+        assert!(matches!(
+            encrypted.decrypt(&subcredential, Some(&key)),
+            Err(HsDescError::WrongDecryptionKey)
+        ));
     }
 
     #[test]

@@ -14,7 +14,7 @@ libfuzzer-sys = "0.4"
 
 [dependencies.tor-netdoc]
 path = ".."
-features = ["hs-service"]
+features = ["hs-client"]
 
 # Prevent this from interfering with workspaces
 [workspace]

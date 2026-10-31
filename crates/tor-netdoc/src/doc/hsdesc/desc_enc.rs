@@ -1,4 +1,4 @@
-//! Types and functions for onion service descriptor encryption.
+//! Types and functions for onion service descriptor decryption.
 
 use tor_hscrypto::{RevisionCounter, Subcredential, pk::HsBlindId};
 use tor_llcrypto::cipher::aes::Aes256Ctr as Cipher;
@@ -7,7 +7,7 @@ use tor_llcrypto::d::Shake256 as KDF;
 
 use cipher::{KeyIvInit, StreamCipher};
 use digest::{ExtendableOutput, FixedOutput, Update, XofReader};
-#[cfg(any(test, feature = "hs-service"))]
+#[cfg(test)]
 use rand::{CryptoRng, Rng, RngExt};
 use tor_llcrypto::pk::curve25519::PublicKey;
 use tor_llcrypto::pk::curve25519::StaticSecret;
@@ -71,9 +71,9 @@ impl<'a> HsDescEncryption<'a> {
     /// Length of our cipher's IV.
     const IV_LEN: usize = 16;
 
-    /// Encrypt a given bytestring using these encryption parameters.
-    #[cfg(any(test, feature = "hs-service"))]
-    pub(super) fn encrypt<R: Rng + CryptoRng>(&self, rng: &mut R, data: &[u8]) -> Vec<u8> {
+    /// Encode test messages for round-trip, truncation, and tamper checks.
+    #[cfg(test)]
+    fn encrypt<R: Rng + CryptoRng>(&self, rng: &mut R, data: &[u8]) -> Vec<u8> {
         let output_len = data.len() + SALT_LEN + MAC_LEN;
         let mut output = Vec::with_capacity(output_len);
         let salt: [u8; SALT_LEN] = rng.random();
