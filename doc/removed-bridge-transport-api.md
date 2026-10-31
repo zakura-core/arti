@@ -61,7 +61,7 @@ last `serde_with` edge. Other retained packages still use those registry crates.
 ## Declaration inventory
 
 Baseline: [dad913ec](https://github.com/zakura-core/arti/tree/dad913ec3968769976abfe1d7fd2341c93e0bb4d).
-The tables preserve 464 removed declarations and 8 changed declarations from
+The tables preserve 466 removed declarations and 8 changed declarations from
 full/experimental Rustdoc output, plus the bridge-disabled guard-manager API.
 They include generated builders/getters, enum variants and fields, trait methods,
 aliases, constants, re-exports, and internal helper changes. Source links pin
@@ -72,10 +72,15 @@ inside a private module is listed even if it was not directly reachable.
 Standard blanket and synthetic auto-trait implementations are omitted.
 No public or crate-internal declaration is added.
 
+The two `metrics`-gated counter fields are supplemented from
+[`a2cd498a`](https://github.com/zakura-core/arti/tree/a2cd498a08c51450da90c296cb6e42af808394d6).
+Their obsolete `no_such_transport` and `pt` error-label registrations are removed
+with the corresponding error variants. Retained channel counters are unchanged.
+
 | Component | Removed declarations | Changed declarations |
 | --- | ---: | ---: |
 | `arti_client` | 35 | 0 |
-| `tor_chanmgr` | 16 | 2 |
+| `tor_chanmgr` | 18 | 2 |
 | `tor_dirmgr` | 39 | 0 |
 | `tor_guardmgr` | 115 | 6 |
 | `tor_guardmgr_feature_off` | 6 | 0 |
@@ -124,6 +129,13 @@ No public or crate-internal declaration is added.
 | public | `arti_client::err::ErrorDetail::PluggableTransport::0: tor_ptmgr::err::PtError` | [crates/arti-client/src/err.rs:277](https://github.com/zakura-core/arti/blob/dad913ec3968769976abfe1d7fd2341c93e0bb4d/crates/arti-client/src/err.rs#L277) |
 
 ### `tor_chanmgr`
+
+The following two crate-visible fields existed only with `metrics` enabled:
+
+| Visibility | Removed declaration | Baseline definition |
+| --- | --- | --- |
+| `pub(crate)`, `metrics` | `tor_chanmgr::mgr::ChanMgrMetrics::inbound_channels_built_failure_no_such_transport: metrics::Counter` | [crates/tor-chanmgr/src/mgr.rs:200](https://github.com/zakura-core/arti/blob/a2cd498a08c51450da90c296cb6e42af808394d6/crates/tor-chanmgr/src/mgr.rs#L200) |
+| `pub(crate)`, `metrics` | `tor_chanmgr::mgr::ChanMgrMetrics::inbound_channels_built_failure_pt: metrics::Counter` | [crates/tor-chanmgr/src/mgr.rs:204](https://github.com/zakura-core/arti/blob/a2cd498a08c51450da90c296cb6e42af808394d6/crates/tor-chanmgr/src/mgr.rs#L204) |
 
 | Visibility | Before | After | Baseline definition |
 | --- | --- | --- | --- |
