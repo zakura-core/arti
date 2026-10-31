@@ -113,3 +113,30 @@ Remove their six generated `*BuilderError` enums, `UninitializedField` and
 `From` implementations. The builders remain available through the existing
 options' `builder()` methods; they retain `Clone`, `Default`, buffer setters
 and nested `common()` accessors. No builder re-exports or visibility are added.
+
+
+BREAKING: Own generalized and Unix address primitives in `tor-rtcompat` rather
+than the separate `tor-general-addr` package. The existing `general::SocketAddr`
+and `general::AddrParseError` re-exports now name types defined by this crate.
+`general::DisplayLossy` is also re-exported. The original methods, variants,
+payloads and trait implementations move with those types. The existing
+`arbitrary` feature now selects the moved `SocketAddr` implementation.
+
+Move `unix::SocketAddr`, `NoAfUnixSocketSupport` and the deprecated
+`NoUnixAddressSupport` alias to the existing public `unix` facade. On Unix,
+`SocketAddr` remains the identical standard-library type. On other targets,
+its uninhabited placeholder type now belongs to this crate. Consequently,
+`NetStreamProvider`/`NetStreamListener` implementations, runtime supertraits,
+listener stream items and their address-dependent associated types refer to
+the runtime-owned address types. The corresponding mock-provider types follow
+the same identity change. No socket/TLS operation implementation changes.
+
+Remove `general::UnsupportedAddress` and its `Clone`, `Debug`, `Display` and
+`Error` implementations. It was used only by two wildcard arms that become
+unreachable when the address enum and its provider share an owner. The existing
+`Inet` and `Unix` provider branches are unchanged.
+
+The standalone address package and its `default`, `full` and `arbitrary`
+features are removed. Its existing parser/roundtrip fuzz package keeps the
+same package identity and targets under `tor-rtcompat/fuzz`. No new crate,
+feature, compatibility wrapper or public address behavior is introduced.

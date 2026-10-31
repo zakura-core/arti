@@ -23,7 +23,6 @@ full = [
     "rustls",
     "tls-server",
     "tor-error/full",
-    "tor-general-addr/full",
     "tor-cert-x509?/full",
     "web-time-compat/full",
 ]
@@ -95,7 +94,6 @@ tokio-crate = { package = "tokio", version = "1.54.1", optional = true, features
 tokio-util = { version = "0.7.20", features = ["compat"], optional = true }
 tor-cert-x509 = { version = "0.47.0", path = "../tor-cert-x509", optional = true }
 tor-error = { version = "0.47.0", path = "../tor-error", features = ["tracing"] }
-tor-general-addr = { version = "0.47.0", path = "../tor-general-addr" }
 tracing = "0.1.44"
 void = "1"
 web-time-compat = { version = "0.3.0", path = "../web-time-compat" }

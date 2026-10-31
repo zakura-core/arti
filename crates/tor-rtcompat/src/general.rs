@@ -1,18 +1,19 @@
-//! Support for streams and listeners on `general::SocketAddr`.
+//! Generalized addresses, streams and listeners.
 
+use crate::unix;
 use async_trait::async_trait;
 use futures::{AsyncRead, AsyncWrite, StreamExt as _, stream};
-use std::io::{Error as IoError, ErrorKind as IoErrorKind, Result as IoResult};
+use std::io::Result as IoResult;
 use std::net;
 use std::task::Poll;
 use std::{pin::Pin, task::Context};
-use tor_general_addr::unix;
 use tracing::instrument;
 
+use crate::general;
 use crate::{NetStreamListener, NetStreamProvider, StreamOps};
-use tor_general_addr::general;
 
-pub use general::{AddrParseError, SocketAddr};
+mod address;
+pub use address::{AddrParseError, DisplayLossy, SocketAddr};
 
 /// Helper trait to allow us to create a type-erased stream.
 ///
@@ -147,10 +148,6 @@ where
                 let options = Default::default();
                 Ok(Stream(Box::pin(self.connect(a, &options).await?)))
             }
-            other => Err(IoError::new(
-                IoErrorKind::InvalidInput,
-                UnsupportedAddress(other.clone()),
-            )),
         }
     }
     async fn listen(
@@ -162,15 +159,6 @@ where
         match addr {
             G::Inet(a) => abstract_listener_on(self, a, &Default::default()).await,
             G::Unix(a) => abstract_listener_on(self, a, &Default::default()).await,
-            other => Err(IoError::new(
-                IoErrorKind::InvalidInput,
-                UnsupportedAddress(other.clone()),
-            )),
         }
     }
 }
-
-/// Tried to use a [`general::SocketAddr`] that `tor-rtcompat` didn't understand.
-#[derive(Clone, Debug, thiserror::Error)]
-#[error("Socket address {0:?} is not supported by tor-rtcompat")]
-pub struct UnsupportedAddress(general::SocketAddr);

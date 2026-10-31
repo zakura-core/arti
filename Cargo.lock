@@ -4011,7 +4011,6 @@ dependencies = [
  "thiserror 2.0.21",
  "toml",
  "tor-error",
- "tor-general-addr",
 ]
 
 [[package]]
@@ -4160,17 +4159,6 @@ dependencies = [
  "void",
  "web-time",
  "web-time-compat",
-]
-
-[[package]]
-name = "tor-general-addr"
-version = "0.47.0"
-dependencies = [
- "arbitrary",
- "assert_matches",
- "derive_more",
- "thiserror 2.0.21",
- "void",
 ]
 
 [[package]]
@@ -4762,7 +4750,6 @@ dependencies = [
  "tor-basic-utils",
  "tor-cert-x509",
  "tor-error",
- "tor-general-addr",
  "tracing",
  "void",
  "web-time-compat",
@@ -4790,7 +4777,6 @@ dependencies = [
  "thiserror 2.0.21",
  "tor-basic-utils",
  "tor-error",
- "tor-general-addr",
  "tor-rtcompat",
  "tracing",
  "tracing-test",

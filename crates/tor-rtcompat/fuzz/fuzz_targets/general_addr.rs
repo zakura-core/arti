@@ -1,7 +1,7 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
 use std::str::FromStr;
-use tor_general_addr::general;
+use tor_rtcompat::general;
 
 fuzz_target!(|data: &str| {
     if let Ok(addr1) = general::SocketAddr::from_str(data) {

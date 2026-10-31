@@ -94,16 +94,16 @@ macro_rules! implement_opaque_runtime {
         }
     }
     #[async_trait::async_trait]
-    impl $crate::traits::NetStreamProvider<tor_general_addr::unix::SocketAddr> for $t {
-        type Stream = <$mty as $crate::traits::NetStreamProvider<tor_general_addr::unix::SocketAddr>>::Stream;
-        type Listener = <$mty as $crate::traits::NetStreamProvider<tor_general_addr::unix::SocketAddr>>::Listener;
-        type ConnectOptions = <$mty as $crate::traits::NetStreamProvider<tor_general_addr::unix::SocketAddr>>::ConnectOptions;
-        type ListenOptions = <$mty as $crate::traits::NetStreamProvider<tor_general_addr::unix::SocketAddr>>::ListenOptions;
+    impl $crate::traits::NetStreamProvider<$crate::unix::SocketAddr> for $t {
+        type Stream = <$mty as $crate::traits::NetStreamProvider<$crate::unix::SocketAddr>>::Stream;
+        type Listener = <$mty as $crate::traits::NetStreamProvider<$crate::unix::SocketAddr>>::Listener;
+        type ConnectOptions = <$mty as $crate::traits::NetStreamProvider<$crate::unix::SocketAddr>>::ConnectOptions;
+        type ListenOptions = <$mty as $crate::traits::NetStreamProvider<$crate::unix::SocketAddr>>::ListenOptions;
         #[inline]
         #[tracing::instrument(skip_all, level = "trace")]
         async fn connect(
             &self,
-            addr: &tor_general_addr::unix::SocketAddr,
+            addr: &$crate::unix::SocketAddr,
             options: &Self::ConnectOptions,
         ) -> std::io::Result<Self::Stream> {
             self.$member.connect(addr, options).await
@@ -111,7 +111,7 @@ macro_rules! implement_opaque_runtime {
         #[inline]
         async fn listen(
             &self,
-            addr: &tor_general_addr::unix::SocketAddr,
+            addr: &$crate::unix::SocketAddr,
             options: &Self::ListenOptions,
         ) -> std::io::Result<Self::Listener> {
             self.$member.listen(addr, options).await

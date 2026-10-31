@@ -5,10 +5,10 @@
 
 /// Types used for networking (tokio implementation)
 pub(crate) mod net {
+    #[cfg(unix)]
+    use crate::unix;
     use crate::{impls, traits};
     use async_trait::async_trait;
-    #[cfg(unix)]
-    use tor_general_addr::unix;
 
     pub(crate) use tokio_crate::net::{
         TcpListener as TokioTcpListener, TcpStream as TokioTcpStream, UdpSocket as TokioUdpSocket,
@@ -203,6 +203,8 @@ use crate::network::{TcpConnectOptions, TcpListenOptions};
 #[cfg(unix)]
 use crate::network::{UnixConnectOptions, UnixListenOptions};
 use crate::traits::*;
+#[cfg(unix)]
+use crate::unix;
 use async_trait::async_trait;
 use futures::Future;
 use std::any::Any;
@@ -211,8 +213,6 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::time::Duration;
-#[cfg(unix)]
-use tor_general_addr::unix;
 use tracing::instrument;
 
 impl SleepProvider for TokioRuntimeHandle {
