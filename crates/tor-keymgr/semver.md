@@ -33,3 +33,20 @@ Disabling it gates key-forge re-exports, `Error::{KeyForge, InvalidCert}` and
 their `From` implementations, and `raw::RawEntryId::Ephemeral` (crate-visible
 normally, public under the existing experimental visibility selection).
 The test-only crate-visible `DummyKey` helper is similarly gated.
+
+
+
+BREAKING: Remove `From<derive_builder::UninitializedFieldError>` and
+`From<derive_builder::SubfieldBuildError<E>>` (for `E: std::error::Error`)
+for `KeyMgrBuilderError`, including their `from` methods. These conversions
+existed in both the real `keymgr` configuration and the feature-disabled
+implementation. Explicit builders construct the same existing error variants
+directly. `From<String>`, `Debug`, `Display`, `Error`, both error variants and
+their payloads remain unchanged.
+
+The owned `KeyMgrBuilder` still implements only `Default`, retains its
+consuming primary-store setter and `build`, and preserves all secondary-store
+list accessors. Missing-primary errors still precede duplicate-ID validation;
+the real key manager still rejects duplicate store IDs. The feature-disabled
+key manager keeps its inert behavior. No public or crate-visible API is added,
+and no retained signature or feature changes.
