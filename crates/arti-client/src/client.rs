@@ -1847,8 +1847,7 @@ impl<R: Runtime> TorClient<R> {
         if let Some(tok) = prefs.prefs_isolation() {
             b.stream_isolation(tok);
         }
-        // Failure should be impossible with this builder.
-        b.build().expect("Failed to construct StreamIsolation")
+        b.build()
     }
 
     /// Generate a service discovery keypair for connecting to a hidden service running in
