@@ -90,3 +90,16 @@ export_keying_material, own_certificate}` and
 `StreamOps::{set_tcp_notsent_lowat, new_handle}`. These traits themselves and
 their Rustls implementations remain unchanged. No new public or `pub(crate)`
 Rust items are introduced.
+
+CHANGED: The experimental `testing` feature no longer enables AWS-LC through
+`futures-rustls`. Its automatic provider fallback now uses the already enabled
+Ring implementation. Applications that need AWS-LC must request that provider
+on their own dependency. An explicitly installed process-wide provider remains
+unchanged. Normal non-testing runtime behavior is unchanged.
+
+No public or `pub(crate)` Rust items, signatures, aliases, methods, fields,
+constructors, variants, constants, or Cargo feature names change. The private
+`ensure_testing_provider_installed` helper retains its signature and the guard
+that respects an existing provider. Remove the development self-dependency
+that existed to supply AWS-LC to tests: unit tests use `cfg(test)`, and tests of
+the explicit `testing` feature still request it normally.

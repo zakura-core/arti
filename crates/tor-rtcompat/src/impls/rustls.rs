@@ -148,22 +148,16 @@ where
     }
 }
 
-/// Try to install a default crypto provider if none has been installed, so that Rustls can operate.
-///
-/// We only use this for testing: It is the application's responsibility to install a CryptoProvider.
-///
+/// Use Ring for tests unless an application already installed a
+/// [`CryptoProvider`].
 #[cfg(any(test, feature = "testing"))]
 fn ensure_testing_provider_installed() {
     if CryptoProvider::get_default().is_none() {
-        // If we haven't installed a CryptoProvider at this point, we warn and install
-        // the `aws-lc-rs` provider. That is not ideal, but the alternative would be to
-        // panic.  Right now, that would cause many of our tests to fail.
         tracing::warn!(
-            "Creating a RustlsRuntime, but no CryptoProvider is installed. The application \
-                        should call CryptoProvider::install_default()"
+            "No Rustls CryptoProvider is installed; selecting the Ring provider for testing"
         );
         let _idempotent_ignore = CryptoProvider::install_default(
-            futures_rustls::rustls::crypto::aws_lc_rs::default_provider(),
+            futures_rustls::rustls::crypto::ring::default_provider(),
         );
     }
 }
