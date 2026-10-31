@@ -9,13 +9,19 @@ use std::fmt::{self, Debug};
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
+use tor_hscrypto::pk::HsClientDescEncKeypair;
 #[allow(deprecated)]
 use tor_hscrypto::pk::HsClientIntroAuthKeypair;
-use tor_hscrypto::pk::{HsClientDescEncKeypair, HsId};
+#[cfg(feature = "keymgr")]
+use tor_hscrypto::pk::HsId;
+#[cfg(feature = "keymgr")]
 use tor_keymgr::derive_deftly_template_KeySpecifier;
 
+#[cfg(feature = "keymgr")]
 use derive_deftly::Deftly;
+#[cfg(feature = "keymgr")]
 use derive_more::Constructor;
+#[cfg(feature = "keymgr")]
 use tor_keymgr::KeySpecifier;
 
 /// Service discovery keys (if any) to use when connecting to a specific onion service.
@@ -146,6 +152,8 @@ impl HsClientSecretKeysBuilder {
     }
 }
 
+#[cfg(feature = "keymgr")]
+#[cfg_attr(docsrs, doc(cfg(feature = "keymgr")))]
 #[derive(Deftly, PartialEq, Debug, Constructor)]
 #[derive_deftly(KeySpecifier)]
 #[deftly(prefix = "client")]

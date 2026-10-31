@@ -223,9 +223,6 @@ impl<R: Runtime> ChanMgr<R> {
     /// # Usage note
     ///
     /// For the manager to work properly, you will need to call `ChanMgr::launch_background_tasks`.
-    ///
-    /// The `keymgr` is only needed for a relay which is used for authenticating its channel to
-    /// other relays. Pass `None` for a client.
     pub fn new(
         runtime: R,
         config: ChanMgrConfig,

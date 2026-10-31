@@ -81,7 +81,9 @@ use tor_rtcompat::Runtime;
 
 pub use err::FailedAttemptError;
 pub use err::{ConnError, DescriptorError, DescriptorErrorDetail, StartupError};
-pub use keys::{HsClientDescEncKeypairSpecifier, HsClientSecretKeys, HsClientSecretKeysBuilder};
+#[cfg(feature = "keymgr")]
+pub use keys::HsClientDescEncKeypairSpecifier;
+pub use keys::{HsClientSecretKeys, HsClientSecretKeysBuilder};
 pub use relay_info::InvalidTarget;
 pub use state::HsClientConnectorConfig;
 

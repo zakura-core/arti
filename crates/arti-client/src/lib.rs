@@ -64,7 +64,9 @@ pub mod status;
 
 pub use address::{DangerouslyIntoTorAddr, IntoTorAddr, TorAddr, TorAddrError};
 pub use builder::{MAX_LOCAL_RESOURCE_TIMEOUT, TorClientBuilder};
-pub use client::{BootstrapBehavior, DormantMode, InertTorClient, StreamPrefs, TorClient};
+#[cfg(feature = "keymgr")]
+pub use client::InertTorClient;
+pub use client::{BootstrapBehavior, DormantMode, StreamPrefs, TorClient};
 pub use config::TorClientConfig;
 
 pub use tor_circmgr::IsolationToken;
@@ -85,10 +87,14 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub use builder::DirProviderBuilder;
 
 #[cfg(all(feature = "onion-service-client", feature = "experimental-api"))]
-pub use {
-    tor_hscrypto::pk::{HsClientDescEncKey, HsId},
-    tor_keymgr::KeystoreSelector,
-};
+pub use tor_hscrypto::pk::{HsClientDescEncKey, HsId};
+
+#[cfg(all(
+    feature = "onion-service-client",
+    feature = "experimental-api",
+    feature = "keymgr"
+))]
+pub use tor_keymgr::KeystoreSelector;
 
 /// Return a list of the protocols [supported](tor_protover::doc_supported) by this crate.
 ///
