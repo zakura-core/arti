@@ -58,16 +58,16 @@ paste = "1.0.15"
 rand = "0.10.3"
 smallvec = "1.16"
 thiserror = "2"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
-tor-bytes = { path = "../tor-bytes", version = "0.47.0-zakura.1", package = "zakura-tor-bytes" }
-tor-cert = { path = "../tor-cert", version = "0.47.0-zakura.1", package = "zakura-tor-cert" }
-tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", package = "zakura-tor-error" }
-tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, features = ["memquota-memcost"], package = "zakura-tor-hscrypto" }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"], package = "zakura-tor-llcrypto" }
-tor-memquota = { version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false, package = "zakura-tor-memquota" }
-tor-protover = { path = "../tor-protover", version = "0.47.0-zakura.1", features = ["tor-bytes"], package = "zakura-tor-protover" }
-tor-units = { path = "../tor-units", version = "0.47.0-zakura.1", features = ["memquota-memcost"], package = "zakura-tor-units" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-bytes = { package = "zakura-tor-bytes", path = "../tor-bytes", version = "0.47.0-zakura.1" }
+tor-cert = { package = "zakura-tor-cert", path = "../tor-cert", version = "0.47.0-zakura.1" }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }
+tor-hscrypto = { package = "zakura-tor-hscrypto", default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true, features = ["memquota-memcost"] }
+tor-linkspec = { package = "zakura-tor-linkspec", path = "../tor-linkspec", version = "0.47.0-zakura.1" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"] }
+tor-memquota = { package = "zakura-tor-memquota", version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false }
+tor-protover = { package = "zakura-tor-protover", path = "../tor-protover", version = "0.47.0-zakura.1", features = ["tor-bytes"] }
+tor-units = { package = "zakura-tor-units", path = "../tor-units", version = "0.47.0-zakura.1", features = ["memquota-memcost"] }
 void = "1"
 
 [dev-dependencies]

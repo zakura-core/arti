@@ -142,7 +142,7 @@ experimental = [
 # feature voids your "semver warrantee".
 experimental-api = ["__is_experimental"]
 dirfilter = ["tor-dirmgr/dirfilter", "__is_experimental"]
-ephemeral-keystore = ["tor-keymgr/ephemeral-keystore", "__is_experimental"]
+ephemeral-keystore = ["keymgr", "tor-keymgr/ephemeral-keystore", "__is_experimental"]
 error_detail = ["__is_experimental"]
 hsc-negotiate-extensions = ["tor-hsclient?/negotiate-extensions", "__is_experimental"]
 hss-negotiate-extensions = ["tor-hsservice?/negotiate-extensions", "__is_experimental"]
@@ -186,7 +186,7 @@ tor-dirmgr = { package = "zakura-tor-dirmgr", path = "../tor-dirmgr", version = 
 tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1", features = ["tracing"] }
 tor-guardmgr = { package = "zakura-tor-guardmgr", path = "../tor-guardmgr", version = "0.47.0-zakura.1" }
 tor-hsclient = { package = "zakura-tor-hsclient", path = "../tor-hsclient", version = "0.47.0-zakura.1", optional = true }
-tor-hscrypto = { package = "zakura-tor-hscrypto", path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true }
+tor-hscrypto = { package = "zakura-tor-hscrypto", default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true }
 tor-hsservice = { package = "zakura-tor-hsservice", path = "../tor-hsservice", version = "0.47.0-zakura.1", optional = true }
 tor-keymgr = { package = "zakura-tor-keymgr", path = "../tor-keymgr", version = "0.47.0-zakura.1", default-features = false }
 tor-linkspec = { package = "zakura-tor-linkspec", path = "../tor-linkspec", version = "0.47.0-zakura.1" }

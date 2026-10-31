@@ -106,7 +106,7 @@ tor-config = { package = "zakura-tor-config", version = "0.47.0-zakura.1", path 
 tor-config-path = { package = "zakura-tor-config-path", version = "0.47.0-zakura.1", path = "../tor-config-path" }
 tor-dirclient = { package = "zakura-tor-dirclient", path = "../tor-dirclient", version = "0.47.0-zakura.1", default-features = false, features = ["hs-service"] }
 tor-error = { package = "zakura-tor-error", version = "0.47.0-zakura.1", path = "../tor-error" }
-tor-hscrypto = { package = "zakura-tor-hscrypto", version = "0.47.0-zakura.1", path = "../tor-hscrypto", features = ["ope"] }
+tor-hscrypto = { package = "zakura-tor-hscrypto", default-features = false, version = "0.47.0-zakura.1", path = "../tor-hscrypto", features = ["ope"] }
 tor-keymgr = { package = "zakura-tor-keymgr", version = "0.47.0-zakura.1", path = "../tor-keymgr", features = ["keymgr"] }
 tor-linkspec = { package = "zakura-tor-linkspec", version = "0.47.0-zakura.1", path = "../tor-linkspec", features = ["verbatim", "decode"] }
 tor-llcrypto = { package = "zakura-tor-llcrypto", version = "0.47.0-zakura.1", path = "../tor-llcrypto" }

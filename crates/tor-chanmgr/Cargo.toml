@@ -22,7 +22,6 @@ full = [
     "tor-cell/full",
     "tor-config/full",
     "tor-error/full",
-    "tor-keymgr/full",
     "tor-linkspec/full",
     "tor-llcrypto/full",
     "tor-netdir/full",
@@ -61,18 +60,17 @@ safelog = { path = "../safelog", version = "0.10.0-zakura.1", package = "zakura-
 serde = { version = "1.0.229", features = ["derive"] }
 serde_with = { version = "3.24.0", default-features = false, features = ["alloc", "macros"] }
 thiserror = "2"
-tor-async-utils = { version = "0.47.0-zakura.1", path = "../tor-async-utils", package = "zakura-tor-async-utils" }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0-zakura.1", package = "zakura-tor-basic-utils" }
-tor-cell = { path = "../tor-cell", version = "0.47.0-zakura.1", package = "zakura-tor-cell" }
-tor-config = { path = "../tor-config", version = "0.47.0-zakura.1", default-features = false, package = "zakura-tor-config" }
-tor-error = { path = "../tor-error", version = "0.47.0-zakura.1", features = ["tracing"], package = "zakura-tor-error" }
-tor-keymgr = { path = "../tor-keymgr", version = "0.47.0-zakura.1", features = ["keymgr"], package = "zakura-tor-keymgr" }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0-zakura.1", package = "zakura-tor-linkspec" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", package = "zakura-tor-llcrypto" }
-tor-memquota = { version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false, package = "zakura-tor-memquota" }
-tor-netdir = { path = "../tor-netdir", version = "0.47.0-zakura.1", package = "zakura-tor-netdir" }
-tor-proto = { path = "../tor-proto", version = "0.47.0-zakura.1", package = "zakura-tor-proto" }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0-zakura.1", package = "zakura-tor-rtcompat" }
+tor-async-utils = { package = "zakura-tor-async-utils", version = "0.47.0-zakura.1", path = "../tor-async-utils" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-cell = { package = "zakura-tor-cell", path = "../tor-cell", version = "0.47.0-zakura.1" }
+tor-config = { package = "zakura-tor-config", path = "../tor-config", version = "0.47.0-zakura.1", default-features = false }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1", features = ["tracing"] }
+tor-linkspec = { package = "zakura-tor-linkspec", path = "../tor-linkspec", version = "0.47.0-zakura.1" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1" }
+tor-memquota = { package = "zakura-tor-memquota", version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false }
+tor-netdir = { package = "zakura-tor-netdir", path = "../tor-netdir", version = "0.47.0-zakura.1" }
+tor-proto = { package = "zakura-tor-proto", path = "../tor-proto", version = "0.47.0-zakura.1" }
+tor-rtcompat = { package = "zakura-tor-rtcompat", path = "../tor-rtcompat", version = "0.47.0-zakura.1" }
 tor-socksproto = { package = "zakura-tor-socksproto", path = "../tor-socksproto", version = "0.47.0-zakura.1", default-features = false, features = [
     "client-handshake",
 ] }

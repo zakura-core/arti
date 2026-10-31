@@ -24,3 +24,9 @@ remove that attribute. The generated `KeySpecifier`, `KeySpecifierPattern`,
 signatures and behavior. Manual `KeySpecifier` implementations, component
 formatting methods, path parsing/errors and typed key operations are unchanged.
 There are no added or changed `pub(crate)` interfaces.
+
+ADDED: `key-encoding` feature, enabled by `keymgr` and therefore by default.
+Disabling it gates key-forge re-exports, `Error::{KeyForge, InvalidCert}` and
+their `From` implementations, and `raw::RawEntryId::Ephemeral` (crate-visible
+normally, public under the existing experimental visibility selection).
+The test-only crate-visible `DummyKey` helper is similarly gated.
