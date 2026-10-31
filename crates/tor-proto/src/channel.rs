@@ -1036,8 +1036,7 @@ impl Channel {
         let peer_id = OwnedChanTarget::builder()
             .ed_identity([6_u8; 32].into())
             .rsa_identity([10_u8; 20].into())
-            .build()
-            .expect("Couldn't construct peer id");
+            .build();
 
         // This will make rx trigger immediately.
         let (_tx, rx) = oneshot_broadcast::channel();
@@ -1207,8 +1206,7 @@ mod test {
         let peer_id = OwnedChanTarget::builder()
             .ed_identity([6_u8; 32].into())
             .rsa_identity([10_u8; 20].into())
-            .build()
-            .expect("Couldn't construct peer id");
+            .build();
         // This will make rx trigger immediately.
         let (_tx, rx) = oneshot_broadcast::channel();
         let (padding_ctrl, _) = client::circuit::padding::new_padding(DynTimeProvider::new(rt));
@@ -1269,18 +1267,15 @@ mod test {
             let t1 = OwnedChanTarget::builder()
                 .ed_identity([6; 32].into())
                 .rsa_identity([10; 20].into())
-                .build()
-                .unwrap();
+                .build();
             let t2 = OwnedChanTarget::builder()
                 .ed_identity([1; 32].into())
                 .rsa_identity([3; 20].into())
-                .build()
-                .unwrap();
+                .build();
             let t3 = OwnedChanTarget::builder()
                 .ed_identity([3; 32].into())
                 .rsa_identity([2; 20].into())
-                .build()
-                .unwrap();
+                .build();
 
             assert!(chan.check_match(&t1).is_ok());
             assert!(chan.check_match(&t2).is_err());

@@ -449,8 +449,7 @@ impl<
         let actual_identity = RelayIds::builder()
             .ed_identity(*kp_relayid_ed)
             .rsa_identity(kp_relayid_rsa.to_rsa_identity())
-            .build()
-            .expect("Unable to build RelayIds");
+            .build();
 
         // We enforce that the relay claimed to have every ID that we wanted:
         // it may also have additional IDs that we didn't ask for.
@@ -872,9 +871,7 @@ fn build_filtered_chan_target(
     }
     *peer_builder.ids() = RelayIdsBuilder::from_relay_ids(peer_info.ids());
 
-    peer_builder
-        .build()
-        .expect("OwnedChanTarget builder failed")
+    peer_builder.build()
 }
 
 /// Read a message from the stream.
@@ -1050,11 +1047,10 @@ pub(crate) mod test {
         let relay_ids = RelayIdsBuilder::default()
             .ed_identity(Ed25519Identity::from_bytes(peer_ed).unwrap())
             .rsa_identity(RsaIdentity::from_bytes(peer_rsa).unwrap())
-            .build()
-            .unwrap();
+            .build();
         let mut peer_builder = OwnedChanTargetBuilder::default();
         *peer_builder.ids() = RelayIdsBuilder::from_relay_ids(&relay_ids);
-        let peer = peer_builder.build().unwrap();
+        let peer = peer_builder.build();
 
         let unverified = UnverifiedInitiatorChannel {
             inner: make_unverified(runtime.clone()),
@@ -1319,7 +1315,7 @@ pub(crate) mod test {
                     // because this test doesn't actually open any streams
                     &[],
                 );
-                let peer_target = OwnedChanTargetBuilder::default().build().unwrap();
+                let peer_target = OwnedChanTargetBuilder::default().build();
                 let unverified = RelayInitiatorHandshake::new(
                     RelayMsgBuf(MsgBuf::new(input)),
                     rt,

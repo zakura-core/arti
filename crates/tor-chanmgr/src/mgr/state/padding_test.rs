@@ -188,8 +188,7 @@ async fn case(
     let peer_id = channel.target().ed_identity().unwrap().clone();
     let relay_ids = OwnedChanTarget::builder()
         .ed_identity(peer_id.clone())
-        .build()
-        .unwrap();
+        .build();
     let factory = FakeChannelFactory {
         channel: Arc::new(channel),
     };

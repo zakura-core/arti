@@ -1537,9 +1537,7 @@ impl NetDir {
         *bld.chan_target() =
             OwnedChanTargetBuilder::from_encoded_linkspecs(Strictness::Standard, linkspecs)?;
         let protocols = {
-            let chan_target = bld.chan_target().build().map_err(into_internal!(
-                "from_encoded_linkspecs gave an invalid output"
-            ))?;
+            let chan_target = bld.chan_target().build();
             match self
                 .by_ids_detailed(&chan_target)
                 .map_err(E::ImpossibleIds)?
@@ -2833,18 +2831,15 @@ mod test {
         let pair_13_13 = RelayIds::builder()
             .ed_identity([13; 32].into())
             .rsa_identity([13; 20].into())
-            .build()
-            .unwrap();
+            .build();
         let pair_14_14 = RelayIds::builder()
             .ed_identity([14; 32].into())
             .rsa_identity([14; 20].into())
-            .build()
-            .unwrap();
+            .build();
         let pair_14_99 = RelayIds::builder()
             .ed_identity([14; 32].into())
             .rsa_identity([99; 20].into())
-            .build()
-            .unwrap();
+            .build();
 
         let r = netdir.by_ids(&pair_13_13);
         assert!(r.is_none());
@@ -2885,36 +2880,25 @@ mod test {
         let id13_13 = RelayIds::builder()
             .ed_identity([13; 32].into())
             .rsa_identity([13; 20].into())
-            .build()
-            .unwrap();
+            .build();
         let id15_15 = RelayIds::builder()
             .ed_identity([15; 32].into())
             .rsa_identity([15; 20].into())
-            .build()
-            .unwrap();
+            .build();
         let id15_99 = RelayIds::builder()
             .ed_identity([15; 32].into())
             .rsa_identity([99; 20].into())
-            .build()
-            .unwrap();
+            .build();
         let id99_15 = RelayIds::builder()
             .ed_identity([99; 32].into())
             .rsa_identity([15; 20].into())
-            .build()
-            .unwrap();
+            .build();
         let id99_99 = RelayIds::builder()
             .ed_identity([99; 32].into())
             .rsa_identity([99; 20].into())
-            .build()
-            .unwrap();
-        let id15_xx = RelayIds::builder()
-            .ed_identity([15; 32].into())
-            .build()
-            .unwrap();
-        let idxx_15 = RelayIds::builder()
-            .rsa_identity([15; 20].into())
-            .build()
-            .unwrap();
+            .build();
+        let id15_xx = RelayIds::builder().ed_identity([15; 32].into()).build();
+        let idxx_15 = RelayIds::builder().rsa_identity([15; 20].into()).build();
 
         assert!(matches!(netdir.by_ids_detailed(&id13_13), Ok(None)));
         assert!(matches!(netdir.by_ids_detailed(&id15_15), Ok(Some(_))));

@@ -965,12 +965,11 @@ pub(crate) mod test {
         let dummy_target = OwnedChanTarget::builder()
             .ed_identity(ed)
             .rsa_identity(rsa)
-            .build()
-            .unwrap();
+            .build();
         let mut peer_ids = RelayIdsBuilder::default();
         peer_ids.ed_identity(ed);
         peer_ids.rsa_identity(rsa);
-        let peer_info = PeerInfo::new(PeerAddr::UNSPECIFIED, peer_ids.build().unwrap());
+        let peer_info = PeerInfo::new(PeerAddr::UNSPECIFIED, peer_ids.build());
         let send1 = send1.sink_map_err(|e| {
             trace!("got sink error: {:?}", e);
             Error::CellDecodeErr {
