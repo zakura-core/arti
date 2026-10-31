@@ -13,9 +13,6 @@ use tor_llcrypto::pk;
 
 use crate::{ChannelMethod, RelayIdRef, RelayIdType, RelayIdTypeIter};
 
-#[cfg(feature = "pt-client")]
-use crate::PtTargetAddr;
-
 /// Legacy implementation helper for HasRelayIds.
 ///
 /// Previously, we assumed that everything had these two identity types, which
@@ -415,16 +412,6 @@ impl<'a, T: ChanTarget> DisplayChanTarget<'a, T> {
                 write!(f, "{}", v[0].maybe_redacted(redact))?;
             }
             ChannelMethod::Direct(v) => write!(f, "{}+", v[0].maybe_redacted(redact))?,
-            #[cfg(feature = "pt-client")]
-            ChannelMethod::Pluggable(target) => {
-                match target.addr() {
-                    PtTargetAddr::None => {}
-                    other => write!(f, "{} ", other.maybe_redacted(redact))?,
-                }
-                write!(f, "via {}", target.transport())?;
-                // This deliberately doesn't include the PtTargetSettings, since
-                // they can be large, and they're typically unnecessary.
-            }
         }
 
         write!(f, " ")?;
@@ -691,26 +678,6 @@ mod test {
             "[127.0.0.1:99+ ed25519:/FHNjmIYoaONpH7QAjDwWAgW7RO6MwOsXeuRFUiQgCU \
               $1234567890abcdef12341234567890abcdef1234]"
         );
-
-        #[cfg(feature = "pt-client")]
-        {
-            use crate::PtTarget;
-
-            let rsa = hex!("234461644a6f6b6523436f726e794f6e4d61696e").into();
-            let mut b = crate::OwnedChanTarget::builder();
-            b.ids().rsa_identity(rsa);
-            let e2 = b
-                .method(ChannelMethod::Pluggable(PtTarget::new(
-                    "obfs4".parse().unwrap(),
-                    "127.0.0.1:99".parse().unwrap(),
-                )))
-                .build()
-                .unwrap();
-            assert_eq!(
-                e2.to_string(),
-                "[127.0.0.1:99 via obfs4 $234461644a6f6b6523436f726e794f6e4d61696e]"
-            );
-        }
     }
 
     #[test]

@@ -27,9 +27,6 @@ keeping a cache of it on disk.
 * `compression` (default) -- Build support for downloading compressed
   documents. Requires a C compiler.
 
-* `bridge-client`: Provide APIs used to fetch
-  and use bridge information.
-
 * `full` -- Enable all features above.
 
 ### Non-additive features

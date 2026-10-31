@@ -16,11 +16,9 @@ use tor_circmgr::ClientDataTunnel;
 use tor_circmgr::isolation::{Isolation, StreamIsolation};
 use tor_circmgr::{IsolationToken, TargetPort, isolation::StreamIsolationBuilder};
 use tor_config::{BoolOrAuto, MutCfg};
-#[cfg(feature = "bridge-client")]
-use tor_dirmgr::bridgedesc::BridgeDescMgr;
 use tor_dirmgr::{DirMgrStore, Timeliness};
 use tor_error::{Bug, error_report, internal};
-use tor_guardmgr::{GuardMgr, RetireCircuits};
+use tor_guardmgr::RetireCircuits;
 use tor_keymgr::Keystore;
 use tor_memquota::MemoryQuotaTracker;
 use tor_netdir::{NetDirProvider, params::NetParameters};
@@ -216,31 +214,12 @@ struct RunningInner<R: Runtime> {
     circmgr: Arc<tor_circmgr::CircMgr<R>>,
     /// Directory manager for keeping our directory material up to date.
     dirmgr: Arc<dyn tor_dirmgr::DirProvider>,
-    /// Bridge descriptor manager
-    ///
-    /// None until we have bootstrapped.
-    ///
-    /// Lock hierarchy: don't acquire this before dormant
-    //
-    // TODO: after or as part of https://gitlab.torproject.org/tpo/core/arti/-/issues/634
-    // this can be   bridge_desc_mgr: BridgeDescMgr<R>>
-    // since BridgeDescMgr is Clone and all its methods take `&self` (it has a lock inside)
-    // Or maybe BridgeDescMgr should not be Clone, since we want to make Weaks of it,
-    // which we can't do when the Arc is inside.
-    #[cfg(feature = "bridge-client")]
-    bridge_desc_mgr: Arc<Mutex<Option<Arc<BridgeDescMgr<R>>>>>,
-    /// Pluggable transport manager.
-    #[cfg(feature = "pt-client")]
-    pt_mgr: Arc<tor_ptmgr::PtMgr<R>>,
     /// HS client connector
     #[cfg(feature = "onion-service-client")]
     hsclient: HsClientConnector<R>,
     /// Circuit pool for onion-service connections.
     #[cfg(feature = "onion-service-client")]
     hs_circ_pool: Arc<tor_circmgr::hspool::HsCircPool<R>>,
-    /// Guard manager
-    #[cfg_attr(not(feature = "bridge-client"), allow(dead_code))]
-    guardmgr: GuardMgr<R>,
 }
 
 /// A Tor client that is not runnable.
@@ -598,15 +577,6 @@ impl From<DormantMode> for tor_chanmgr::Dormancy {
         match dormant {
             DormantMode::Normal => tor_chanmgr::Dormancy::Active,
             DormantMode::Soft => tor_chanmgr::Dormancy::Dormant,
-        }
-    }
-}
-#[cfg(feature = "bridge-client")]
-impl From<DormantMode> for tor_dirmgr::bridgedesc::Dormancy {
-    fn from(dormant: DormantMode) -> tor_dirmgr::bridgedesc::Dormancy {
-        match dormant {
-            DormantMode::Normal => tor_dirmgr::bridgedesc::Dormancy::Active,
-            DormantMode::Soft => tor_dirmgr::bridgedesc::Dormancy::Dormant,
         }
     }
 }
@@ -1064,8 +1034,6 @@ impl<R: Runtime> RunningInner<R> {
             .expect("Client somehow dropped while creating RunningInner");
         let memquota = &client.memquota;
         let statemgr = &client.statemgr;
-        let path_resolver = &client.path_resolver;
-        let (state_dir, _) = config.state_dir()?;
 
         let chanmgr = Arc::new(
             tor_chanmgr::ChanMgr::new(
@@ -1079,24 +1047,6 @@ impl<R: Runtime> RunningInner<R> {
         );
         let guardmgr = tor_guardmgr::GuardMgr::new(runtime.clone(), statemgr.clone(), &config)
             .map_err(ErrorDetail::GuardMgrSetup)?;
-
-        #[cfg(feature = "pt-client")]
-        let pt_mgr = {
-            let pt_state_dir = state_dir.as_path().join("pt_state");
-            config.storage.permissions().make_directory(&pt_state_dir)?;
-
-            let mgr = Arc::new(tor_ptmgr::PtMgr::new(
-                config.bridges.transports.clone(),
-                pt_state_dir,
-                Arc::clone(path_resolver),
-                config.channel.outbound_proxy().cloned(),
-                runtime.clone(),
-            )?);
-
-            chanmgr.set_pt_mgr(mgr.clone());
-
-            mgr
-        };
 
         let circmgr = Arc::new(
             tor_circmgr::CircMgr::new(
@@ -1133,10 +1083,6 @@ impl<R: Runtime> RunningInner<R> {
                 .launch_background_tasks(&runtime, dirmgr.clone().upcast_arc())
                 .map_err(ErrorDetail::ChanMgrSetup)?,
         );
-
-        #[cfg(feature = "bridge-client")]
-        // TODO: We can just construct this.
-        let bridge_desc_mgr = Arc::new(Mutex::new(None));
 
         #[cfg(feature = "onion-service-client")]
         let hs_circ_pool = {
@@ -1211,8 +1157,6 @@ impl<R: Runtime> RunningInner<R> {
                 dormant_recv.clone(),
                 dirmgr.clone().upcast_arc(),
                 chanmgr.clone(),
-                #[cfg(feature = "bridge-client")]
-                bridge_desc_mgr.clone(),
                 periodic_task_handles,
             ))
             .map_err(|e| ErrorDetail::from_spawn("periodic task dormant monitor", e))?;
@@ -1221,15 +1165,10 @@ impl<R: Runtime> RunningInner<R> {
             chanmgr,
             circmgr,
             dirmgr,
-            #[cfg(feature = "bridge-client")]
-            bridge_desc_mgr,
-            #[cfg(feature = "pt-client")]
-            pt_mgr,
             #[cfg(feature = "onion-service-client")]
             hsclient,
             #[cfg(feature = "onion-service-client")]
             hs_circ_pool,
-            guardmgr,
         });
 
         Ok(running_inner)
@@ -1260,15 +1199,6 @@ impl<R: Runtime> RunningInner<R> {
 
         self.chanmgr
             .reconfigure(&new_config.channel, how, netparams)
-            .map_err(wrap_err)?;
-
-        #[cfg(feature = "pt-client")]
-        self.pt_mgr
-            .reconfigure(
-                how,
-                new_config.bridges.transports.clone(),
-                new_config.channel.outbound_proxy().cloned(),
-            )
             .map_err(wrap_err)?;
 
         Ok(())
@@ -2102,32 +2032,6 @@ impl<R: Runtime> ClientShared<R> {
 
         let running = self.instantiate_running_inner(self.inner.lock().expect("lock poisoned"))?;
 
-        // Make sure we have a bridge descriptor manager, which is active iff required
-        #[cfg(feature = "bridge-client")]
-        {
-            let mut dormant = self.dormant.lock().expect("dormant lock poisoned");
-            let dormant = dormant.borrow();
-            let dormant = dormant.ok_or_else(|| internal!("dormant dropped"))?.into();
-
-            let mut bdm = running.bridge_desc_mgr.lock().expect("bdm lock poisoned");
-            if bdm.is_none() {
-                let new_bdm = Arc::new(BridgeDescMgr::new(
-                    &Default::default(),
-                    self.runtime.clone(),
-                    self.dirmgr_store.clone(),
-                    running.circmgr.clone(),
-                    dormant,
-                )?);
-                running
-                    .guardmgr
-                    .install_bridge_desc_provider(&(new_bdm.clone() as _))
-                    .map_err(ErrorDetail::GuardMgrSetup)?;
-                // If ^ that fails, we drop the BridgeDescMgr again.  It may do some
-                // work but will hopefully eventually quit.
-                *bdm = Some(new_bdm);
-            }
-        }
-
         if self
             .statemgr
             .try_lock()
@@ -2292,7 +2196,6 @@ async fn tasks_monitor_dormant<R: Runtime>(
     mut dormant_rx: tor_async_utils::watch::Receiver<Option<DormantMode>>,
     netdir: Arc<dyn NetDirProvider>,
     chanmgr: Arc<tor_chanmgr::ChanMgr<R>>,
-    #[cfg(feature = "bridge-client")] bridge_desc_mgr: Arc<Mutex<Option<Arc<BridgeDescMgr<R>>>>>,
     periodic_task_handles: Vec<TaskHandle>,
 ) {
     while let Some(Some(mode)) = dormant_rx.next().await {
@@ -2301,15 +2204,6 @@ async fn tasks_monitor_dormant<R: Runtime>(
         chanmgr
             .set_dormancy(mode.into(), netparams)
             .unwrap_or_else(|e| error_report!(e, "couldn't set dormancy"));
-
-        // IEFI simplifies handling of exceptional cases, as "never mind, then".
-        #[cfg(feature = "bridge-client")]
-        (|| {
-            let mut bdm = bridge_desc_mgr.lock().ok()?;
-            let bdm = bdm.as_mut()?;
-            bdm.set_dormancy(mode.into());
-            Some(())
-        })();
 
         let is_dormant = matches!(mode, DormantMode::Soft);
 

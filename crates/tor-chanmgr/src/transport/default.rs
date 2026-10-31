@@ -100,8 +100,7 @@ async fn connect_to_one<R: Runtime>(
                 let a = *a;
                 async move {
                     let stream = if let Some(ref protocol) = proxy {
-                        // Use proxy - extract address and protocol details
-                        let target = tor_linkspec::PtTargetAddr::IpPort(a);
+                        // Use the configured proxy for this relay address.
                         match protocol {
                             crate::config::ProxyProtocol::Socks {
                                 version,
@@ -109,7 +108,7 @@ async fn connect_to_one<R: Runtime>(
                                 addr,
                             } => {
                                 let proto = super::proxied::Protocol::Socks(*version, auth.clone());
-                                super::proxied::connect_via_proxy(rt, addr, &proto, &target).await?
+                                super::proxied::connect_via_proxy(rt, addr, &proto, &a).await?
                             }
                             crate::config::ProxyProtocol::HttpConnect { addr, credentials } => {
                                 // Wrap credentials in Sensitive to avoid accidental logging.
@@ -122,7 +121,7 @@ async fn connect_to_one<R: Runtime>(
                                     )
                                 });
                                 let proto = super::proxied::Protocol::HttpConnect { auth };
-                                super::proxied::connect_via_proxy(rt, addr, &proto, &target).await?
+                                super::proxied::connect_via_proxy(rt, addr, &proto, &a).await?
                             }
                         }
                     } else {

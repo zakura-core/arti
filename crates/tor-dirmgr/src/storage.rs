@@ -13,9 +13,6 @@ use tor_netdoc::doc::netstatus::{ConsensusFlavor, ProtoStatuses};
 #[cfg(feature = "routerdesc")]
 use tor_netdoc::doc::routerdesc::RdDigest;
 
-#[cfg(feature = "bridge-client")]
-pub(crate) use tor_guardmgr::bridge::BridgeConfig;
-
 use crate::docmeta::{AuthCertMeta, ConsensusMeta};
 use crate::{Error, Result};
 use std::cell::RefCell;
@@ -214,9 +211,8 @@ pub(crate) const EXPIRATION_DEFAULTS: ExpirationConfig = {
         // to adjust it depending on what we find in practice.  For relays,
         // instead of looking at publication date, we might want to use an
         // approach more similar to the "last-listed" approach taken by
-        // microdescriptors.  For bridges, we can keep descriptors for a longer
-        // time.  In either case, we may be able to discard all but the most
-        // recent descriptor from each identity.
+        // microdescriptors. We may be able to discard all but the most recent
+        // descriptor from each identity.
         router_descs: Duration::days(5),
         // This value is a compromise between saving bandwidth (by not having to
         // re-download microdescs) and saving space (by not having to store too
@@ -311,31 +307,6 @@ pub(crate) trait Store: Send + 'static {
     #[allow(unused)]
     fn store_routerdescs(&mut self, digests: &[(&str, SystemTime, &RdDigest)]) -> Result<()>;
 
-    /// Look up a cached bridge descriptor.
-    #[cfg(feature = "bridge-client")]
-    fn lookup_bridgedesc(&self, bridge: &BridgeConfig) -> Result<Option<CachedBridgeDescriptor>>;
-
-    /// Store a cached bridge descriptor.
-    ///
-    /// This entry will be deleted some time after `until`
-    /// (but the caller is not allowed to rely on either timely deletion,
-    /// or retention until that time).
-    #[cfg(feature = "bridge-client")]
-    fn store_bridgedesc(
-        &mut self,
-        bridge: &BridgeConfig,
-        entry: CachedBridgeDescriptor,
-        until: SystemTime,
-    ) -> Result<()>;
-
-    /// Delete a cached bridge descriptor for this bridge.
-    ///
-    /// It's not an error if it's not present.
-    #[cfg(feature = "bridge-client")]
-    // Nothing uses this yet; removal is handled from `expire_all`.
-    #[allow(dead_code)] // see also allow on DELETE_BRIDGEDESC
-    fn delete_bridgedesc(&mut self, bridge: &BridgeConfig) -> Result<()>;
-
     /// Try to update our cached protocol recommendations to those listed in `protocols`.
     fn update_protocol_recommendations(
         &mut self,
@@ -345,17 +316,6 @@ pub(crate) trait Store: Send + 'static {
 
     /// Return our most recent cached protocol recommendations.
     fn cached_protocol_recommendations(&self) -> Result<Option<(SystemTime, ProtoStatuses)>>;
-}
-
-/// Value in the bridge descriptor cache
-#[derive(Clone, Debug)]
-#[cfg_attr(not(feature = "bridge-client"), allow(dead_code))]
-pub(crate) struct CachedBridgeDescriptor {
-    /// When we fetched this
-    pub(crate) fetched: SystemTime,
-
-    /// The document text, as we fetched it
-    pub(crate) document: String,
 }
 
 #[cfg(test)]

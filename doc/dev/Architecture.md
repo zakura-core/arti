@@ -33,7 +33,6 @@ have more general names.
         tor-dirmgr --> tor-circmgr
         tor-dirmgr --> tor-dirclient 
         tor-circmgr --> tor-chanmgr
-        tor-chanmgr --> tor-ptmgr
         tor-circmgr --> tor-guardmgr
    end
 
@@ -111,7 +110,6 @@ The current crates are:
 * [`tor-persist`](../../crates/tor-persist/README.md) -- Persistent data storage for use with Tor.
 * [`tor-proto`](../../crates/tor-proto/README.md) -- Implementations for the core Tor protocol
 * [`tor-protover`](../../crates/tor-protover/README.md) -- Implementation of Tor's "subprotocol versioning" feature.
-* [`tor-ptmgr`](../../crates/tor-ptmgr/README.md) -- Manage a set of anti-censorship pluggable transports.
 * [`tor-rtcompat`](../../crates/tor-rtcompat/README.md) -- Compatibility between different async runtimes for Arti.
 * [`tor-rtmock`](../../crates/tor-rtmock/README.md) -- Support for mocking with `tor-rtcompat` asynchronous runtimes.
 * [`tor-socksproto`](../../crates/tor-socksproto/README.md) -- Implements SOCKS in the flavors provided by Tor.

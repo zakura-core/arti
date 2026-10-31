@@ -411,21 +411,16 @@ fn select_guard<'a, RT: Runtime>(
     }
     let guard_usage = b.build().expect("Failed while building guard usage!");
     let (guard, mon, usable) = guardmgr.select_guard(guard_usage)?;
-    let guard = if let Some(ct) = guard.as_circ_target() {
-        // This is a bridge; we will not look for it in the network directory.
-        MaybeOwnedRelay::from(ct.clone())
-    } else {
-        // Look this up in the network directory: we expect to find a relay.
-        guard
-            .get_relay(netdir)
-            .ok_or_else(|| {
-                internal!(
-                    "Somehow the guardmgr gave us an unlisted guard {:?}!",
-                    guard
-                )
-            })?
-            .into()
-    };
+    // Direct guards must be listed in the authenticated network directory.
+    let guard = guard
+        .get_relay(netdir)
+        .ok_or_else(|| {
+            internal!(
+                "Somehow the guardmgr gave us an unlisted guard {:?}!",
+                guard
+            )
+        })?
+        .into();
     Ok((guard, mon, usable))
 }
 

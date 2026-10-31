@@ -3,8 +3,6 @@
 use tor_basic_utils::define_accessor_trait;
 use tor_dircommon::fallback::FallbackList;
 
-use crate::bridge::BridgeConfig;
-
 define_accessor_trait! {
     /// Configuration for a guard manager
     ///
@@ -14,19 +12,6 @@ define_accessor_trait! {
     /// Prefer to use `TorClientConfig`, which will always implement this trait.
     pub trait GuardMgrConfig {
         fallbacks: FallbackList,
-        bridges: [BridgeConfig],
-        +
-        /// Should the bridges be used?
-        ///
-        /// This is only allowed to return true if `bridges()` is nonempty.
-        ///
-        /// Therefore, it also requires `tor-guardmgr` cargo feature `bridge-client`,
-        /// since without that feature `BridgeConfig` is uninhabited and therefore
-        /// `bridges` is necessarily empty.
-        //
-        // Therefore, it is safe (from a "reject unsupported config" point of view)
-        // to ctest this only in code which is #[cfg(feature = "bridge-client")].
-        fn bridges_enabled(&self) -> bool;
     }
 }
 
@@ -58,16 +43,6 @@ pub(crate) mod testing {
     pub struct TestConfig {
         #[as_ref]
         pub fallbacks: FallbackList,
-        pub bridges: Vec<BridgeConfig>,
     }
-    impl AsRef<[BridgeConfig]> for TestConfig {
-        fn as_ref(&self) -> &[BridgeConfig] {
-            &self.bridges
-        }
-    }
-    impl GuardMgrConfig for TestConfig {
-        fn bridges_enabled(&self) -> bool {
-            !self.bridges.is_empty()
-        }
-    }
+    impl GuardMgrConfig for TestConfig {}
 }
