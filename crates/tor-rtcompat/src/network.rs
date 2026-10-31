@@ -11,18 +11,47 @@
 /// For established streams that are accepted from a listener,
 /// you can use [`StreamOps`](crate::StreamOps) to perform additional operations
 /// or to configure additional options.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, getset::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, getset::Getters)]
 #[non_exhaustive]
 pub struct CommonListenOptions {
     /// Value set for `SO_SNDBUF` on the listening socket.
-    #[builder(default)]
     #[getset(get = "pub")]
     pub(crate) send_buffer_size: Option<usize>,
 
     /// Value set for `SO_RCVBUF` on the listening socket.
-    #[builder(default)]
     #[getset(get = "pub")]
     pub(crate) recv_buffer_size: Option<usize>,
+}
+
+/// Builder for [`CommonListenOptions`].
+#[derive(Clone, Default)]
+pub struct CommonListenOptionsBuilder {
+    /// Send buffer size, or the operating system default.
+    send_buffer_size: Option<usize>,
+    /// Receive buffer size, or the operating system default.
+    recv_buffer_size: Option<usize>,
+}
+
+impl CommonListenOptionsBuilder {
+    /// Set the value for `SO_SNDBUF`, or use the operating system default.
+    pub fn send_buffer_size(&mut self, value: Option<usize>) -> &mut Self {
+        self.send_buffer_size = value;
+        self
+    }
+
+    /// Set the value for `SO_RCVBUF`, or use the operating system default.
+    pub fn recv_buffer_size(&mut self, value: Option<usize>) -> &mut Self {
+        self.recv_buffer_size = value;
+        self
+    }
+
+    /// Build the socket options.
+    pub fn build(&self) -> CommonListenOptions {
+        CommonListenOptions {
+            send_buffer_size: self.send_buffer_size,
+            recv_buffer_size: self.recv_buffer_size,
+        }
+    }
 }
 
 impl CommonListenOptions {
@@ -36,7 +65,7 @@ impl CommonListenOptions {
 #[allow(clippy::derivable_impls)]
 impl Default for CommonListenOptions {
     fn default() -> Self {
-        // This needs to match the result of `Self::builder().build().unwrap()`,
+        // This needs to match the result of `Self::builder().build()`,
         // which is tested by the `builder_defaults()` test below.
         Self {
             send_buffer_size: None,
@@ -48,13 +77,33 @@ impl Default for CommonListenOptions {
 /// Options to use when initializing a TCP listening socket.
 ///
 /// See [`CommonListenOptions`] for more information.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, getset::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, getset::Getters)]
 #[non_exhaustive]
 pub struct TcpListenOptions {
     /// Options that are common for all socket types.
-    #[builder(sub_builder)]
     #[getset(get = "pub")]
     pub(crate) common: CommonListenOptions,
+}
+
+/// Builder for [`TcpListenOptions`].
+#[derive(Clone, Default)]
+pub struct TcpListenOptionsBuilder {
+    /// Builder for the options common to socket types.
+    common: CommonListenOptionsBuilder,
+}
+
+impl TcpListenOptionsBuilder {
+    /// Modify the options common to socket types.
+    pub fn common(&mut self) -> &mut CommonListenOptionsBuilder {
+        &mut self.common
+    }
+
+    /// Build the socket options.
+    pub fn build(&self) -> TcpListenOptions {
+        TcpListenOptions {
+            common: self.common.build(),
+        }
+    }
 }
 
 impl TcpListenOptions {
@@ -68,7 +117,7 @@ impl TcpListenOptions {
 #[allow(clippy::derivable_impls)]
 impl Default for TcpListenOptions {
     fn default() -> Self {
-        // This needs to match the result of `Self::builder().build().unwrap()`,
+        // This needs to match the result of `Self::builder().build()`,
         // which is tested by the `builder_defaults()` test below.
         Self {
             common: CommonListenOptions::default(),
@@ -78,9 +127,20 @@ impl Default for TcpListenOptions {
 
 /// Options to use when initializing a unix stream listening socket.
 // TODO: We should support at least the options in `CommonListenOptions`.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct UnixListenOptions {}
+
+/// Builder for [`UnixListenOptions`].
+#[derive(Clone, Default)]
+pub struct UnixListenOptionsBuilder {}
+
+impl UnixListenOptionsBuilder {
+    /// Build the socket options.
+    pub fn build(&self) -> UnixListenOptions {
+        UnixListenOptions {}
+    }
+}
 
 impl UnixListenOptions {
     /// Returns a builder for this [`UnixListenOptions`].
@@ -93,7 +153,7 @@ impl UnixListenOptions {
 #[allow(clippy::derivable_impls)]
 impl Default for UnixListenOptions {
     fn default() -> Self {
-        // This needs to match the result of `Self::builder().build().unwrap()`,
+        // This needs to match the result of `Self::builder().build()`,
         // which is tested by the `builder_defaults()` test below.
         Self {}
     }
@@ -110,18 +170,47 @@ impl Default for UnixListenOptions {
 /// For established streams,
 /// you can use [`StreamOps`](crate::StreamOps) to perform additional operations
 /// or to configure additional options.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, getset::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, getset::Getters)]
 #[non_exhaustive]
 pub struct CommonConnectOptions {
     /// Value set for `SO_SNDBUF` on the socket.
-    #[builder(default)]
     #[getset(get = "pub")]
     pub(crate) send_buffer_size: Option<usize>,
 
     /// Value set for `SO_RCVBUF` on the socket.
-    #[builder(default)]
     #[getset(get = "pub")]
     pub(crate) recv_buffer_size: Option<usize>,
+}
+
+/// Builder for [`CommonConnectOptions`].
+#[derive(Clone, Default)]
+pub struct CommonConnectOptionsBuilder {
+    /// Send buffer size, or the operating system default.
+    send_buffer_size: Option<usize>,
+    /// Receive buffer size, or the operating system default.
+    recv_buffer_size: Option<usize>,
+}
+
+impl CommonConnectOptionsBuilder {
+    /// Set the value for `SO_SNDBUF`, or use the operating system default.
+    pub fn send_buffer_size(&mut self, value: Option<usize>) -> &mut Self {
+        self.send_buffer_size = value;
+        self
+    }
+
+    /// Set the value for `SO_RCVBUF`, or use the operating system default.
+    pub fn recv_buffer_size(&mut self, value: Option<usize>) -> &mut Self {
+        self.recv_buffer_size = value;
+        self
+    }
+
+    /// Build the socket options.
+    pub fn build(&self) -> CommonConnectOptions {
+        CommonConnectOptions {
+            send_buffer_size: self.send_buffer_size,
+            recv_buffer_size: self.recv_buffer_size,
+        }
+    }
 }
 
 impl CommonConnectOptions {
@@ -135,7 +224,7 @@ impl CommonConnectOptions {
 #[allow(clippy::derivable_impls)]
 impl Default for CommonConnectOptions {
     fn default() -> Self {
-        // This needs to match the result of `Self::builder().build().unwrap()`,
+        // This needs to match the result of `Self::builder().build()`,
         // which is tested by the `builder_defaults()` test below.
         Self {
             send_buffer_size: None,
@@ -147,13 +236,33 @@ impl Default for CommonConnectOptions {
 /// Options to use when connecting a TCP socket.
 ///
 /// See [`CommonConnectOptions`] for more information.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder, getset::Getters)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, getset::Getters)]
 #[non_exhaustive]
 pub struct TcpConnectOptions {
     /// Options that are common for all socket types.
-    #[builder(sub_builder)]
     #[getset(get = "pub")]
     pub(crate) common: CommonConnectOptions,
+}
+
+/// Builder for [`TcpConnectOptions`].
+#[derive(Clone, Default)]
+pub struct TcpConnectOptionsBuilder {
+    /// Builder for the options common to socket types.
+    common: CommonConnectOptionsBuilder,
+}
+
+impl TcpConnectOptionsBuilder {
+    /// Modify the options common to socket types.
+    pub fn common(&mut self) -> &mut CommonConnectOptionsBuilder {
+        &mut self.common
+    }
+
+    /// Build the socket options.
+    pub fn build(&self) -> TcpConnectOptions {
+        TcpConnectOptions {
+            common: self.common.build(),
+        }
+    }
 }
 
 impl TcpConnectOptions {
@@ -167,7 +276,7 @@ impl TcpConnectOptions {
 #[allow(clippy::derivable_impls)]
 impl Default for TcpConnectOptions {
     fn default() -> Self {
-        // This needs to match the result of `Self::builder().build().unwrap()`,
+        // This needs to match the result of `Self::builder().build()`,
         // which is tested by the `builder_defaults()` test below.
         Self {
             common: CommonConnectOptions::default(),
@@ -177,9 +286,20 @@ impl Default for TcpConnectOptions {
 
 /// Options to use when connecting a unix stream socket.
 // TODO: We should support at least the options in `CommonConnectOptions`.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, derive_builder::Builder)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct UnixConnectOptions {}
+
+/// Builder for [`UnixConnectOptions`].
+#[derive(Clone, Default)]
+pub struct UnixConnectOptionsBuilder {}
+
+impl UnixConnectOptionsBuilder {
+    /// Build the socket options.
+    pub fn build(&self) -> UnixConnectOptions {
+        UnixConnectOptions {}
+    }
+}
 
 impl UnixConnectOptions {
     /// Returns a builder for this [`UnixConnectOptions`].
@@ -192,7 +312,7 @@ impl UnixConnectOptions {
 #[allow(clippy::derivable_impls)]
 impl Default for UnixConnectOptions {
     fn default() -> Self {
-        // This needs to match the result of `Self::builder().build().unwrap()`,
+        // This needs to match the result of `Self::builder().build()`,
         // which is tested by the `builder_defaults()` test below.
         Self {}
     }
@@ -218,11 +338,44 @@ mod test {
     use super::*;
 
     #[test]
+    fn builder_clones_keep_independent_socket_options() {
+        const SEND_BUFFER: usize = 65_536;
+        const RECV_BUFFER: usize = 32_768;
+
+        macro_rules! check {
+            ($type:ty) => {
+                let mut builder = <$type>::builder();
+                builder
+                    .common()
+                    .send_buffer_size(Some(SEND_BUFFER))
+                    .recv_buffer_size(Some(RECV_BUFFER));
+                let snapshot = builder.clone();
+                builder
+                    .common()
+                    .send_buffer_size(None)
+                    .recv_buffer_size(Some(0));
+
+                for _ in 0..2 {
+                    let original = snapshot.build();
+                    assert_eq!(original.common().send_buffer_size(), &Some(SEND_BUFFER));
+                    assert_eq!(original.common().recv_buffer_size(), &Some(RECV_BUFFER));
+                    let changed = builder.build();
+                    assert_eq!(changed.common().send_buffer_size(), &None);
+                    assert_eq!(changed.common().recv_buffer_size(), &Some(0));
+                }
+            };
+        }
+
+        check!(TcpListenOptions);
+        check!(TcpConnectOptions);
+    }
+
+    #[test]
     fn builder_defaults() {
         // Ensure that the builder default matches the type's default.
         macro_rules! check {
             ($type:tt) => {
-                assert_eq!($type::builder().build().unwrap(), $type::default());
+                assert_eq!($type::builder().build(), $type::default());
             };
         }
 

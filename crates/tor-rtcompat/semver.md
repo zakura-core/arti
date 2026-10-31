@@ -103,3 +103,13 @@ constructors, variants, constants, or Cargo feature names change. The private
 that respects an existing provider. Remove the development self-dependency
 that existed to supply AWS-LC to tests: unit tests use `cfg(test)`, and tests of
 the explicit `testing` feature still request it normally.
+BREAKING: The six socket-option builders now build infallibly. For
+`CommonListenOptionsBuilder`, `TcpListenOptionsBuilder`,
+`UnixListenOptionsBuilder`, `CommonConnectOptionsBuilder`,
+`TcpConnectOptionsBuilder` and `UnixConnectOptionsBuilder`, `build(&self)`
+returns the corresponding options value directly instead of a `Result`.
+Remove their six generated `*BuilderError` enums, `UninitializedField` and
+`ValidationError` variants and payloads, and `Debug`, `Display`, `Error` and
+`From` implementations. The builders remain available through the existing
+options' `builder()` methods; they retain `Clone`, `Default`, buffer setters
+and nested `common()` accessors. No builder re-exports or visibility are added.
