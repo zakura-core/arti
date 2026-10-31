@@ -1,8 +1,5 @@
 //! Declare error types.
 
-use std::path::PathBuf;
-
-use tor_basic_utils::PathExt as _;
 use tor_error::{ErrorKind, HasKind};
 
 /// An error related to an option passed to Arti via a configuration
@@ -162,100 +159,6 @@ pub enum ReconfigureError {
 impl HasKind for ReconfigureError {
     fn kind(&self) -> ErrorKind {
         ErrorKind::InvalidConfigTransition
-    }
-}
-
-/// An error that occurs while trying to read and process our configuration.
-#[derive(Debug, Clone, thiserror::Error)]
-#[non_exhaustive]
-pub enum ConfigError {
-    /// We encoundered a problem checking file permissions (for example, no such file)
-    #[error("Problem accessing configuration file(s)")]
-    FileAccess(#[source] fs_mistrust::Error),
-    /// We encoundered a problem checking file permissions (for example, no such file)
-    ///
-    /// This variant name is misleading - see the docs for [`fs_mistrust::Error`].
-    /// Please use [`ConfigError::FileAccess`] instead.
-    #[deprecated = "use ConfigError::FileAccess instead"]
-    #[error("Problem accessing configuration file(s)")]
-    Permissions(#[source] fs_mistrust::Error),
-    /// Our underlying configuration library gave an error while loading our
-    /// configuration.
-    #[error("Couldn't load configuration")]
-    Load(#[source] ConfigLoadError),
-    /// Encountered an IO error with a configuration file or directory.
-    ///
-    /// Note that some IO errors may be reported as `Load` errors,
-    /// due to limitations of the underlying library.
-    #[error("IoError while {} {}", action, path.display_lossy())]
-    Io {
-        /// The action while we were trying to perform
-        action: &'static str,
-        /// The path we were trying to do it to.
-        path: PathBuf,
-        /// The underlying problem
-        #[source]
-        err: std::sync::Arc<std::io::Error>,
-    },
-}
-
-/// An error that occurred while trying to look up a configuration value.
-#[derive(Clone, Debug, thiserror::Error)]
-#[non_exhaustive]
-pub enum ConfigGetValueError {
-    /// Some internal error occurred.
-    #[error("Internal error")]
-    Bug(#[from] tor_error::Bug),
-}
-
-/// Wrapper for our an error type from our underlying configuration library.
-#[derive(Debug, Clone)]
-pub struct ConfigLoadError(LoadError);
-
-/// The loader error is uninhabited when file loading is disabled.
-#[cfg(not(feature = "load-config"))]
-type LoadError = void::Void;
-/// The underlying configuration parser's error.
-#[cfg(feature = "load-config")]
-type LoadError = figment::Error;
-
-impl ConfigError {
-    /// Wrap `err` as a ConfigError.
-    ///
-    /// This is not a From implementation, since we don't want to expose our
-    /// underlying configuration library.
-    #[cfg(feature = "load-config")]
-    pub(crate) fn from_cfg_err(err: figment::Error) -> Self {
-        // TODO: It would be lovely to extract IO errors from figment::Error
-        // and report them as Error::Io.  Unfortunately, it doesn't seem
-        // possible to do that given the design of figment::Error.
-        ConfigError::Load(ConfigLoadError(err))
-    }
-}
-
-impl std::fmt::Display for ConfigLoadError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = self.0.to_string();
-        write!(f, "{}", s)?;
-        if s.contains("invalid escape") || s.contains("invalid hex escape") {
-            write!(
-                f,
-                "   (If you wanted to include a literal \\ character, you need to escape it by writing two in a row: \\\\)"
-            )?;
-        }
-        Ok(())
-    }
-}
-
-impl std::error::Error for ConfigLoadError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        // A `ConfigLoadError` isn't really a new higher-level error,
-        // it just wraps an existing figment error and formats it a little differently.
-        // Our `Display` implementation writes the `self.0` error message,
-        // so here in `source()` we skip `self.0` and return *its* source error.
-        // Otherwise an error formatter which iterates over error sources would print the same
-        // error message twice.
-        self.0.source()
     }
 }
 

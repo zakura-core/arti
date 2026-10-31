@@ -13,14 +13,14 @@ use std::result::Result as StdResult;
 use std::time::Duration;
 
 pub use tor_chanmgr::{ChannelConfig, ChannelConfigBuilder};
+pub use tor_config::BoolOrAuto;
 pub use tor_config::convert_helper_via_multi_line_list_builder;
 use tor_config::derive::prelude::*;
 use tor_config::extend_builder::extend_with_replace;
 pub use tor_config::impl_standard_builder;
 pub use tor_config::list_builder::{MultilineListBuilder, MultilineListBuilderError};
 pub use tor_config::mistrust::BuilderExt as _;
-pub use tor_config::{BoolOrAuto, ConfigError};
-pub use tor_config::{ConfigBuildError, ConfigurationSource, ConfigurationSources, Reconfigure};
+pub use tor_config::{ConfigBuildError, Reconfigure};
 pub use tor_config::{define_list_builder_accessors, define_list_builder_helper};
 pub use tor_config_path::{CfgPath, CfgPathError, CfgPathResolver};
 pub use tor_linkspec::{ChannelMethod, HasChanMethod, PtTransportName, TransportId};
@@ -643,10 +643,6 @@ pub struct TorClientConfig {
     pub(crate) path_resolver: CfgPathResolver,
 }
 
-impl tor_config::load::TopLevel for TorClientConfig {
-    type Builder = TorClientConfigBuilder;
-}
-
 /// Helper to add overrides to a default collection.
 fn default_extend<T: Default + Extend<X>, X>(to_add: impl IntoIterator<Item = X>) -> T {
     let mut collection = T::default();
@@ -821,20 +817,6 @@ impl TorClientConfigBuilder {
     }
 }
 
-/// Return the filenames for the default user configuration files
-pub fn default_config_files() -> Result<Vec<ConfigurationSource>, CfgPathError> {
-    // the base path resolver includes the 'ARTI_CONFIG' variable
-    let path_resolver = tor_config_path::arti_client_base_resolver();
-
-    ["${ARTI_CONFIG}/arti.toml", "${ARTI_CONFIG}/arti.d/"]
-        .into_iter()
-        .map(|f| {
-            let path = CfgPath::new(f.into()).path(&path_resolver)?;
-            Ok(ConfigurationSource::from_path(path))
-        })
-        .collect()
-}
-
 /// The environment variable we look at when deciding whether to disable FS permissions checking.
 #[deprecated = "use tor-config::mistrust::ARTI_FS_DISABLE_PERMISSION_CHECKS instead"]
 pub const FS_PERMISSIONS_CHECKS_DISABLE_VAR: &str = "ARTI_FS_DISABLE_PERMISSION_CHECKS";
@@ -978,17 +960,6 @@ mod test {
                 path = "obfs4proxy"
             "#,
         );
-    }
-
-    #[test]
-    fn check_default() {
-        // We don't want to second-guess the directories crate too much
-        // here, so we'll just make sure it does _something_ plausible.
-
-        let dflt = default_config_files().unwrap();
-        assert!(dflt[0].as_path().unwrap().ends_with("arti.toml"));
-        assert!(dflt[1].as_path().unwrap().ends_with("arti.d"));
-        assert_eq!(dflt.len(), 2);
     }
 
     #[test]

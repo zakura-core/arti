@@ -7,5 +7,11 @@ BREAKING: Remove the `native-tls` and `static-native-tls` Cargo features.
 Default and `full` now select Rustls/Ring instead of native-TLS. The `static`
 feature retains static SQLite linking without a native-TLS backend.
 
+BREAKING: Remove the `load-config` feature, `config::default_config_files`,
+`config::{ConfigurationSource, ConfigurationSources, ConfigError}` re-exports,
+and the `load::TopLevel` implementation for `TorClientConfig`. Applications
+supply Rust configuration values directly; directory builders and validation
+retain their existing behavior.
+
 REMOVED: The `accel-openssl` Cargo feature. Existing default RustCrypto
 implementations remain in use.

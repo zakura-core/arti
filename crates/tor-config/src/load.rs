@@ -1,17 +1,6 @@
-//! Configuration builder traits and optional configuration-tree resolution.
-//!
-//! Programmatic builders work without the `load-config` feature. Enable it
-//! to read configuration files and resolve them into validated configurations.
-#![cfg_attr(feature = "load-config", doc = include_str!("load/README.md"))]
+//! Traits used by typed configuration builders.
 
 use crate::ConfigBuildError;
-use serde::de::DeserializeOwned;
-
-#[cfg(feature = "load-config")]
-mod resolve;
-#[cfg(feature = "load-config")]
-#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
-pub use resolve::*;
 
 /// A type that can be built from a builder.
 pub trait Buildable {
@@ -58,26 +47,4 @@ pub trait ConfigBuilder: Builder {
     /// is to call [`build()`](Builder::build) on it:
     /// `build()` also takes defaults into account.
     fn apply_defaults(&mut self) -> Result<(), ConfigBuildError>;
-}
-
-/// Top-level configuration struct, made from a deserializable builder
-///
-/// One configuration consumer's configuration settings.
-///
-/// Implementing this trait only for top-level configurations,
-/// which are to be parsed at the root level of a (TOML) config file taxonomy.
-///
-/// This trait exists to:
-///
-///  * Mark top-level configuration structures for use with `resolve`
-///    (when `load-config` is enabled)
-///  * Provide the type of the `Builder` for use by Rust generic code
-pub trait TopLevel {
-    /// The `Builder` which can be used to make a `Self`
-    ///
-    /// Should satisfy `&'_ Self::Builder: Builder<Built=Self>`
-    type Builder: DeserializeOwned;
-
-    /// Deprecated config keys, as "."-separates strings
-    const DEPRECATED_KEYS: &'static [&'static str] = &[];
 }

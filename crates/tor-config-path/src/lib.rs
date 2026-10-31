@@ -690,19 +690,9 @@ mod test_serde {
     use std::ffi::OsString;
     use std::fmt::Debug;
 
-    use derive_deftly::Deftly;
-    use tor_config::load::TopLevel;
-
-    #[derive(Serialize, Deserialize, Deftly, Eq, PartialEq, Debug)]
-    #[derive_deftly(tor_config::derive::TorConfig)]
-    #[deftly(tor_config(no_default_trait))]
+    #[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
     struct TestConfigFile {
-        #[deftly(tor_config(no_default))]
         p: CfgPath,
-    }
-
-    impl TopLevel for TestConfigFile {
-        type Builder = TestConfigFileBuilder;
     }
 
     fn deser_json(json: &str) -> CfgPath {
@@ -715,24 +705,10 @@ mod test_serde {
         let TestConfigFile { p } = toml::from_str(toml).expect("deser toml failed");
         p
     }
-    fn deser_toml_cfg(toml: &str) -> CfgPath {
-        dbg!(toml);
-        let mut sources = tor_config::ConfigurationSources::new_empty();
-        sources.push_source(
-            tor_config::ConfigurationSource::from_verbatim(toml.to_string()),
-            tor_config::sources::MustRead::MustRead,
-        );
-        let cfg = sources.load().unwrap();
-
-        dbg!(&cfg);
-        let TestConfigFile { p } = tor_config::load::resolve(&cfg).expect("cfg resolution failed");
-        p
-    }
-
     #[test]
     fn test_parse() {
         fn desers(toml: &str, json: &str) -> Vec<CfgPath> {
-            vec![deser_toml(toml), deser_toml_cfg(toml), deser_json(json)]
+            vec![deser_toml(toml), deser_json(json)]
         }
 
         for cp in desers(r#"p = "string""#, r#"{ "p": "string" }"#) {

@@ -1210,8 +1210,6 @@ pub mod exports {
         load::ConfigBuilder,
     };
     pub use derive_deftly::Deftly;
-    #[cfg(feature = "load-config")]
-    pub use figment;
     pub use humantime_serde;
     pub use serde::{Deserialize, Deserializer, Serialize, Serializer};
     pub use serde_value;
