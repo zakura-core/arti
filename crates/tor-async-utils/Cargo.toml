@@ -34,7 +34,7 @@ derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 educe = "0.4.23"
 event-listener = "5"
 extend = "1.2.0"
-futures = "0.3.34"
+futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }
 pin-project = "1"
 slotmap-careful = { package = "zakura-slotmap-careful", path = "../slotmap-careful", version = "0.9.0-zakura.1" }
 sync_wrapper = "1.0.2"
@@ -50,6 +50,7 @@ web-time-compat = { package = "zakura-web-time-compat", version = "0.3.0-zakura.
 
 [dev-dependencies]
 criterion = "0.8.2"
+futures = { version = "0.3.34", default-features = false, features = ["executor"] }
 futures-await-test = "0.3.0"
 tokio = { version = "1.54.1", features = ["macros", "net", "rt", "rt-multi-thread", "time"] }
 tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }

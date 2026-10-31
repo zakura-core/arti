@@ -18,7 +18,7 @@ full = ["tor-error/full", "tor-rtcompat/full", "web-time-compat/full"]
 
 [dependencies]
 
-futures = "0.3.34"
+futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }
 humantime = "2"
 thiserror = "2"
 tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }
