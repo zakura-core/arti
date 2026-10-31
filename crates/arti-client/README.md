@@ -165,11 +165,10 @@ Streams can be isolated in two ways:
 - by generating [`IsolationToken`]s, and passing them in via [`StreamPrefs`]
   to [`TorClient::connect`].
 
-## Multiple runtime support
+## Runtime support
 
-Arti uses the [`tor_rtcompat`] crate to support multiple asynchronous
-runtimes; currently [Tokio](https://tokio.rs), [async-std](https://async.rs)
-and [smol](https://github.com/smol-rs/smol) (experimental) are supported.
+This fork uses the [`tor_rtcompat`] crate with [Tokio](https://tokio.rs)
+and Rustls for embedded wallets.
 
 The backend Arti uses for TCP connections ([`tor_rtcompat::NetStreamProvider`])
 and for creating TLS sessions ([`tor_rtcompat::TlsProvider`]) is also
@@ -231,7 +230,6 @@ match tor_client.connect(("example.com", 80)).await {
 * `tokio` (default) -- build with [Tokio](https://tokio.rs/) support
 * `rustls` (default) -- build with [Rustls](https://github.com/rustls/rustls)
   and its Ring cryptographic provider for TLS support.
-* `async-std` -- build with [async-std](https://async.rs/) support.
 * `compression` (default) -- Build support for downloading compressed
   documents. Requires a C compiler.
 * `onion-service-client` -- Build with support for connecting to onion
@@ -247,7 +245,7 @@ match tor_client.connect(("example.com", 80)).await {
   implementation to the exclusion of another, or those that set a build
   flag.)
 
-Flags `tokio`, `async-std`, `smol` and `rustls` enable the flags of the
+Flags `tokio` and `rustls` enable the flags of the
 same name on the [`tor_rtcompat`] crate.
 
 ### Build-flag related features
@@ -274,7 +272,6 @@ implementation with another.
 * `error_detail` -- expose the `arti_client::Error` inner error type.
 * `dirfilter` -- expose the `DirFilter` API, which lets you modify a network
   directory before it is used.
-* `smol` -- build with [smol](https://github.com/smol-rs/smol) support.
 * `experimental` -- build with all experimental features above, along with
   all experimental features from other arti crates.
 

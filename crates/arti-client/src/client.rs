@@ -29,7 +29,7 @@ use tor_persist::StateMgr;
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 use tor_persist::TestingStateMgr;
 use tor_proto::client::stream::{DataStream, IpVersionPreference, StreamParameters};
-#[cfg(all(feature = "rustls", any(feature = "async-std", feature = "tokio"),))]
+#[cfg(all(feature = "rustls", feature = "tokio",))]
 use tor_rtcompat::PreferredRuntime;
 use tor_rtcompat::{Runtime, SleepProviderExt};
 #[cfg(feature = "onion-service-client")]
@@ -806,7 +806,7 @@ impl StreamPrefs {
     // TODO: Add some way to be IPFlexible, and require exit to support both.
 }
 
-#[cfg(all(feature = "rustls", any(feature = "async-std", feature = "tokio")))]
+#[cfg(all(feature = "rustls", feature = "tokio"))]
 impl TorClient<PreferredRuntime> {
     /// Bootstrap a connection to the Tor network, using the provided `config`.
     ///
@@ -820,10 +820,6 @@ impl TorClient<PreferredRuntime> {
     /// If Tokio is being used (the default), panics if created outside the context of a currently
     /// running Tokio runtime. See the documentation for [`PreferredRuntime::current`] for
     /// more information.
-    ///
-    /// If using `async-std`, either take care to ensure Arti is not compiled with Tokio support,
-    /// or manually create an `async-std` runtime using [`tor_rtcompat`] and use it with
-    /// [`TorClient::with_runtime`].
     ///
     /// # Do not fork
     ///
@@ -850,10 +846,6 @@ impl TorClient<PreferredRuntime> {
     /// If Tokio is being used (the default), panics if created outside the context of a currently
     /// running Tokio runtime. See the documentation for `tokio::runtime::Handle::current` for
     /// more information.
-    ///
-    /// If using `async-std`, either take care to ensure Arti is not compiled with Tokio support,
-    /// or manually create an `async-std` runtime using [`tor_rtcompat`] and use it with
-    /// [`TorClient::with_runtime`].
     ///
     /// # Do not fork
     ///
