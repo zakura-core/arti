@@ -1,6 +1,5 @@
 //! Implement a sink-blocking policy that allows a limited number of items to be sent.
 
-use nonany::NonMaxU32;
 use tor_error::{Bug, internal};
 
 /// A sink-blocking [`Policy`](super::Policy) that can allow a limited number of items to be sent.
@@ -13,26 +12,27 @@ use tor_error::{Bug, internal};
 pub(crate) struct CountingPolicy {
     /// The number of items that may currently be sent.
     ///
-    /// `None` represents an unlimited number.
-    remaining: Option<NonMaxU32>,
+    /// [`UNLIMITED`] represents an unlimited number.
+    remaining: u32,
 }
 
+/// The sentinel for an unlimited number of items.
+const UNLIMITED: u32 = u32::MAX;
+
 /// The largest possible limited number of cells in a CountingPolicy.
-const MAX_LIMIT: NonMaxU32 = NonMaxU32::new(u32::MAX - 1).expect("Couldn't construct MAX_LIMIT");
+const MAX_LIMIT: u32 = UNLIMITED - 1;
 
 impl CountingPolicy {
     /// Return a new unlimited CountingPolicy.
     pub(crate) fn new_unlimited() -> Self {
-        Self { remaining: None }
+        Self {
+            remaining: UNLIMITED,
+        }
     }
 
     /// Return a new completely blocked CountingPolicy.
     pub(crate) fn new_blocked() -> Self {
-        Self {
-            remaining: Some(
-                const { NonMaxU32::new(0).expect("Couldn't construct NonMaxU32 from zero.") },
-            ),
-        }
+        Self { remaining: 0 }
     }
 
     /// Return a new CountingPolicy that allows `n` items, and then becomes blocked.
@@ -42,7 +42,7 @@ impl CountingPolicy {
     /// If `n` is greater than `MAX_LIMIT`, only `MAX_LIMIT` items will be allowed.
     pub(crate) fn new_limited(n: u32) -> Self {
         Self {
-            remaining: Some(NonMaxU32::new(n).unwrap_or(MAX_LIMIT)),
+            remaining: n.min(MAX_LIMIT),
         }
     }
 
@@ -59,15 +59,15 @@ impl CountingPolicy {
     // Therefore it obeys the invariants of the `Policy` trait.
     fn saturating_add(&self, n: u32) -> Self {
         match self.remaining {
-            Some(current) => Self::new_limited(current.get().saturating_add(n)),
-            None => Self::new_unlimited(),
+            UNLIMITED => Self::new_unlimited(),
+            remaining => Self::new_limited(remaining.saturating_add(n)),
         }
     }
 }
 
 impl super::Policy for CountingPolicy {
     fn is_blocking(&self) -> bool {
-        self.remaining.is_some_and(|n| n.get() == 0)
+        self.remaining == 0
     }
 
     // Correctness:
@@ -78,21 +78,15 @@ impl super::Policy for CountingPolicy {
     // but it cannot cause a blocked `self` to become unblocked.
     // Thus the invariants of the `Policy` trait are preserved.
     fn take_one(&mut self) -> Result<(), Bug> {
-        match &mut self.remaining {
+        match self.remaining {
             // Unlimited: nothing to do.
-            None => Ok(()),
-
-            Some(remaining) => {
-                if let Some(n) = remaining.get().checked_sub(1) {
-                    *remaining = n
-                        .try_into()
-                        .expect("Somehow subtracting 1 made us exceed MAX_LIMIT!?");
-                    Ok(())
-                } else {
-                    Err(internal!(
-                        "Tried to take_one() from a blocked CountingPolicy."
-                    ))
-                }
+            UNLIMITED => Ok(()),
+            0 => Err(internal!(
+                "Tried to take_one() from a blocked CountingPolicy."
+            )),
+            remaining => {
+                self.remaining = remaining - 1;
+                Ok(())
             }
         }
     }
@@ -124,7 +118,7 @@ impl<S> super::SinkBlocker<S, CountingPolicy> {
 
     /// Return true if there is no limit on this policy.
     pub(crate) fn is_unlimited(&self) -> bool {
-        self.policy.remaining.is_none()
+        self.policy.remaining == UNLIMITED
     }
 }
 
@@ -156,7 +150,7 @@ mod test {
         assert!(unlimited.take_one().is_ok());
         assert_eq!(unlimited.is_blocking(), false);
         let u2 = unlimited.saturating_add(99);
-        assert!(u2.remaining.is_none()); // still unlimited.
+        assert_eq!(u2.remaining, UNLIMITED); // still unlimited.
     }
 
     #[test]
@@ -164,11 +158,12 @@ mod test {
         let mut blocked = CountingPolicy::new_blocked();
         assert_eq!(blocked.is_blocking(), true);
         assert!(blocked.take_one().is_err());
+        assert_eq!(blocked.remaining, 0); // A failed take must leave it blocked.
         let mut u2 = blocked.saturating_add(99);
-        assert_eq!(u2.remaining.unwrap().get(), 99); // New policy is limited  to 99.
+        assert_eq!(u2.remaining, 99); // New policy is limited to 99.
         assert_eq!(u2.is_blocking(), false);
         assert!(u2.take_one().is_ok());
-        assert_eq!(u2.remaining.unwrap().get(), 98); // You take one down, you pass it around...
+        assert_eq!(u2.remaining, 98); // You take one down, you pass it around...
     }
 
     #[test]
@@ -183,11 +178,15 @@ mod test {
 
         let limited = CountingPolicy::new_limited(99);
         let lim2 = limited.saturating_add(25);
-        assert_eq!(lim2.remaining.unwrap().get(), 25 + 99);
-        let lim3 = limited.saturating_add(u32::MAX);
-        assert_eq!(lim3.remaining.unwrap(), MAX_LIMIT);
+        assert_eq!(lim2.remaining, 25 + 99);
+        let mut lim3 = limited.saturating_add(u32::MAX);
+        assert_eq!(lim3.remaining, MAX_LIMIT);
+        assert!(lim3.take_one().is_ok());
+        assert_eq!(lim3.remaining, MAX_LIMIT - 1); // Saturation stays finite.
 
-        let limited = CountingPolicy::new_limited(u32::MAX);
-        assert_eq!(limited.remaining.unwrap(), MAX_LIMIT);
+        let mut limited = CountingPolicy::new_limited(u32::MAX);
+        assert_eq!(limited.remaining, MAX_LIMIT);
+        assert!(limited.take_one().is_ok());
+        assert_eq!(limited.remaining, MAX_LIMIT - 1); // Clamping stays finite.
     }
 }
