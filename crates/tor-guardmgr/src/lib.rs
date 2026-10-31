@@ -1827,17 +1827,23 @@ pub enum GuardUsageKind {
 /// A set of parameters describing how a single guard should be selected.
 ///
 /// Used as an argument to [`GuardMgr::select_guard`].
-#[derive(Clone, Debug, derive_builder::Builder)]
-#[builder(build_fn(error = "tor_config::ConfigBuildError"))]
+#[derive(Clone, Debug)]
 pub struct GuardUsage {
     /// The purpose for which this guard will be used.
-    #[builder(default)]
     kind: GuardUsageKind,
     /// A list of restrictions on which guard may be used.
     ///
     /// The default is the empty list.
-    #[builder(sub_builder, setter(custom))]
     restrictions: GuardRestrictionList,
+}
+
+/// Builder for [`GuardUsage`].
+#[derive(Clone, Default)]
+pub struct GuardUsageBuilder {
+    /// The requested circuit purpose, or the default when unset.
+    kind: Option<GuardUsageKind>,
+    /// Restrictions applied when selecting the guard.
+    restrictions: GuardRestrictionListBuilder,
 }
 
 impl_standard_builder! { GuardUsage: !Deserialize }
@@ -1862,6 +1868,23 @@ define_list_builder_accessors! {
 }
 
 impl GuardUsageBuilder {
+    /// Set the purpose for which a guard will be selected.
+    pub fn kind(&mut self, kind: GuardUsageKind) -> &mut Self {
+        self.kind = Some(kind);
+        self
+    }
+
+    /// Resolve the guard purpose and restrictions.
+    pub fn build(&self) -> Result<GuardUsage, tor_config::ConfigBuildError> {
+        Ok(GuardUsage {
+            kind: self.kind.clone().unwrap_or_default(),
+            restrictions: self
+                .restrictions
+                .build()
+                .map_err(|error| error.within("restrictions"))?,
+        })
+    }
+
     /// Create a new empty [`GuardUsageBuilder`].
     pub fn new() -> Self {
         Self::default()
@@ -1980,6 +2003,34 @@ mod test {
     use tor_linkspec::{HasAddrs, HasRelayIds};
     use tor_persist::TestingStateMgr;
     use tor_rtcompat::test_with_all_runtimes;
+
+    #[test]
+    fn guard_usage_builder_preserves_kind_and_restrictions() {
+        let defaults = GuardUsage::builder().build().unwrap();
+        assert_eq!(defaults.kind, GuardUsageKind::Data);
+        assert!(defaults.restrictions.is_empty());
+
+        let avoided = RelayId::Ed25519([7; 32].into());
+        let mut builder = GuardUsageBuilder::new();
+        builder.kind(GuardUsageKind::OneHopDirectory);
+        builder
+            .restrictions()
+            .push(GuardRestriction::AvoidId(avoided.clone()));
+        let cloned = builder.clone();
+        builder.kind(GuardUsageKind::Data).restrictions().clear();
+        let changed = builder.build().unwrap();
+        assert_eq!(changed.kind, GuardUsageKind::Data);
+        assert!(changed.restrictions.is_empty());
+
+        for _ in 0..2 {
+            let usage = cloned.build().unwrap();
+            assert_eq!(usage.kind, GuardUsageKind::OneHopDirectory);
+            assert!(matches!(
+                usage.restrictions.as_slice(),
+                [GuardRestriction::AvoidId(actual)] if actual == &avoided
+            ));
+        }
+    }
 
     #[test]
     fn guard_param_defaults() {
