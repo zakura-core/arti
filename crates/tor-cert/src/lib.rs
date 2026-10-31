@@ -170,11 +170,9 @@ caret_int! {
 
 /// Structure for an Ed25519-signed certificate as described in Tor's
 /// cert-spec.txt.
-#[derive(Debug, Clone, PartialEq, Eq, derive_builder::Builder)]
-#[builder(build_fn(skip))]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ed25519Cert {
     /// How many _hours_ after the epoch will this certificate expire?
-    #[builder(setter(custom))]
     exp_hours: ExpiryHours,
     /// Type of the certificate; recognized values are in certtype::*
     cert_type: CertType,
@@ -182,15 +180,46 @@ pub struct Ed25519Cert {
     cert_key: CertifiedKey,
     /// A list of extensions.
     #[allow(unused)] // TODO review CertExt and make it pub, and add a getter
-    #[builder(setter(custom))]
     extensions: Vec<CertExt>,
     /// The key that signed this cert.
     ///
     /// Once the cert has been unwrapped from an KeyUnknownCert, this field will
     /// be set.  If there is a `SignedWithEd25519` extension in
     /// `self.extensions`, this will match it.
-    #[builder(setter(custom))]
     signed_with: Option<ed25519::Ed25519Identity>,
+}
+
+/// Builder for an encoded, signed [`Ed25519Cert`].
+///
+/// Use [`Ed25519Cert::builder`] to create a builder and
+/// [`encode_and_sign`](Self::encode_and_sign) to sign the certificate.
+#[derive(Clone, Default)]
+pub struct Ed25519CertBuilder {
+    /// Certificate expiration, rounded to hours after the epoch.
+    exp_hours: Option<ExpiryHours>,
+    /// The kind of certificate to encode.
+    cert_type: Option<CertType>,
+    /// The key or object being certified.
+    cert_key: Option<CertifiedKey>,
+    /// Optional certificate extensions.
+    extensions: Option<Vec<CertExt>>,
+    /// Whether the caller selected a signing-key extension.
+    #[allow(clippy::option_option)]
+    signed_with: Option<Option<ed25519::Ed25519Identity>>,
+}
+
+impl Ed25519CertBuilder {
+    /// Set the certificate type.
+    pub fn cert_type(&mut self, cert_type: CertType) -> &mut Self {
+        self.cert_type = Some(cert_type);
+        self
+    }
+
+    /// Set the key or object being certified.
+    pub fn cert_key(&mut self, cert_key: CertifiedKey) -> &mut Self {
+        self.cert_key = Some(cert_key);
+        self
+    }
 }
 
 /// One of the data types that can be certified by an Ed25519Cert.

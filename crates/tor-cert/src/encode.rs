@@ -225,6 +225,45 @@ mod test {
     use web_time_compat::{Duration, SystemTimeExt};
 
     #[test]
+    fn builder_keeps_required_fields_and_signing_key_validation() {
+        let signing_key = ed25519::Keypair::from_bytes(&[17; 32]);
+        let other_key = ed25519::Keypair::from_bytes(&[18; 32]);
+        let mut builder = Ed25519Cert::builder();
+        assert!(matches!(
+            builder.encode_and_sign(&signing_key),
+            Err(CertEncodeError::MissingField("cert_type"))
+        ));
+        builder.cert_type(CertType::IDENTITY_V_SIGNING);
+        assert!(matches!(
+            builder.encode_and_sign(&signing_key),
+            Err(CertEncodeError::MissingField("expiration"))
+        ));
+        builder.expiration(SystemTime::UNIX_EPOCH + Duration::from_secs(1));
+        assert!(matches!(
+            builder.encode_and_sign(&signing_key),
+            Err(CertEncodeError::MissingField("cert_key"))
+        ));
+        builder
+            .cert_key(CertifiedKey::Ed25519(other_key.verifying_key().into()))
+            .signing_key(other_key.verifying_key().into());
+        assert!(matches!(
+            builder.encode_and_sign(&signing_key),
+            Err(CertEncodeError::KeyMismatch)
+        ));
+        builder.signing_key(signing_key.verifying_key().into());
+        let original = builder.clone();
+        builder.cert_type(CertType::SIGNING_V_LINK_AUTH);
+        assert_eq!(
+            original.encode_and_sign(&signing_key).unwrap().cert_type(),
+            CertType::IDENTITY_V_SIGNING
+        );
+        assert_eq!(
+            builder.encode_and_sign(&signing_key).unwrap().cert_type(),
+            CertType::SIGNING_V_LINK_AUTH
+        );
+    }
+
+    #[test]
     fn signed_cert_without_key() {
         let mut rng = rand::rng();
         let keypair = ed25519::Keypair::generate(&mut rng);
