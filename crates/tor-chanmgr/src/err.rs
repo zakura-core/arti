@@ -5,7 +5,6 @@ use std::sync::Arc;
 use futures::task::SpawnError;
 use thiserror::Error;
 
-use crate::factory::AbstractPtError;
 use tor_error::{ErrorKind, internal};
 use tor_linkspec::{ChanTarget, IntoOwnedChanTarget, LoggedChanTarget};
 use tor_proto::ClockSkew;
@@ -106,23 +105,10 @@ pub enum Error {
     #[error("Relay identity keys were only a partial match for what we wanted.")]
     IdentityConflict,
 
-    /// Tried to connect via a transport that we don't support.
-    #[error("No plugin available for the transport {0}")]
-    NoSuchTransport(tor_linkspec::TransportId),
-
     /// An attempt to open a channel failed because it was cancelled or
     /// superseded by another request or configuration change.
     #[error("Channel request cancelled or superseded")]
     RequestCancelled,
-
-    /// An error occurred in a pluggable transport manager.
-    ///
-    /// We can't know the type, because any pluggable transport manager implementing
-    /// `AbstractPtMgr` can be used.
-    /// However, if you're using Arti in the standard configuration, this will be
-    /// `tor-ptmgr`'s `PtError`.
-    #[error("Pluggable transport error: {0}")]
-    Pt(#[source] Arc<dyn AbstractPtError>),
 
     /// Memory quota error
     #[error("memory quota error")]
@@ -185,14 +171,12 @@ impl tor_error::HasKind for Error {
             E::Spawn { cause, .. } => cause.kind(),
             E::Proto { source, .. } => source.kind(),
             E::PendingFailed { .. } => EK::TorAccessFailed,
-            E::NoSuchTransport(_) => EK::InvalidConfig,
             E::UnusableTarget(_) | E::Internal(_) => EK::Internal,
             E::MissingId => EK::BadApiUsage,
             E::IdentityConflict => EK::TorAccessFailed,
             E::Connect { .. } => EK::TorAccessFailed,
             E::RequestCancelled => EK::TransientFailure,
             E::Memquota(e) => e.kind(),
-            E::Pt(e) => e.kind(),
         }
     }
 }
@@ -233,9 +217,6 @@ impl tor_error::HasRetryTime for Error {
             // errors.
             E::PendingFailed { .. } | E::Proto { .. } | E::Io { .. } => RT::AfterWaiting,
 
-            // Delegate.
-            E::Pt(e) => e.retry_time(),
-
             // This error reflects multiple attempts, so we go with whichever error
             // can be retried the earliest.
             E::Connect { addresses } => {
@@ -249,10 +230,6 @@ impl tor_error::HasRetryTime for Error {
 
             // This can't succeed until the relay is reconfigured.
             E::IdentityConflict => RT::Never,
-
-            // This one can't succeed until the bridge, or our set of
-            // transports, is reconfigured.
-            E::NoSuchTransport(_) => RT::Never,
 
             E::RequestCancelled => RT::Immediate,
 

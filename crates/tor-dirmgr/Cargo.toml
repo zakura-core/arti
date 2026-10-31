@@ -18,7 +18,6 @@ all-features = true
 default = ["mmap", "compression"]
 full = [
     "routerdesc",
-    "bridge-client",
     "default",
     "fs-mistrust/full",
     "safelog/full",
@@ -43,7 +42,6 @@ full = [
     "web-time-compat/full",
 ]
 experimental = ["experimental-api", "dirfilter", "dir-plugin"]
-bridge-client = ["tor-circmgr/specific-relay", "tor-guardmgr/bridge-client", "routerdesc"]
 
 mmap = ["memmap2"]
 static = ["rusqlite/bundled", "__is_nonadditive"]

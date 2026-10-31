@@ -14,7 +14,6 @@ repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
 [features]
 default = []
 full = [
-    "pt-client",
     "caret/full",
     "safelog/full",
     "tor-basic-utils/full",
@@ -25,7 +24,6 @@ full = [
     "tor-memquota/full",
 ]
 experimental = ["decode", "verbatim"]
-pt-client = []
 decode = ["__is_experimental"]
 verbatim = ["__is_experimental"]
 __is_experimental = []
@@ -41,7 +39,6 @@ hex = "0.4"
 itertools = "0.15.0"
 safelog = { path = "../safelog", version = "0.10.0" }
 serde = { version = "1.0.229", features = ["derive"] }
-serde_with = { version = "3.24.0", default-features = false, features = ["alloc", "macros"] }
 strum = { version = "0.28.0", features = ["derive"] }
 thiserror = "2"
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }

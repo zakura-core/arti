@@ -335,7 +335,6 @@ pub(crate) mod test_config {
     use super::*;
     use crate::*;
     use tor_guardmgr::VanguardConfig;
-    use tor_guardmgr::bridge::BridgeConfig;
 
     /// Testing configuration, with public fields
     #[derive(Default, derive_more::AsRef)]
@@ -349,21 +348,12 @@ pub(crate) mod test_config {
         pub guardmgr: tor_guardmgr::TestConfig,
         pub vanguard_config: VanguardConfig,
     }
-    impl AsRef<[BridgeConfig]> for TestConfig {
-        fn as_ref(&self) -> &[BridgeConfig] {
-            &self.guardmgr.bridges
-        }
-    }
     impl AsRef<FallbackList> for TestConfig {
         fn as_ref(&self) -> &FallbackList {
             &self.guardmgr.fallbacks
         }
     }
-    impl GuardMgrConfig for TestConfig {
-        fn bridges_enabled(&self) -> bool {
-            self.guardmgr.bridges_enabled()
-        }
-    }
+    impl GuardMgrConfig for TestConfig {}
     impl CircMgrConfig for TestConfig {
         fn path_rules(&self) -> &PathConfig {
             &self.path_rules

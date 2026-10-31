@@ -146,15 +146,6 @@ tor_log_ratelim::install_runtime(runtime.clone())?;
 let tor_client = TorClient::with_runtime(runtime).create_bootstrapped()?;
 ```
 
-### Bridge usage
-
-Bridges and Pluggable Transports (PT) can be used as censorship circumvention tools
-to connect to Tor in places where it is otherwise blocked. In arti, they are
-configured through [`config::BridgesConfig`]. You will need to enable the feature
-`pt-client` for PT support. Note that pluggable transports need to be installed
-separately and that Arti does not provide them on its own. You can read more about
-PTs in [TB manual](https://tb-manual.torproject.org/circumvention/).
-
 ### More advanced usage
 
 This version of Arti includes basic support for "stream isolation": the
@@ -243,12 +234,10 @@ match tor_client.connect(("example.com", 80)).await {
 * `async-std` -- build with [async-std](https://async.rs/) support.
 * `compression` (default) -- Build support for downloading compressed
   documents. Requires a C compiler.
-* `bridge-client` -- Build with support for bridges.
 * `onion-service-client` -- Build with support for connecting to onion
   services.
 * `vanguards` -- Build with support for vanguards.
   Requires that `onion-service-client` is also enabled.
-* `pt-client` -- Build with support for pluggable transports.
 * `anyhow` -- Build with support for extracting `ErrorHint`s from
   anyhow::Error.
 

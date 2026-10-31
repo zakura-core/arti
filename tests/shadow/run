@@ -98,8 +98,6 @@ check_host_xfers() {
 # Check whether file transfers via arti inside the simulation succeeded
 check_host_xfers articlient 10 10
 check_host_xfers articlient-extra 10 10
-check_host_xfers articlient-bridge 10 10
-check_host_xfers articlient-bridge-obfs4 10 10
 check_host_xfers torclient-onion-artiserver 10 10
 check_host_xfers torclient-onion-artiserver-full-vanguards 10 10
 # arti-client onion-service transfers have tended to be a bit less reliable.
@@ -143,23 +141,5 @@ for HOST in "${HOSTS[@]}"; do
     EXIT_STATUS=1
   fi
 done
-
-pushd shadow.data/hosts/articlient-bridge/
-for PCAP in *.pcap; do
-	# verify all connection are either from/to the bridge, or local.
-	LEAK=$(tshark -r "$PCAP" 'ip.src != 100.0.0.2 && ip.dst != 100.0.0.2 && ip.dst != 127.0.0.0/8')
-	if [ "$LEAK" ]; then
-		echo "FAIL: Found tcp leaks in PCAP: $PCAP"
-	        echo "$LEAK"
-    EXIT_STATUS=1
-	fi
-done
-
-DNS_LEAK=$(grep -l shadow_hostname_to_addr_ipv4 arti.*.strace || true)
-if [ "$DNS_LEAK" ]; then
-	echo "FAIL: Found DNS leaks in $DNS_LEAK"
-	EXIT_STATUS=1
-fi
-popd
 
 exit "$EXIT_STATUS"

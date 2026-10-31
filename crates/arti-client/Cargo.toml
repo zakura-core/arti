@@ -29,8 +29,6 @@ full = [
     "memquota",
     "rustls",
     "compression",
-    "bridge-client",
-    "pt-client",
     "tor-rtcompat/full",
     "tor-proto/full",
     "tor-netdoc/full",
@@ -49,7 +47,6 @@ full = [
     "tor-llcrypto/full",
     "tor-netdir/full",
     "tor-persist/full",
-    "tor-ptmgr?/full",
     "tor-keymgr?/full",
     "tor-linkspec/full",
     "tor-memquota/full",
@@ -69,18 +66,11 @@ full = [
 
 async-std = ["tor-rtcompat/async-std"]
 smol = ["tor-rtcompat/smol", "__is_experimental"]
-bridge-client = ["tor-guardmgr/bridge-client", "tor-dirmgr/bridge-client"]
 # the "memquota" feature is now a no-op as the functionality is always-enabled,
 # but the feature is kept for backwards compatibility
 # https://gitlab.torproject.org/tpo/core/arti/-/issues/2030
 memquota = []
 tokio = ["tor-async-utils/tokio", "tor-rtcompat/tokio", "tor-proto/tokio"]
-pt-client = [
-    "bridge-client",
-    "tor-chanmgr/pt-client",
-    "tor-guardmgr/pt-client",
-    "tor-ptmgr",
-]
 
 
 # Expose interfaces useful for testing
@@ -173,7 +163,6 @@ tor-netdoc = { path = "../tor-netdoc", version = "0.47.0" }
 tor-persist = { path = "../tor-persist", version = "0.47.0" }
 tor-proto = { path = "../tor-proto", version = "0.47.0" }
 tor-protover = { path = "../tor-protover", version = "0.47.0" }
-tor-ptmgr = { path = "../tor-ptmgr", version = "0.47.0", optional = true }
 tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0" }
 tracing = "0.1.44"
 visibility = { version = "0.1.1", optional = true }
