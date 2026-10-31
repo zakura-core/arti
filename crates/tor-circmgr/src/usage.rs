@@ -697,14 +697,8 @@ pub(crate) mod test {
         };
         let tok1 = IsolationToken::new();
         let tok2 = IsolationToken::new();
-        let isolation = StreamIsolationBuilder::new()
-            .owner_token(tok1)
-            .build()
-            .unwrap();
-        let isolation2 = StreamIsolationBuilder::new()
-            .owner_token(tok2)
-            .build()
-            .unwrap();
+        let isolation = StreamIsolationBuilder::new().owner_token(tok1).build();
+        let isolation2 = StreamIsolationBuilder::new().owner_token(tok2).build();
 
         let supp_dir = SupportedTunnelUsage::Dir;
         let targ_dir = TargetTunnelUsage::Dir;
@@ -785,14 +779,8 @@ pub(crate) mod test {
 
         let tok1 = IsolationToken::new();
         let tok2 = IsolationToken::new();
-        let isolation = StreamIsolationBuilder::new()
-            .owner_token(tok1)
-            .build()
-            .unwrap();
-        let isolation2 = StreamIsolationBuilder::new()
-            .owner_token(tok2)
-            .build()
-            .unwrap();
+        let isolation = StreamIsolationBuilder::new().owner_token(tok1).build();
+        let isolation2 = StreamIsolationBuilder::new().owner_token(tok2).build();
 
         let supp_dir = SupportedTunnelUsage::Dir;
         let targ_dir = TargetTunnelUsage::Dir;
@@ -916,10 +904,7 @@ pub(crate) mod test {
 
             // Now an exit circuit, to port 995.
             let tok1 = IsolationToken::new();
-            let isolation = StreamIsolationBuilder::new()
-                .owner_token(tok1)
-                .build()
-                .unwrap();
+            let isolation = StreamIsolationBuilder::new().owner_token(tok1).build();
 
             let exit_usage = TargetTunnelUsage::Exit {
                 ports: vec![TargetPort::ipv4(995)],
