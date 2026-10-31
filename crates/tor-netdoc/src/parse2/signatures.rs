@@ -5,7 +5,7 @@
 // But the tor_checkable API might need some updates and this seems nontrivial.
 // Each verification function seems to take different inputs.
 
-use saturating_time::SaturatingTime;
+use crate::util::{saturating_add, saturating_sub};
 
 use super::*;
 
@@ -334,6 +334,39 @@ pub fn check_validity_time_tolerance(
 ) -> Result<(), VF> {
     let start = *validity.start();
     let end = *validity.end();
-    let validity = start.saturating_sub(pre_tolerance)..=end.saturating_add(post_tolerance);
+    let validity = saturating_sub(start, pre_tolerance)..=saturating_add(end, post_tolerance);
     check_validity_time(now, validity)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[allow(deprecated)]
+    fn validity_tolerance_saturates_without_widening_zero_tolerance() {
+        let epoch = SystemTime::UNIX_EPOCH;
+        let one_ns = Duration::new(0, 1);
+        let before = epoch.checked_sub(one_ns).expect("before epoch");
+        let after = epoch.checked_add(one_ns).expect("after epoch");
+
+        assert!(
+            check_validity_time_tolerance(before, epoch..=epoch, Duration::MAX, Duration::ZERO,)
+                .is_ok()
+        );
+        assert!(
+            check_validity_time_tolerance(after, epoch..=epoch, Duration::ZERO, Duration::MAX,)
+                .is_ok()
+        );
+        assert!(matches!(
+            check_validity_time_tolerance(before, epoch..=epoch, Duration::ZERO, Duration::ZERO,),
+            Err(VF::TooNew),
+        ));
+        assert!(matches!(
+            check_validity_time_tolerance(after, epoch..=epoch, Duration::ZERO, Duration::ZERO,),
+            Err(VF::TooOld),
+        ));
+        assert!(check_validity_time_tolerance(before, epoch..=epoch, one_ns, one_ns).is_ok());
+        assert!(check_validity_time_tolerance(after, epoch..=epoch, one_ns, one_ns).is_ok());
+    }
 }

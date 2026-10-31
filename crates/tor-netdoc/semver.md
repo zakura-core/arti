@@ -75,3 +75,25 @@ REMOVED (internal): Descriptor publication layer structs/fields and their
 `HsDescEncryption::encrypt` is now private test-only code; production
 ciphertext processing retains the same decrypt/KDF/MAC implementation.
 No public or crate-visible Rust API is added.
+
+REMOVED (package): `saturating-time` and its `full` feature. Its public sealed
+`SaturatingTime` trait and all five methods (`max_value`, `min_value`,
+`saturating_add`, `saturating_sub`, `saturating_duration_since`) are removed,
+including the `SystemTime` and `Instant` implementations and nightly overrides.
+Its private-module sealing trait and six methods (`anchor`, `max_value`,
+`min_value`, `checked_add`, `checked_sub`, `checked_duration_since`) are removed
+as well. Downstream users of the standalone helper have no public replacement
+in this wallet fork.
+
+ADDED (crate-visible): `util::saturating_add` and `util::saturating_sub`, each
+with signature `(SystemTime, Duration) -> SystemTime`. They are defined in a
+private `util::system_time` module and reexported within this crate only. The
+limit search, caches, test helpers and constants remain private; no new
+`pub(super)` item, public type, method, variant, alias or constructor is added.
+Retained public document/signature APIs and their signatures do not change.
+
+Only `SystemTime` add/sub operations are needed for document validity bounds.
+Their checked arithmetic, lazy platform-limit discovery and nightly standard
+library path retain the existing behavior. The `saturating_time_nightly`
+configuration is now recognized on this crate instead of the removed package.
+No dependency edge, clock provider or platform restriction is added.

@@ -2772,13 +2772,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "saturating-time"
-version = "0.5.0"
-dependencies = [
- "web-time-compat",
-]
-
-[[package]]
 name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4309,7 +4302,6 @@ dependencies = [
  "rand 0.10.3",
  "rangemap",
  "regex",
- "saturating-time",
  "serde",
  "serde_json",
  "serde_test",

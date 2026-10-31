@@ -13,7 +13,6 @@ members = [
     "crates/web-time-compat",
     "crates/slotmap-careful",
     "crates/test-temp-dir",
-    "crates/saturating-time",
     "crates/tor-basic-utils",
     "crates/caret",
     "crates/fs-mistrust",
