@@ -176,7 +176,7 @@ impl HsDirRing {
     ///
     /// Reuses existing hash calculations from a previous netdir, if available.
     ///
-    /// `this_netdir.hsdir_rings` is not used; the return values from this function
+    /// `this_netdir.hsdir_ring` is not used; the return values from this function
     /// will be stored there by
     /// [`PartialNetDir::compute_rings`](super::PartialNetDir::compute_rings).
     pub(crate) fn compute(
@@ -208,10 +208,10 @@ impl HsDirRing {
         // is the same complexity as the (unavoidable) sort by hsdir_index.
         let reuse_index_values: HashMap<&Ed25519Identity, &HsDirIndex> = (|| {
             let prev_netdir = prev_netdir?;
-            let prev_ring = prev_netdir
-                .hsdir_rings
-                .iter()
-                .find(|prev_ring| prev_ring.params == new_params)?;
+            let prev_ring = &prev_netdir.hsdir_ring;
+            if prev_ring.params != new_params {
+                return None;
+            }
 
             let reuse_index_values = prev_ring
                 .ring
@@ -256,10 +256,9 @@ impl HsDirRing {
     ///
     /// Wraps around once when we reach the end.
     ///
-    /// The specified filter function `f` is applied to each item, and determines whether the item
-    /// should be yielded or not. This filtering functionality is used by [`NetDir::hs_dirs`] to
-    /// prevent nodes that have already been selected for a lowered-numbered replica to be
-    /// considered again when choosing `spread` nodes for a higher-numbered replicas.
+    /// The filter `f` determines whether each item should be yielded. This lets
+    /// [`NetDir::hs_dirs_download`] avoid selecting a node for another replica
+    /// once it has been selected for a lower-numbered replica.
     ///
     /// Yields no element more than once, even if the ring is smaller than `spread`.
     pub(crate) fn ring_items_at(

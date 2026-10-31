@@ -14,3 +14,18 @@ optional-lookup methods. It does not expose the former generic `TiSlice` API.
 `RouterStatusIdx`, `HsDirPos`, and all public signatures and visibility are
 unchanged. Owned microdescriptor/ring containers are private, retain distinct
 index types and bounds checks, and preserve their index-keyed `Debug` output.
+
+BREAKING: Remove the `hs-service` feature, `NetDir::hs_dirs_upload`,
+`NetDir::hs_all_time_periods`, deprecated `NetDir::hs_dirs`, `HsDirOp` and its
+`Upload`/`Download` variants, and `NetParameters::hsdir_spread_store`. The
+fork retains descriptor download selection through `NetDir::hs_dirs_download`.
+
+BREAKING: Remove the public `HsDirParams` re-export and its `time_period`,
+`start_of_shard_rand_period`, and `offset_within_srv_period` methods. The
+parameter type remains private to the crate, with its existing derived traits.
+Its fields and `compute` are now `pub(super)`; `compute` returns the current
+ring's parameters directly instead of `HsDirs<HsDirParams>`.
+
+REMOVED (crate-visible): `HsDirs<D>` and its `Clone`/`Debug` implementations,
+`map`, `iter`, and `iter_for_op`. The directory now stores one descriptor
+fetch ring, preserving its shared-random-value cache comparison.

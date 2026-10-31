@@ -24,7 +24,6 @@ experimental = ["experimental-api", "testing"]
 # feature voids your "semver warrantee".
 experimental-api = ["visibility", "__is_experimental"]
 hs-client = ["hs-common"]
-hs-service = ["hs-common", "tor-hscrypto/ope"]
 hs-common = [
     "digest",
     "hex",
@@ -40,7 +39,6 @@ testing = ["hex", "postage", "tor-netdoc/build_docs", "__is_experimental"]
 
 full = [
     "hs-client",
-    "hs-service",
     "tor-basic-utils/full",
     "tor-error/full",
     "tor-hscrypto?/full",

@@ -574,11 +574,6 @@ pub struct NetParameters {
     pub hsdir_spread_fetch: BoundedInt32<1, 128> = (3)
         from "hsdir_spread_fetch",
 
-    /// The number of HSDir instances, at each position in the hash ring, that
-    /// should be considered when uploading an onion service descriptor.
-    pub hsdir_spread_store: BoundedInt32<1,128> = (4)
-        from "hsdir_spread_store",
-
     /// Largest allowable v3 onion service size (in bytes).
     pub hsdir_max_desc_size: BoundedInt32<1, {i32::MAX}> = (50_000)
         from "HSV3MaxDescriptorSize",
