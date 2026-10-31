@@ -37,7 +37,6 @@ full = [
     "tor-keymgr?/full",
     "tor-async-utils/full",
     "tor-persist/full",
-    "oneshot-fused-workaround/full",
     "slotmap-careful/full",
     "tor-memquota/full",
     "tor-protover/full",
@@ -56,7 +55,6 @@ educe = "0.4.23"
 either = "1"
 futures = "0.3.34"
 itertools = "0.15.0"
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
 rand = "0.10.3"
 safelog = { path = "../safelog", version = "0.10.0" }
 slotmap-careful = { path = "../slotmap-careful", version = "0.9.0" }

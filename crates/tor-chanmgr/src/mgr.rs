@@ -6,10 +6,10 @@ use crate::{ChanProvenance, ChannelConfig, ChannelUsage, Dormancy, Error, Result
 
 use async_trait::async_trait;
 use futures::future::Shared;
-use oneshot_fused_workaround as oneshot;
 use std::result::Result as StdResult;
 use std::sync::Arc;
 use std::time::Duration;
+use tor_basic_utils::oneshot;
 use tor_error::{error_report, internal};
 use tor_linkspec::{HasChanMethod, HasRelayIds};
 use tor_netdir::params::NetParameters;

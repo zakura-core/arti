@@ -52,7 +52,7 @@ use tor_llcrypto::pk;
 use web_time_compat::{Duration, Instant, SystemTime};
 
 use futures::SinkExt as _;
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 use tor_rtcompat::{DynTimeProvider, SleepProvider as _};
 use tracing::{debug, instrument, trace, warn};
 

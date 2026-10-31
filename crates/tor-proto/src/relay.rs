@@ -21,7 +21,7 @@ pub use channel::create_handler::{
 };
 
 use derive_deftly::Deftly;
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 
 use tor_cell::chancell::msg::{self as chanmsg};
 use tor_cell::relaycell::StreamId;

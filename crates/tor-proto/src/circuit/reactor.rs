@@ -238,7 +238,7 @@ use std::sync::Arc;
 use derive_deftly::Deftly;
 use futures::channel::mpsc;
 use futures::{FutureExt as _, StreamExt as _, select_biased};
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 use tracing::trace;
 
 use tor_cell::chancell::CircId;

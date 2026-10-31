@@ -76,7 +76,7 @@ use crate::circuit::UniqId;
 use super::{ClientTunnel, TargetHop};
 
 use futures::channel::mpsc;
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 
 use futures::FutureExt as _;
 use std::collections::HashMap;

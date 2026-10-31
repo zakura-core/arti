@@ -32,7 +32,7 @@ use strum::EnumIter;
 //    tracing-test = { version = "0.2.4", features = ["no-env-filter"] }
 use tracing::{error, trace};
 
-use oneshot_fused_workaround::{self as oneshot, Canceled};
+use tor_basic_utils::oneshot::{self, Canceled};
 use tor_error::error_report;
 use tor_rtcompat::join_set::FuturesJoinSet;
 use tor_rtcompat::{Blocking, JoinSetProvider, ToplevelBlockOn};

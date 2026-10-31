@@ -36,7 +36,6 @@ full = [
     "tor-rtcompat/full",
     "tor-async-utils/full",
     "tor-persist/full",
-    "oneshot-fused-workaround/full",
     "tor-protover/full",
     "tor-dircommon/full",
     "web-time-compat/full",
@@ -76,7 +75,6 @@ humantime = "2"
 humantime-serde = "1.1.1"
 itertools = "0.15.0"
 memmap2 = { version = "0.9.12", optional = true }
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
 paste = "1.0.15"
 rand = "0.10.3"
 # NOTE: Indirectly relax `libsqlite3-sys` version to a range because only one version can appear in a dependent

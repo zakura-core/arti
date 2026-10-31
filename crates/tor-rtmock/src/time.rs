@@ -612,9 +612,9 @@ mod test {
     #[test]
     fn time_moves_on() {
         test_with_all_runtimes!(|_| async {
-            use oneshot_fused_workaround as oneshot;
             use std::sync::atomic::AtomicBool;
             use std::sync::atomic::Ordering;
+            use tor_basic_utils::oneshot;
 
             let sp = MockSleepProvider::new(SystemTime::get());
             let one_hour = Duration::new(3600, 0);

@@ -38,7 +38,6 @@ full = [
     "tor-units/full",
     "tor-hscrypto?/full",
     "tor-log-ratelim/full",
-    "oneshot-fused-workaround/full",
     "tor-memquota/full",
     "slotmap-careful/full",
     "caret/full",
@@ -105,7 +104,6 @@ hkdf = "0.12.4"
 hmac = "0.12.1"
 itertools = "0.15.0"
 maybenot = { version = "2.2.2", optional = true }
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
 pin-project = "1"
 polyval = { version = "0.7" }
 rand = "0.10.3"

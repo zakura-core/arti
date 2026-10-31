@@ -370,7 +370,7 @@ pub(crate) mod test {
 
     use futures::AsyncReadExt as _;
     use futures::SinkExt as _;
-    use oneshot_fused_workaround as oneshot;
+    use tor_basic_utils::oneshot;
     use tracing_test::traced_test;
 
     use tor_basic_utils::test_rng::{TestingRng, testing_rng};

@@ -12,3 +12,6 @@ More substantial sets of functionality with particular themes
 are to be found in other `tor-*` crates.
 
 License: MIT OR Apache-2.0
+
+Fused oneshot channels in [`oneshot`] preserve cancellation when selected with
+`futures::select!`, including a sender dropped before the first receiver poll.

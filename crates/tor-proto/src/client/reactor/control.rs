@@ -41,7 +41,7 @@ use tor_cell::relaycell::msg::SendmeTag;
 #[cfg(feature = "conflux")]
 use super::{Circuit, ConfluxLinkResultChannel};
 
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 
 use crate::crypto::handshake::ntor::NtorPublicKey;
 use tor_linkspec::{EncodedLinkSpec, OwnedChanTarget};

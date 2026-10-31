@@ -258,7 +258,7 @@ mod tests {
     use std::task::Waker;
 
     use futures::{StreamExt as _, executor::block_on, future::poll_fn};
-    use oneshot_fused_workaround as oneshot;
+    use tor_basic_utils::oneshot;
     use tor_rtmock::MockRuntime;
 
     use super::*;

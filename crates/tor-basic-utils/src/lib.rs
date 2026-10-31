@@ -59,6 +59,7 @@ pub mod intern;
 pub mod iter;
 pub mod n_key_list;
 pub mod n_key_set;
+pub mod oneshot;
 pub mod onionperf_types;
 pub mod rand_hostname;
 pub mod rangebounds;

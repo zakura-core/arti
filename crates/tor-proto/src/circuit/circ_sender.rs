@@ -10,8 +10,8 @@ use std::pin::Pin;
 use std::task::{self, Context, Poll};
 
 use futures::{FutureExt as _, SinkExt as _, Stream, StreamExt as _};
-use oneshot_fused_workaround as oneshot;
 use tor_basic_utils::assert_val_impl_trait;
+use tor_basic_utils::oneshot;
 use tor_cell::chancell::msg::{AnyChanMsg, Destroy};
 use tor_memquota::mq_queue::{self, ChannelSpec, MpscSpec};
 
