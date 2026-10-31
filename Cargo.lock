@@ -125,64 +125,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
 
 [[package]]
-name = "arti-client"
-version = "0.47.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "cfg-if",
- "derive-deftly",
- "derive_more",
- "educe",
- "fs-mistrust",
- "futures",
- "futures-rustls",
- "hostname-validator",
- "humantime",
- "humantime-serde",
- "libc",
- "once_cell",
- "rand 0.10.3",
- "rustls",
- "safelog",
- "serde",
- "serde_json",
- "strum",
- "tempfile",
- "thiserror 2.0.21",
- "time",
- "toml",
- "tor-async-utils",
- "tor-basic-utils",
- "tor-chanmgr",
- "tor-circmgr",
- "tor-config",
- "tor-config-path",
- "tor-dircommon",
- "tor-dirmgr",
- "tor-error",
- "tor-guardmgr",
- "tor-hsclient",
- "tor-hscrypto",
- "tor-keymgr",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-memquota",
- "tor-netdir",
- "tor-netdoc",
- "tor-persist",
- "tor-proto",
- "tor-protover",
- "tor-relay-selection",
- "tor-rtcompat",
- "tracing",
- "tracing-test",
- "visibility",
- "void",
- "web-time-compat",
-]
-
-[[package]]
 name = "assert_matches"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -323,10 +265,6 @@ name = "bytes"
 version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
-
-[[package]]
-name = "caret"
-version = "0.11.0"
 
 [[package]]
 name = "cast"
@@ -1132,24 +1070,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 
 [[package]]
-name = "fs-mistrust"
-version = "0.16.0"
-dependencies = [
- "assert_matches",
- "dirs-sys",
- "extend",
- "libc",
- "pwd-grp",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.21",
- "toml",
- "void",
- "walkdir",
-]
-
-[[package]]
 name = "funty"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1642,8 +1562,8 @@ dependencies = [
  "clap",
  "rand 0.10.3",
  "ssh-key-fork-arti",
- "tor-basic-utils",
- "tor-llcrypto",
+ "zakura-tor-basic-utils",
+ "zakura-tor-llcrypto",
 ]
 
 [[package]]
@@ -2671,20 +2591,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
-name = "safelog"
-version = "0.10.0"
-dependencies = [
- "derive_more",
- "educe",
- "either",
- "fluid-let",
- "serde",
- "serial_test",
- "static_assertions",
- "thiserror 2.0.21",
-]
-
-[[package]]
 name = "same-file"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2938,17 +2844,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "slotmap-careful"
-version = "0.9.0"
-dependencies = [
- "paste",
- "serde",
- "serde_json",
- "slotmap",
- "thiserror 2.0.21",
-]
-
-[[package]]
 name = "smallvec"
 version = "1.16.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3165,16 +3060,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "test-temp-dir"
-version = "0.9.0"
-dependencies = [
- "anyhow",
- "derive_more",
- "educe",
- "tempfile",
-]
-
-[[package]]
 name = "testresult"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3384,1096 +3269,6 @@ name = "toml_writer"
 version = "1.1.3+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06bdbd8cfc056b8d2e2e85f29b56a3bdbecb527cef81eb39e3e7b98af4652770"
-
-[[package]]
-name = "tor-async-utils"
-version = "0.47.0"
-dependencies = [
- "cfg-if",
- "criterion",
- "derive-deftly",
- "educe",
- "event-listener",
- "extend",
- "futures",
- "futures-await-test",
- "pin-project",
- "slotmap-careful",
- "sync_wrapper",
- "thiserror 2.0.21",
- "tokio",
- "tokio-util",
- "tor-basic-utils",
- "tor-error",
- "tor-rtcompat",
- "tor-rtmock",
- "tracing",
- "visibility",
- "void",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-basic-utils"
-version = "0.47.0"
-dependencies = [
- "derive-deftly",
- "derive_more",
- "educe",
- "extend",
- "futures",
- "getrandom 0.4.3",
- "hex",
- "itertools 0.15.0",
- "libc",
- "paste",
- "rand 0.10.3",
- "rand_chacha 0.10.0",
- "serde",
- "serde-value",
- "serde_json",
- "slab",
- "smallvec",
- "thiserror 2.0.21",
- "tracing",
- "weak-table",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-bytes"
-version = "0.47.0"
-dependencies = [
- "bytes",
- "derive-deftly",
- "digest 0.10.7",
- "educe",
- "getrandom 0.4.3",
- "hex-literal",
- "safelog",
- "thiserror 2.0.21",
- "tor-error",
- "tor-llcrypto",
- "zeroize",
-]
-
-[[package]]
-name = "tor-cell"
-version = "0.47.0"
-dependencies = [
- "bitflags",
- "bytes",
- "caret",
- "derive-deftly",
- "derive_more",
- "educe",
- "getset",
- "hex",
- "hex-literal",
- "itertools 0.15.0",
- "paste",
- "rand 0.10.3",
- "smallvec",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-bytes",
- "tor-cert",
- "tor-error",
- "tor-hscrypto",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-memquota",
- "tor-protover",
- "tor-units",
- "void",
-]
-
-[[package]]
-name = "tor-cert"
-version = "0.47.0"
-dependencies = [
- "base64ct",
- "caret",
- "derive_more",
- "digest 0.10.7",
- "hex-literal",
- "humantime",
- "rand 0.10.3",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-bytes",
- "tor-cert-x509",
- "tor-checkable",
- "tor-error",
- "tor-llcrypto",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-cert-x509"
-version = "0.47.0"
-dependencies = [
- "digest 0.10.7",
- "ecdsa",
- "p256",
- "pem",
- "rand 0.10.3",
- "rsa",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-error",
- "tor-llcrypto",
- "web-time-compat",
- "x509-cert",
-]
-
-[[package]]
-name = "tor-chanmgr"
-version = "0.47.0"
-dependencies = [
- "async-trait",
- "base64ct",
- "caret",
- "cfg-if",
- "derive-deftly",
- "derive_more",
- "educe",
- "float_eq",
- "futures",
- "futures-await-test",
- "hex-literal",
- "httparse",
- "itertools 0.15.0",
- "metrics",
- "percent-encoding",
- "rand 0.10.3",
- "safelog",
- "serde",
- "serde_test",
- "thiserror 2.0.21",
- "tor-async-utils",
- "tor-basic-utils",
- "tor-cell",
- "tor-config",
- "tor-error",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-memquota",
- "tor-netdir",
- "tor-proto",
- "tor-rtcompat",
- "tor-rtmock",
- "tor-socksproto",
- "tor-units",
- "tracing",
- "void",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-checkable"
-version = "0.47.0"
-dependencies = [
- "humantime",
- "itertools 0.15.0",
- "signature",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-llcrypto",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-circmgr"
-version = "0.47.0"
-dependencies = [
- "async-trait",
- "cfg-if",
- "derive-deftly",
- "derive_more",
- "dyn-clone",
- "educe",
- "futures",
- "futures-await-test",
- "getset",
- "hex",
- "humantime-serde",
- "itertools 0.15.0",
- "once_cell",
- "pin-project",
- "rand 0.10.3",
- "safelog",
- "serde",
- "thiserror 2.0.21",
- "tor-async-utils",
- "tor-basic-utils",
- "tor-cell",
- "tor-chanmgr",
- "tor-config",
- "tor-dircommon",
- "tor-error",
- "tor-guardmgr",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-memquota",
- "tor-netdir",
- "tor-netdoc",
- "tor-persist",
- "tor-proto",
- "tor-protover",
- "tor-relay-selection",
- "tor-rtcompat",
- "tor-rtmock",
- "tor-units",
- "tracing",
- "visibility",
- "weak-table",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-config"
-version = "0.47.0"
-dependencies = [
- "assert_matches",
- "cfg-if",
- "derive-deftly",
- "educe",
- "either",
- "extend",
- "fs-mistrust",
- "futures",
- "getset",
- "humantime-serde",
- "itertools 0.15.0",
- "notify",
- "paste",
- "postage",
- "serde",
- "serde-value",
- "serde_ignored",
- "serde_json",
- "strum",
- "tempfile",
- "test-temp-dir",
- "thiserror 2.0.21",
- "toml",
- "tor-basic-utils",
- "tor-error",
- "tor-rtcompat",
- "tracing",
- "tracing-test",
- "void",
-]
-
-[[package]]
-name = "tor-config-path"
-version = "0.47.0"
-dependencies = [
- "assert_matches",
- "directories",
- "rmp-serde",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "toml",
- "tor-error",
-]
-
-[[package]]
-name = "tor-consdiff"
-version = "0.47.0"
-dependencies = [
- "derive_more",
- "digest 0.10.7",
- "hex",
- "imara-diff",
- "rand 0.10.3",
- "static_assertions",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-error",
- "tor-llcrypto",
- "tor-netdoc",
-]
-
-[[package]]
-name = "tor-dirclient"
-version = "0.47.0"
-dependencies = [
- "async-compression",
- "base64ct",
- "derive_more",
- "futures",
- "futures-await-test",
- "hex",
- "http",
- "httparse",
- "httpdate",
- "itertools 0.15.0",
- "thiserror 2.0.21",
- "tor-circmgr",
- "tor-error",
- "tor-hscrypto",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-netdoc",
- "tor-proto",
- "tor-rtcompat",
- "tor-rtmock",
- "tracing",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-dircommon"
-version = "0.47.0"
-dependencies = [
- "base64ct",
- "derive-deftly",
- "getset",
- "http",
- "humantime",
- "humantime-serde",
- "serde",
- "thiserror 2.0.21",
- "toml",
- "tor-basic-utils",
- "tor-checkable",
- "tor-config",
- "tor-error",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-netdoc",
- "tracing",
-]
-
-[[package]]
-name = "tor-dirmgr"
-version = "0.47.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64ct",
- "derive_more",
- "digest 0.10.7",
- "educe",
- "event-listener",
- "filetime",
- "float_eq",
- "fs-mistrust",
- "futures",
- "hex",
- "hex-literal",
- "httpdate",
- "humantime",
- "humantime-serde",
- "itertools 0.15.0",
- "memmap2",
- "paste",
- "rand 0.10.3",
- "rusqlite",
- "safelog",
- "scopeguard",
- "serde",
- "serde_json",
- "signature",
- "static_assertions",
- "strum",
- "tempfile",
- "thiserror 2.0.21",
- "time",
- "tor-async-utils",
- "tor-basic-utils",
- "tor-checkable",
- "tor-circmgr",
- "tor-config",
- "tor-consdiff",
- "tor-dirclient",
- "tor-dircommon",
- "tor-error",
- "tor-guardmgr",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-netdir",
- "tor-netdoc",
- "tor-persist",
- "tor-proto",
- "tor-protover",
- "tor-rtcompat",
- "tor-rtmock",
- "tracing",
- "tracing-test",
- "void",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-error"
-version = "0.47.0"
-dependencies = [
- "anyhow",
- "derive_more",
- "futures",
- "http",
- "humantime",
- "paste",
- "static_assertions",
- "strum",
- "thiserror 2.0.21",
- "tracing",
- "tracing-test",
- "void",
- "web-time",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-guardmgr"
-version = "0.47.0"
-dependencies = [
- "derive-deftly",
- "derive_more",
- "educe",
- "float_eq",
- "fs-mistrust",
- "futures",
- "getset",
- "humantime",
- "humantime-serde",
- "itertools 0.15.0",
- "pin-project",
- "rand 0.10.3",
- "safelog",
- "serde",
- "serde_json",
- "strum",
- "tempfile",
- "thiserror 2.0.21",
- "toml",
- "tor-async-utils",
- "tor-basic-utils",
- "tor-config",
- "tor-dircommon",
- "tor-error",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-netdir",
- "tor-netdoc",
- "tor-persist",
- "tor-proto",
- "tor-relay-selection",
- "tor-rtcompat",
- "tor-rtmock",
- "tor-units",
- "tracing",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-hsclient"
-version = "0.47.0"
-dependencies = [
- "async-trait",
- "cfg-if",
- "derive-deftly",
- "derive_more",
- "educe",
- "either",
- "futures",
- "humantime",
- "itertools 0.15.0",
- "rand 0.10.3",
- "safelog",
- "slotmap-careful",
- "strum",
- "thiserror 2.0.21",
- "tokio",
- "tor-async-utils",
- "tor-basic-utils",
- "tor-bytes",
- "tor-cell",
- "tor-chanmgr",
- "tor-checkable",
- "tor-circmgr",
- "tor-config",
- "tor-dirclient",
- "tor-error",
- "tor-guardmgr",
- "tor-hscrypto",
- "tor-keymgr",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-memquota",
- "tor-netdir",
- "tor-netdoc",
- "tor-persist",
- "tor-proto",
- "tor-protover",
- "tor-rtcompat",
- "tor-rtmock",
- "tracing",
- "tracing-test",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-hscrypto"
-version = "0.47.0"
-dependencies = [
- "data-encoding",
- "derive-deftly",
- "derive_more",
- "digest 0.10.7",
- "hex",
- "hex-literal",
- "humantime",
- "itertools 0.15.0",
- "paste",
- "rand 0.10.3",
- "safelog",
- "serde",
- "signature",
- "subtle",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-bytes",
- "tor-error",
- "tor-key-forge",
- "tor-llcrypto",
- "tor-memquota",
- "tor-units",
- "void",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-key-forge"
-version = "0.47.0"
-dependencies = [
- "derive-deftly",
- "derive_more",
- "paste",
- "rand 0.10.3",
- "rsa",
- "signature",
- "ssh-key-fork-arti",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-bytes",
- "tor-cert",
- "tor-checkable",
- "tor-error",
- "tor-llcrypto",
-]
-
-[[package]]
-name = "tor-keymgr"
-version = "0.47.0"
-dependencies = [
- "arrayvec",
- "cfg-if",
- "data-encoding",
- "derive-deftly",
- "derive_more",
- "dyn-clone",
- "fs-mistrust",
- "getset",
- "glob-match",
- "humantime",
- "itertools 0.15.0",
- "paste",
- "rand 0.10.3",
- "safelog",
- "serde",
- "serde_json",
- "signature",
- "ssh-key-fork-arti",
- "tempfile",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-bytes",
- "tor-cert",
- "tor-checkable",
- "tor-config",
- "tor-config-path",
- "tor-error",
- "tor-hscrypto",
- "tor-key-forge",
- "tor-llcrypto",
- "tor-persist",
- "tracing",
- "visibility",
- "walkdir",
- "web-time-compat",
- "zeroize",
-]
-
-[[package]]
-name = "tor-linkspec"
-version = "0.47.0"
-dependencies = [
- "base64ct",
- "by_address",
- "caret",
- "derive-deftly",
- "derive_more",
- "hex",
- "hex-literal",
- "itertools 0.15.0",
- "safelog",
- "serde",
- "serde_test",
- "strum",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-bytes",
- "tor-config",
- "tor-llcrypto",
- "tor-memquota",
- "tor-protover",
-]
-
-[[package]]
-name = "tor-llcrypto"
-version = "0.47.0"
-dependencies = [
- "aes",
- "base64ct",
- "cipher 0.5.2",
- "ctr",
- "curve25519-dalek",
- "derive-deftly",
- "derive_more",
- "digest 0.10.7",
- "ed25519-dalek",
- "educe",
- "getrandom 0.2.17",
- "getrandom 0.3.4",
- "getrandom 0.4.3",
- "hex",
- "hex-literal",
- "rand 0.10.3",
- "rand_chacha 0.10.0",
- "rand_core 0.10.1",
- "rand_core 0.6.4",
- "rand_jitter",
- "rdrand",
- "reseeding_rng",
- "rsa",
- "safelog",
- "serde",
- "serde_test",
- "sha1",
- "sha2",
- "sha3 0.10.9",
- "signature",
- "subtle",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-error",
- "tor-memquota-cost",
- "visibility",
- "x25519-dalek",
- "zeroize",
-]
-
-[[package]]
-name = "tor-log-ratelim"
-version = "0.47.0"
-dependencies = [
- "futures",
- "humantime",
- "thiserror 2.0.21",
- "tor-error",
- "tor-rtcompat",
- "tracing",
- "weak-table",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-memquota"
-version = "0.47.0"
-dependencies = [
- "cfg-if",
- "derive-deftly",
- "derive_more",
- "dyn-clone",
- "educe",
- "extend",
- "futures",
- "itertools 0.15.0",
- "libc",
- "paste",
- "pin-project",
- "rand 0.10.3",
- "safelog",
- "serde",
- "serde_json",
- "slotmap-careful",
- "static_assertions",
- "sysinfo",
- "thiserror 2.0.21",
- "tor-async-utils",
- "tor-basic-utils",
- "tor-config",
- "tor-error",
- "tor-log-ratelim",
- "tor-memquota-cost",
- "tor-rtcompat",
- "tor-rtmock",
- "tracing",
- "tracing-test",
- "visibility",
- "void",
- "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "tor-memquota-cost"
-version = "0.47.0"
-dependencies = [
- "derive-deftly",
- "itertools 0.15.0",
- "paste",
- "safelog",
- "serde_json",
- "void",
-]
-
-[[package]]
-name = "tor-netdir"
-version = "0.47.0"
-dependencies = [
- "async-trait",
- "bitflags",
- "derive_more",
- "digest 0.10.7",
- "float_eq",
- "futures",
- "hex",
- "hex-literal",
- "humantime",
- "itertools 0.15.0",
- "postage",
- "rand 0.10.3",
- "serde",
- "strum",
- "thiserror 2.0.21",
- "time",
- "tor-basic-utils",
- "tor-error",
- "tor-hscrypto",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-netdoc",
- "tor-protover",
- "tor-units",
- "tracing",
- "visibility",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-netdoc"
-version = "0.47.0"
-dependencies = [
- "anyhow",
- "arrayvec",
- "assert_matches",
- "base64ct",
- "cipher 0.5.2",
- "derive-deftly",
- "derive_more",
- "digest 0.10.7",
- "educe",
- "extend",
- "getset",
- "hex",
- "hex-literal",
- "hostname-validator",
- "humantime",
- "imara-diff",
- "ipnet",
- "iprange",
- "itertools 0.15.0",
- "memchr",
- "paste",
- "pem",
- "rand 0.10.3",
- "rangemap",
- "regex",
- "serde",
- "serde_json",
- "serde_test",
- "signature",
- "smallvec",
- "strum",
- "subtle",
- "testresult",
- "thiserror 2.0.21",
- "time",
- "tor-basic-utils",
- "tor-bytes",
- "tor-cell",
- "tor-cert",
- "tor-checkable",
- "tor-error",
- "tor-hscrypto",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-protover",
- "tor-units",
- "visibility",
- "void",
- "web-time-compat",
- "zeroize",
-]
-
-[[package]]
-name = "tor-persist"
-version = "0.47.0"
-dependencies = [
- "anyhow",
- "derive-deftly",
- "derive_more",
- "extend",
- "filetime",
- "fs-mistrust",
- "futures",
- "getset",
- "humantime",
- "itertools 0.15.0",
- "libc",
- "paste",
- "serde",
- "serde_json",
- "tempfile",
- "test-temp-dir",
- "thiserror 2.0.21",
- "time",
- "tor-basic-utils",
- "tor-error",
- "tracing",
- "tracing-test",
- "void",
- "web-time-compat",
- "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "tor-proto"
-version = "0.47.0"
-dependencies = [
- "aes",
- "assert_matches",
- "async-trait",
- "asynchronous-codec",
- "bitvec",
- "bytes",
- "caret",
- "cfg-if",
- "cipher 0.5.2",
- "coarsetime",
- "criterion",
- "criterion-cycles-per-byte",
- "ctr",
- "derive-deftly",
- "derive_more",
- "digest 0.10.7",
- "educe",
- "futures",
- "futures-util",
- "getset",
- "hex",
- "hex-literal",
- "hkdf",
- "hmac",
- "humantime",
- "itertools 0.15.0",
- "maybenot",
- "pin-project",
- "polyval",
- "rand 0.10.3",
- "rand 0.9.5",
- "rand_core 0.10.1",
- "regex",
- "safelog",
- "slotmap-careful",
- "smallvec",
- "static_assertions",
- "statrs",
- "strum",
- "subtle",
- "thiserror 2.0.21",
- "tokio",
- "tokio-util",
- "tor-async-utils",
- "tor-basic-utils",
- "tor-bytes",
- "tor-cell",
- "tor-cert",
- "tor-checkable",
- "tor-config",
- "tor-error",
- "tor-hscrypto",
- "tor-key-forge",
- "tor-linkspec",
- "tor-llcrypto",
- "tor-log-ratelim",
- "tor-memquota",
- "tor-protover",
- "tor-relay-crypto",
- "tor-rtcompat",
- "tor-rtmock",
- "tor-units",
- "tracing",
- "tracing-test",
- "typenum",
- "visibility",
- "void",
- "web-time-compat",
- "zeroize",
-]
-
-[[package]]
-name = "tor-protover"
-version = "0.47.0"
-dependencies = [
- "caret",
- "derive-deftly",
- "derive_more",
- "itertools 0.15.0",
- "paste",
- "serde_core",
- "serde_test",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-bytes",
-]
-
-[[package]]
-name = "tor-relay-crypto"
-version = "0.47.0"
-dependencies = [
- "derive-deftly",
- "derive_more",
- "humantime",
- "tor-cert",
- "tor-checkable",
- "tor-error",
- "tor-key-forge",
- "tor-keymgr",
- "tor-llcrypto",
- "tor-persist",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-relay-selection"
-version = "0.47.0"
-dependencies = [
- "rand 0.10.3",
- "serde",
- "tor-basic-utils",
- "tor-linkspec",
- "tor-netdir",
- "tor-netdoc",
-]
-
-[[package]]
-name = "tor-rtcompat"
-version = "0.47.0"
-dependencies = [
- "arbitrary",
- "assert_matches",
- "async-trait",
- "asynchronous-codec",
- "cfg-if",
- "coarsetime",
- "derive_more",
- "dyn-clone",
- "educe",
- "futures",
- "futures-rustls",
- "getset",
- "hex",
- "libc",
- "paste",
- "pin-project",
- "rustls",
- "rustls-pki-types",
- "rustls-webpki",
- "socket2",
- "thiserror 2.0.21",
- "tokio",
- "tokio-util",
- "tor-basic-utils",
- "tor-cert-x509",
- "tor-error",
- "tracing",
- "void",
- "web-time-compat",
- "zeroize",
-]
-
-[[package]]
-name = "tor-rtmock"
-version = "0.47.0"
-dependencies = [
- "assert_matches",
- "async-trait",
- "derive-deftly",
- "derive_more",
- "educe",
- "futures",
- "futures-await-test",
- "humantime",
- "itertools 0.15.0",
- "pin-project",
- "priority-queue",
- "rand 0.10.3",
- "slotmap-careful",
- "strum",
- "thiserror 2.0.21",
- "tor-basic-utils",
- "tor-error",
- "tor-rtcompat",
- "tracing",
- "tracing-test",
- "void",
- "web-time-compat",
-]
-
-[[package]]
-name = "tor-socksproto"
-version = "0.47.0"
-dependencies = [
- "anyhow",
- "arbitrary",
- "caret",
- "derive-deftly",
- "educe",
- "hex-literal",
- "safelog",
- "subtle",
- "thiserror 2.0.21",
- "tor-bytes",
- "tor-error",
-]
-
-[[package]]
-name = "tor-units"
-version = "0.47.0"
-dependencies = [
- "derive-deftly",
- "derive_more",
- "float-cmp",
- "serde",
- "thiserror 2.0.21",
- "tor-memquota",
-]
 
 [[package]]
 name = "tracing"
@@ -4745,13 +3540,6 @@ checksum = "5a6580f308b1fad9207618087a65c04e7a10bc77e02c8e84e9b00dd4b12fa0bb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "web-time-compat"
-version = "0.3.0"
-dependencies = [
- "web-time",
 ]
 
 [[package]]
@@ -5108,6 +3896,1218 @@ dependencies = [
  "signature",
  "spki",
  "tls_codec",
+]
+
+[[package]]
+name = "zakura-arti-client"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "cfg-if",
+ "derive-deftly",
+ "derive_more",
+ "educe",
+ "futures",
+ "futures-rustls",
+ "hostname-validator",
+ "humantime",
+ "humantime-serde",
+ "libc",
+ "once_cell",
+ "rand 0.10.3",
+ "rustls",
+ "serde",
+ "serde_json",
+ "strum",
+ "tempfile",
+ "thiserror 2.0.21",
+ "time",
+ "toml",
+ "tracing",
+ "tracing-test",
+ "visibility",
+ "void",
+ "zakura-fs-mistrust",
+ "zakura-safelog",
+ "zakura-tor-async-utils",
+ "zakura-tor-basic-utils",
+ "zakura-tor-chanmgr",
+ "zakura-tor-circmgr",
+ "zakura-tor-config",
+ "zakura-tor-config-path",
+ "zakura-tor-dircommon",
+ "zakura-tor-dirmgr",
+ "zakura-tor-error",
+ "zakura-tor-guardmgr",
+ "zakura-tor-hsclient",
+ "zakura-tor-hscrypto",
+ "zakura-tor-keymgr",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-memquota",
+ "zakura-tor-netdir",
+ "zakura-tor-netdoc",
+ "zakura-tor-persist",
+ "zakura-tor-proto",
+ "zakura-tor-protover",
+ "zakura-tor-relay-selection",
+ "zakura-tor-rtcompat",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-caret"
+version = "0.11.0-zakura.1"
+
+[[package]]
+name = "zakura-fs-mistrust"
+version = "0.16.0-zakura.1"
+dependencies = [
+ "assert_matches",
+ "dirs-sys",
+ "extend",
+ "libc",
+ "pwd-grp",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+ "toml",
+ "void",
+ "walkdir",
+]
+
+[[package]]
+name = "zakura-safelog"
+version = "0.10.0-zakura.1"
+dependencies = [
+ "derive_more",
+ "educe",
+ "either",
+ "fluid-let",
+ "serde",
+ "serial_test",
+ "static_assertions",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "zakura-slotmap-careful"
+version = "0.9.0-zakura.1"
+dependencies = [
+ "paste",
+ "serde",
+ "serde_json",
+ "slotmap",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "zakura-test-temp-dir"
+version = "0.9.0-zakura.1"
+dependencies = [
+ "anyhow",
+ "derive_more",
+ "educe",
+ "tempfile",
+]
+
+[[package]]
+name = "zakura-tor-async-utils"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "cfg-if",
+ "criterion",
+ "derive-deftly",
+ "educe",
+ "event-listener",
+ "extend",
+ "futures",
+ "futures-await-test",
+ "pin-project",
+ "sync_wrapper",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "visibility",
+ "void",
+ "zakura-slotmap-careful",
+ "zakura-tor-basic-utils",
+ "zakura-tor-error",
+ "zakura-tor-rtcompat",
+ "zakura-tor-rtmock",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-basic-utils"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "derive-deftly",
+ "derive_more",
+ "educe",
+ "extend",
+ "futures",
+ "getrandom 0.4.3",
+ "hex",
+ "itertools 0.15.0",
+ "libc",
+ "paste",
+ "rand 0.10.3",
+ "rand_chacha 0.10.0",
+ "serde",
+ "serde-value",
+ "serde_json",
+ "slab",
+ "smallvec",
+ "thiserror 2.0.21",
+ "tracing",
+ "weak-table",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-bytes"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "bytes",
+ "derive-deftly",
+ "digest 0.10.7",
+ "educe",
+ "getrandom 0.4.3",
+ "hex-literal",
+ "thiserror 2.0.21",
+ "zakura-safelog",
+ "zakura-tor-error",
+ "zakura-tor-llcrypto",
+ "zeroize",
+]
+
+[[package]]
+name = "zakura-tor-cell"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "bitflags",
+ "bytes",
+ "derive-deftly",
+ "derive_more",
+ "educe",
+ "getset",
+ "hex",
+ "hex-literal",
+ "itertools 0.15.0",
+ "paste",
+ "rand 0.10.3",
+ "smallvec",
+ "thiserror 2.0.21",
+ "void",
+ "zakura-caret",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+ "zakura-tor-cert",
+ "zakura-tor-error",
+ "zakura-tor-hscrypto",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-memquota",
+ "zakura-tor-protover",
+ "zakura-tor-units",
+]
+
+[[package]]
+name = "zakura-tor-cert"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "base64ct",
+ "derive_more",
+ "digest 0.10.7",
+ "hex-literal",
+ "humantime",
+ "rand 0.10.3",
+ "thiserror 2.0.21",
+ "zakura-caret",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+ "zakura-tor-cert-x509",
+ "zakura-tor-checkable",
+ "zakura-tor-error",
+ "zakura-tor-llcrypto",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-cert-x509"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "digest 0.10.7",
+ "ecdsa",
+ "p256",
+ "pem",
+ "rand 0.10.3",
+ "rsa",
+ "thiserror 2.0.21",
+ "x509-cert",
+ "zakura-tor-basic-utils",
+ "zakura-tor-error",
+ "zakura-tor-llcrypto",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-chanmgr"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "async-trait",
+ "base64ct",
+ "cfg-if",
+ "derive-deftly",
+ "derive_more",
+ "educe",
+ "float_eq",
+ "futures",
+ "futures-await-test",
+ "hex-literal",
+ "httparse",
+ "itertools 0.15.0",
+ "metrics",
+ "percent-encoding",
+ "rand 0.10.3",
+ "serde",
+ "serde_test",
+ "thiserror 2.0.21",
+ "tracing",
+ "void",
+ "zakura-caret",
+ "zakura-safelog",
+ "zakura-tor-async-utils",
+ "zakura-tor-basic-utils",
+ "zakura-tor-cell",
+ "zakura-tor-config",
+ "zakura-tor-error",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-memquota",
+ "zakura-tor-netdir",
+ "zakura-tor-proto",
+ "zakura-tor-rtcompat",
+ "zakura-tor-rtmock",
+ "zakura-tor-socksproto",
+ "zakura-tor-units",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-checkable"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "humantime",
+ "itertools 0.15.0",
+ "signature",
+ "thiserror 2.0.21",
+ "zakura-tor-basic-utils",
+ "zakura-tor-llcrypto",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-circmgr"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "async-trait",
+ "cfg-if",
+ "derive-deftly",
+ "derive_more",
+ "dyn-clone",
+ "educe",
+ "futures",
+ "futures-await-test",
+ "getset",
+ "hex",
+ "humantime-serde",
+ "itertools 0.15.0",
+ "once_cell",
+ "pin-project",
+ "rand 0.10.3",
+ "serde",
+ "thiserror 2.0.21",
+ "tracing",
+ "visibility",
+ "weak-table",
+ "zakura-safelog",
+ "zakura-tor-async-utils",
+ "zakura-tor-basic-utils",
+ "zakura-tor-cell",
+ "zakura-tor-chanmgr",
+ "zakura-tor-config",
+ "zakura-tor-dircommon",
+ "zakura-tor-error",
+ "zakura-tor-guardmgr",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-memquota",
+ "zakura-tor-netdir",
+ "zakura-tor-netdoc",
+ "zakura-tor-persist",
+ "zakura-tor-proto",
+ "zakura-tor-protover",
+ "zakura-tor-relay-selection",
+ "zakura-tor-rtcompat",
+ "zakura-tor-rtmock",
+ "zakura-tor-units",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-config"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "assert_matches",
+ "cfg-if",
+ "derive-deftly",
+ "educe",
+ "either",
+ "extend",
+ "futures",
+ "getset",
+ "humantime-serde",
+ "itertools 0.15.0",
+ "notify",
+ "paste",
+ "postage",
+ "serde",
+ "serde-value",
+ "serde_ignored",
+ "serde_json",
+ "strum",
+ "tempfile",
+ "thiserror 2.0.21",
+ "toml",
+ "tracing",
+ "tracing-test",
+ "void",
+ "zakura-fs-mistrust",
+ "zakura-test-temp-dir",
+ "zakura-tor-basic-utils",
+ "zakura-tor-error",
+ "zakura-tor-rtcompat",
+]
+
+[[package]]
+name = "zakura-tor-config-path"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "assert_matches",
+ "directories",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "toml",
+ "zakura-tor-error",
+]
+
+[[package]]
+name = "zakura-tor-consdiff"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "derive_more",
+ "digest 0.10.7",
+ "hex",
+ "imara-diff",
+ "rand 0.10.3",
+ "static_assertions",
+ "thiserror 2.0.21",
+ "zakura-tor-basic-utils",
+ "zakura-tor-error",
+ "zakura-tor-llcrypto",
+ "zakura-tor-netdoc",
+]
+
+[[package]]
+name = "zakura-tor-dirclient"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "async-compression",
+ "base64ct",
+ "derive_more",
+ "futures",
+ "futures-await-test",
+ "hex",
+ "http",
+ "httparse",
+ "httpdate",
+ "itertools 0.15.0",
+ "thiserror 2.0.21",
+ "tracing",
+ "zakura-tor-circmgr",
+ "zakura-tor-error",
+ "zakura-tor-hscrypto",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-netdoc",
+ "zakura-tor-proto",
+ "zakura-tor-rtcompat",
+ "zakura-tor-rtmock",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-dircommon"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "base64ct",
+ "derive-deftly",
+ "getset",
+ "http",
+ "humantime",
+ "humantime-serde",
+ "serde",
+ "thiserror 2.0.21",
+ "toml",
+ "tracing",
+ "zakura-tor-basic-utils",
+ "zakura-tor-checkable",
+ "zakura-tor-config",
+ "zakura-tor-error",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-netdoc",
+]
+
+[[package]]
+name = "zakura-tor-dirmgr"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "base64ct",
+ "derive_more",
+ "digest 0.10.7",
+ "educe",
+ "event-listener",
+ "filetime",
+ "float_eq",
+ "futures",
+ "hex",
+ "hex-literal",
+ "httpdate",
+ "humantime",
+ "humantime-serde",
+ "itertools 0.15.0",
+ "memmap2",
+ "paste",
+ "rand 0.10.3",
+ "rusqlite",
+ "scopeguard",
+ "serde",
+ "serde_json",
+ "signature",
+ "static_assertions",
+ "strum",
+ "tempfile",
+ "thiserror 2.0.21",
+ "time",
+ "tracing",
+ "tracing-test",
+ "void",
+ "zakura-fs-mistrust",
+ "zakura-safelog",
+ "zakura-tor-async-utils",
+ "zakura-tor-basic-utils",
+ "zakura-tor-checkable",
+ "zakura-tor-circmgr",
+ "zakura-tor-config",
+ "zakura-tor-consdiff",
+ "zakura-tor-dirclient",
+ "zakura-tor-dircommon",
+ "zakura-tor-error",
+ "zakura-tor-guardmgr",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-netdir",
+ "zakura-tor-netdoc",
+ "zakura-tor-persist",
+ "zakura-tor-proto",
+ "zakura-tor-protover",
+ "zakura-tor-rtcompat",
+ "zakura-tor-rtmock",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-error"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "anyhow",
+ "derive_more",
+ "futures",
+ "http",
+ "humantime",
+ "paste",
+ "static_assertions",
+ "strum",
+ "thiserror 2.0.21",
+ "tracing",
+ "tracing-test",
+ "void",
+ "web-time",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-guardmgr"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "derive-deftly",
+ "derive_more",
+ "educe",
+ "float_eq",
+ "futures",
+ "getset",
+ "humantime",
+ "humantime-serde",
+ "itertools 0.15.0",
+ "pin-project",
+ "rand 0.10.3",
+ "serde",
+ "serde_json",
+ "strum",
+ "tempfile",
+ "thiserror 2.0.21",
+ "toml",
+ "tracing",
+ "zakura-fs-mistrust",
+ "zakura-safelog",
+ "zakura-tor-async-utils",
+ "zakura-tor-basic-utils",
+ "zakura-tor-config",
+ "zakura-tor-dircommon",
+ "zakura-tor-error",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-netdir",
+ "zakura-tor-netdoc",
+ "zakura-tor-persist",
+ "zakura-tor-proto",
+ "zakura-tor-relay-selection",
+ "zakura-tor-rtcompat",
+ "zakura-tor-rtmock",
+ "zakura-tor-units",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-hsclient"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "async-trait",
+ "cfg-if",
+ "derive-deftly",
+ "derive_more",
+ "educe",
+ "either",
+ "futures",
+ "humantime",
+ "itertools 0.15.0",
+ "rand 0.10.3",
+ "strum",
+ "thiserror 2.0.21",
+ "tokio",
+ "tracing",
+ "tracing-test",
+ "zakura-safelog",
+ "zakura-slotmap-careful",
+ "zakura-tor-async-utils",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+ "zakura-tor-cell",
+ "zakura-tor-chanmgr",
+ "zakura-tor-checkable",
+ "zakura-tor-circmgr",
+ "zakura-tor-config",
+ "zakura-tor-dirclient",
+ "zakura-tor-error",
+ "zakura-tor-guardmgr",
+ "zakura-tor-hscrypto",
+ "zakura-tor-keymgr",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-memquota",
+ "zakura-tor-netdir",
+ "zakura-tor-netdoc",
+ "zakura-tor-persist",
+ "zakura-tor-proto",
+ "zakura-tor-protover",
+ "zakura-tor-rtcompat",
+ "zakura-tor-rtmock",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-hscrypto"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "data-encoding",
+ "derive-deftly",
+ "derive_more",
+ "digest 0.10.7",
+ "hex",
+ "hex-literal",
+ "humantime",
+ "itertools 0.15.0",
+ "paste",
+ "rand 0.10.3",
+ "serde",
+ "signature",
+ "subtle",
+ "thiserror 2.0.21",
+ "void",
+ "zakura-safelog",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+ "zakura-tor-error",
+ "zakura-tor-key-forge",
+ "zakura-tor-llcrypto",
+ "zakura-tor-memquota",
+ "zakura-tor-units",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-key-forge"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "derive-deftly",
+ "derive_more",
+ "paste",
+ "rand 0.10.3",
+ "rsa",
+ "signature",
+ "ssh-key-fork-arti",
+ "thiserror 2.0.21",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+ "zakura-tor-cert",
+ "zakura-tor-checkable",
+ "zakura-tor-error",
+ "zakura-tor-llcrypto",
+]
+
+[[package]]
+name = "zakura-tor-keymgr"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "arrayvec",
+ "cfg-if",
+ "data-encoding",
+ "derive-deftly",
+ "derive_more",
+ "dyn-clone",
+ "getset",
+ "glob-match",
+ "humantime",
+ "itertools 0.15.0",
+ "paste",
+ "rand 0.10.3",
+ "serde",
+ "serde_json",
+ "signature",
+ "ssh-key-fork-arti",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tracing",
+ "visibility",
+ "walkdir",
+ "zakura-fs-mistrust",
+ "zakura-safelog",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+ "zakura-tor-cert",
+ "zakura-tor-checkable",
+ "zakura-tor-config",
+ "zakura-tor-config-path",
+ "zakura-tor-error",
+ "zakura-tor-hscrypto",
+ "zakura-tor-key-forge",
+ "zakura-tor-llcrypto",
+ "zakura-tor-persist",
+ "zakura-web-time-compat",
+ "zeroize",
+]
+
+[[package]]
+name = "zakura-tor-linkspec"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "base64ct",
+ "by_address",
+ "derive-deftly",
+ "derive_more",
+ "hex",
+ "hex-literal",
+ "itertools 0.15.0",
+ "serde",
+ "serde_test",
+ "strum",
+ "thiserror 2.0.21",
+ "zakura-caret",
+ "zakura-safelog",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+ "zakura-tor-config",
+ "zakura-tor-llcrypto",
+ "zakura-tor-memquota",
+ "zakura-tor-protover",
+]
+
+[[package]]
+name = "zakura-tor-llcrypto"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "aes",
+ "base64ct",
+ "cipher 0.5.2",
+ "ctr",
+ "curve25519-dalek",
+ "derive-deftly",
+ "derive_more",
+ "digest 0.10.7",
+ "ed25519-dalek",
+ "educe",
+ "getrandom 0.2.17",
+ "getrandom 0.3.4",
+ "getrandom 0.4.3",
+ "hex",
+ "hex-literal",
+ "rand 0.10.3",
+ "rand_chacha 0.10.0",
+ "rand_core 0.10.1",
+ "rand_core 0.6.4",
+ "rand_jitter",
+ "rdrand",
+ "reseeding_rng",
+ "rsa",
+ "serde",
+ "serde_test",
+ "sha1",
+ "sha2",
+ "sha3 0.10.9",
+ "signature",
+ "subtle",
+ "thiserror 2.0.21",
+ "visibility",
+ "x25519-dalek",
+ "zakura-safelog",
+ "zakura-tor-basic-utils",
+ "zakura-tor-error",
+ "zakura-tor-memquota-cost",
+ "zeroize",
+]
+
+[[package]]
+name = "zakura-tor-log-ratelim"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "futures",
+ "humantime",
+ "thiserror 2.0.21",
+ "tracing",
+ "weak-table",
+ "zakura-tor-error",
+ "zakura-tor-rtcompat",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-memquota"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "cfg-if",
+ "derive-deftly",
+ "derive_more",
+ "dyn-clone",
+ "educe",
+ "extend",
+ "futures",
+ "itertools 0.15.0",
+ "libc",
+ "paste",
+ "pin-project",
+ "rand 0.10.3",
+ "serde",
+ "serde_json",
+ "static_assertions",
+ "sysinfo",
+ "thiserror 2.0.21",
+ "tracing",
+ "tracing-test",
+ "visibility",
+ "void",
+ "windows-sys 0.61.2",
+ "zakura-safelog",
+ "zakura-slotmap-careful",
+ "zakura-tor-async-utils",
+ "zakura-tor-basic-utils",
+ "zakura-tor-config",
+ "zakura-tor-error",
+ "zakura-tor-log-ratelim",
+ "zakura-tor-memquota-cost",
+ "zakura-tor-rtcompat",
+ "zakura-tor-rtmock",
+]
+
+[[package]]
+name = "zakura-tor-memquota-cost"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "derive-deftly",
+ "itertools 0.15.0",
+ "paste",
+ "serde_json",
+ "void",
+ "zakura-safelog",
+]
+
+[[package]]
+name = "zakura-tor-netdir"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "async-trait",
+ "bitflags",
+ "derive_more",
+ "digest 0.10.7",
+ "float_eq",
+ "futures",
+ "hex",
+ "hex-literal",
+ "humantime",
+ "itertools 0.15.0",
+ "postage",
+ "rand 0.10.3",
+ "serde",
+ "strum",
+ "thiserror 2.0.21",
+ "time",
+ "tracing",
+ "visibility",
+ "zakura-tor-basic-utils",
+ "zakura-tor-error",
+ "zakura-tor-hscrypto",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-netdoc",
+ "zakura-tor-protover",
+ "zakura-tor-units",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-netdoc"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "anyhow",
+ "arrayvec",
+ "assert_matches",
+ "base64ct",
+ "cipher 0.5.2",
+ "derive-deftly",
+ "derive_more",
+ "digest 0.10.7",
+ "educe",
+ "extend",
+ "getset",
+ "hex",
+ "hex-literal",
+ "hostname-validator",
+ "humantime",
+ "imara-diff",
+ "ipnet",
+ "iprange",
+ "itertools 0.15.0",
+ "memchr",
+ "paste",
+ "pem",
+ "rand 0.10.3",
+ "rangemap",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_test",
+ "signature",
+ "smallvec",
+ "strum",
+ "subtle",
+ "testresult",
+ "thiserror 2.0.21",
+ "time",
+ "visibility",
+ "void",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+ "zakura-tor-cell",
+ "zakura-tor-cert",
+ "zakura-tor-checkable",
+ "zakura-tor-error",
+ "zakura-tor-hscrypto",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-protover",
+ "zakura-tor-units",
+ "zakura-web-time-compat",
+ "zeroize",
+]
+
+[[package]]
+name = "zakura-tor-persist"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "anyhow",
+ "derive-deftly",
+ "derive_more",
+ "extend",
+ "filetime",
+ "futures",
+ "getset",
+ "humantime",
+ "itertools 0.15.0",
+ "libc",
+ "paste",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+ "time",
+ "tracing",
+ "tracing-test",
+ "void",
+ "windows-sys 0.61.2",
+ "zakura-fs-mistrust",
+ "zakura-test-temp-dir",
+ "zakura-tor-basic-utils",
+ "zakura-tor-error",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-proto"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "aes",
+ "assert_matches",
+ "async-trait",
+ "asynchronous-codec",
+ "bitvec",
+ "bytes",
+ "cfg-if",
+ "cipher 0.5.2",
+ "coarsetime",
+ "criterion",
+ "criterion-cycles-per-byte",
+ "ctr",
+ "derive-deftly",
+ "derive_more",
+ "digest 0.10.7",
+ "educe",
+ "futures",
+ "futures-util",
+ "getset",
+ "hex",
+ "hex-literal",
+ "hkdf",
+ "hmac",
+ "humantime",
+ "itertools 0.15.0",
+ "maybenot",
+ "pin-project",
+ "polyval",
+ "rand 0.10.3",
+ "rand 0.9.5",
+ "rand_core 0.10.1",
+ "regex",
+ "smallvec",
+ "static_assertions",
+ "statrs",
+ "strum",
+ "subtle",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "tracing-test",
+ "typenum",
+ "visibility",
+ "void",
+ "zakura-caret",
+ "zakura-safelog",
+ "zakura-slotmap-careful",
+ "zakura-tor-async-utils",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+ "zakura-tor-cell",
+ "zakura-tor-cert",
+ "zakura-tor-checkable",
+ "zakura-tor-config",
+ "zakura-tor-error",
+ "zakura-tor-hscrypto",
+ "zakura-tor-key-forge",
+ "zakura-tor-linkspec",
+ "zakura-tor-llcrypto",
+ "zakura-tor-log-ratelim",
+ "zakura-tor-memquota",
+ "zakura-tor-protover",
+ "zakura-tor-relay-crypto",
+ "zakura-tor-rtcompat",
+ "zakura-tor-rtmock",
+ "zakura-tor-units",
+ "zakura-web-time-compat",
+ "zeroize",
+]
+
+[[package]]
+name = "zakura-tor-protover"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "derive-deftly",
+ "derive_more",
+ "itertools 0.15.0",
+ "paste",
+ "serde_core",
+ "serde_test",
+ "thiserror 2.0.21",
+ "zakura-caret",
+ "zakura-tor-basic-utils",
+ "zakura-tor-bytes",
+]
+
+[[package]]
+name = "zakura-tor-relay-crypto"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "derive-deftly",
+ "derive_more",
+ "humantime",
+ "zakura-tor-cert",
+ "zakura-tor-checkable",
+ "zakura-tor-error",
+ "zakura-tor-key-forge",
+ "zakura-tor-keymgr",
+ "zakura-tor-llcrypto",
+ "zakura-tor-persist",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-relay-selection"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "rand 0.10.3",
+ "serde",
+ "zakura-tor-basic-utils",
+ "zakura-tor-linkspec",
+ "zakura-tor-netdir",
+ "zakura-tor-netdoc",
+]
+
+[[package]]
+name = "zakura-tor-rtcompat"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "arbitrary",
+ "assert_matches",
+ "async-trait",
+ "asynchronous-codec",
+ "cfg-if",
+ "coarsetime",
+ "derive_more",
+ "dyn-clone",
+ "educe",
+ "futures",
+ "futures-rustls",
+ "getset",
+ "hex",
+ "libc",
+ "paste",
+ "pin-project",
+ "rustls",
+ "rustls-pki-types",
+ "rustls-webpki",
+ "socket2",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "void",
+ "zakura-tor-basic-utils",
+ "zakura-tor-cert-x509",
+ "zakura-tor-error",
+ "zakura-web-time-compat",
+ "zeroize",
+]
+
+[[package]]
+name = "zakura-tor-rtmock"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "assert_matches",
+ "async-trait",
+ "derive-deftly",
+ "derive_more",
+ "educe",
+ "futures",
+ "futures-await-test",
+ "humantime",
+ "itertools 0.15.0",
+ "pin-project",
+ "priority-queue",
+ "rand 0.10.3",
+ "strum",
+ "thiserror 2.0.21",
+ "tracing",
+ "tracing-test",
+ "void",
+ "zakura-slotmap-careful",
+ "zakura-tor-basic-utils",
+ "zakura-tor-error",
+ "zakura-tor-rtcompat",
+ "zakura-web-time-compat",
+]
+
+[[package]]
+name = "zakura-tor-socksproto"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "anyhow",
+ "arbitrary",
+ "derive-deftly",
+ "educe",
+ "hex-literal",
+ "subtle",
+ "thiserror 2.0.21",
+ "zakura-caret",
+ "zakura-safelog",
+ "zakura-tor-bytes",
+ "zakura-tor-error",
+]
+
+[[package]]
+name = "zakura-tor-units"
+version = "0.47.0-zakura.1"
+dependencies = [
+ "derive-deftly",
+ "derive_more",
+ "float-cmp",
+ "serde",
+ "thiserror 2.0.21",
+ "zakura-tor-memquota",
+]
+
+[[package]]
+name = "zakura-web-time-compat"
+version = "0.3.0-zakura.1"
+dependencies = [
+ "web-time",
 ]
 
 [[package]]
