@@ -37,13 +37,7 @@ use std::{
 /// If another built-in provider is also enabled through Cargo features, an
 /// application must explicitly install its chosen provider first.
 ///
-#[cfg_attr(
-    docsrs,
-    doc(cfg(all(
-        feature = "rustls",
-        any(feature = "tokio", feature = "async-std", feature = "smol")
-    )))
-)]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "rustls", feature = "tokio"))))]
 #[derive(Clone)]
 #[non_exhaustive]
 pub struct RustlsProvider {

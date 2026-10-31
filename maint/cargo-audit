@@ -39,11 +39,6 @@ IGNORE=(
     # (concat-idents?).
     --ignore RUSTSEC-2024-0436
 
-    # async-std has been discontinued.
-    # Deprecation/removal plan:
-    # <https://gitlab.torproject.org/tpo/core/arti/-/issues/2130>
-    --ignore RUSTSEC-2025-0052
-
     # Bincode is unmaintained.
     #
     # Right now, we do not depend on it directly, but rather transitively

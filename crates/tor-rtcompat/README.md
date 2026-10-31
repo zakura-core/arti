@@ -1,15 +1,14 @@
 # tor-rtcompat
 
-Compatibility between different async runtimes for Arti.
+Runtime abstractions for Arti with Tokio and test executors.
 
 ## Overview
 
-Rust's support for asynchronous programming is powerful, but still
-a bit immature: there are multiple powerful runtimes you can use,
-but they do not expose a consistent set of interfaces.
+This fork supplies a Tokio runtime for embedded wallets. Its runtime traits
+also support deterministic test executors and custom transports.
 
 The [`futures`] API abstracts much of the differences among these
-runtime libraries, but there are still areas where no standard API
+runtime capabilities, but there are still areas where no standard API
 yet exists, including:
  - Network programming.
  - Time and delays.
@@ -22,9 +21,7 @@ require compatibility wrappers to use.
 
 To solve these problems, the `tor-rtcompat` crate provides a set
 of traits that represent a runtime's ability to perform these
-tasks, along with implementations for these traits for the `tokio`
-and `async-std` runtimes.  In the future we hope to add support
-for other runtimes as needed.
+tasks, along with an implementation for the Tokio runtime.
 
 This crate is part of
 [Arti](https://gitlab.torproject.org/tpo/core/arti/), a project to
@@ -65,13 +62,11 @@ You can get a [`Runtime`] in several ways:
   * If you want to construct a default runtime that you won't be
     using for anything besides Arti, you can use [`PreferredRuntime::create()`].
 
-Both of the above methods use the "preferred runtime", which is usually Tokio.
-However, changing the set of Cargo features available can affect this; see
-[`PreferredRuntime`] for more.
+Both methods use the preferred Tokio/Rustls wrapper. See [`PreferredRuntime`]
+for construction and lifetime requirements.
 
   * If you want to use a runtime with an explicitly chosen backend,
-    name its type directly as [`async_std::AsyncStdRustlsRuntime`],
-    [`tokio::TokioRustlsRuntime`] or [`smol::SmolRustlsRuntime`].
+    name its type directly as [`tokio::TokioRustlsRuntime`].
     To construct one of these runtimes, call its `create()` method.  Or if you have already constructed a
     Tokio runtime that you want to use, you can wrap it as a
     [`Runtime`] explicitly with `current()`.
@@ -140,31 +135,16 @@ for a full example of this.
 Features supported by this crate:
 
 * `tokio` -- build with [Tokio](https://tokio.rs/) support
-* `async-std` -- build with [async-std](https://async.rs/) support.
 * `rustls` -- build with [Rustls](https://github.com/rustls/rustls) and its
   Ring cryptographic provider for TLS support. Applications may install their
   own Rustls provider before constructing a runtime. If another built-in
   provider is also enabled, applications must explicitly install their choice.
-
-### Experimental and unstable features
-* `smol` -- build with [smol](https://github.com/smol-rs/smol) support.
-
 
 By default, *this* crate doesn't enable any features. However, you're almost certainly
 using this as part of the `arti-client` crate, which will enable `tokio` and `rustls` in
 its default configuration.
 
 ## Design FAQ
-
-### Why support `async_std`?
-
-Although Tokio currently a more popular and widely supported
-asynchronous runtime than `async_std` is, we believe that it's
-critical to build Arti against multiple runtimes.
-
-By supporting multiple runtimes, we avoid making tokio-specific
-assumptions in our code, which we hope will make it easier to port
-to other environments (like WASM) in the future.
 
 ### Why a `Runtime` trait, and not a set of functions?
 
@@ -174,15 +154,7 @@ implementation.  For example, instead of exposing a
 [`ToplevelBlockOn`] trait to represent blocking until a task is
 done, we could just provide a single global `block_on` function.
 
-That simplification would come at a cost, however.  First of all,
-it would make it harder for us to use Rust's "feature" system
-correctly.  Current features are supposed to be _additive only_,
-but if had a single global runtime, then support for different
-backends would be _mutually exclusive_.  (That is, you couldn't
-have both the tokio and async-std features building at the same
-time.)
-
-Secondly, much of our testing in the rest of Arti relies on the
+Testing in the rest of Arti relies on the
 ability to replace [`Runtime`]s.  By treating a runtime as an
 object, we can override a runtime's view of time, or of the
 network, in order to test asynchronous code effectively.
