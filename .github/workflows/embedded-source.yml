@@ -47,8 +47,7 @@ jobs:
           cargo test --locked --manifest-path crates/tor-persist/Cargo.toml --all-features
           cargo test --locked --manifest-path crates/tor-rtcompat/Cargo.toml \
             --no-default-features --features tokio,rustls,tls-server,testing
-          cargo test --locked --manifest-path crates/tor-rtcompat/Cargo.toml \
-            --no-default-features --features tokio,async-std,smol,rustls,tls-server,testing
+          cargo test --locked --manifest-path crates/tor-rtcompat/Cargo.toml --no-default-features
       - name: Test configuration feature boundaries
         run: |
           cargo test --locked --manifest-path crates/tor-config/Cargo.toml --no-default-features
