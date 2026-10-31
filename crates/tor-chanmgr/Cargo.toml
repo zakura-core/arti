@@ -56,7 +56,6 @@ percent-encoding = "2.3.2"
 rand = "0.10.3"
 safelog = { path = "../safelog", version = "0.10.0" }
 serde = { version = "1.0.229", features = ["derive"] }
-serde_with = { version = "3.24.0", default-features = false, features = ["alloc", "macros"] }
 thiserror = "2"
 tor-async-utils = { version = "0.47.0", path = "../tor-async-utils" }
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
@@ -78,6 +77,7 @@ void = "1"
 web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
 
 [dev-dependencies]
+serde_test = "1.0.177"
 float_eq = "1.0.1"
 futures-await-test = "0.3.0"
 hex-literal = "1.1"
