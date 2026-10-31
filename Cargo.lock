@@ -4025,7 +4025,6 @@ dependencies = [
 name = "tor-hscrypto"
 version = "0.47.0"
 dependencies = [
- "cipher 0.5.2",
  "data-encoding",
  "derive-deftly",
  "derive_more",
@@ -4050,7 +4049,6 @@ dependencies = [
  "tor-units",
  "void",
  "web-time-compat",
- "zeroize",
 ]
 
 [[package]]

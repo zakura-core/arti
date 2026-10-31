@@ -829,26 +829,6 @@ macro_rules! upload_request {
     }
 }
 
-#[cfg(feature = "hs-service")]
-upload_request! {
-
-    /// A request to upload a hidden service descriptor
-    ///
-    /// rend-spec-v3 2.2.6
-    pub struct HsDescUploadRequest(
-        Anonymized,
-        "/tor/hs/3/publish",
-        // A real Tor POST _response_ will always be less than this length, which
-        // will fit into 3 DATA messages at most. (The reply will be a single
-        // HTTP line, followed by a Date header.)
-        // Do not increase this limit without thinking about side channels!
-        //
-        // (Note that the body will be empty, but we need to allow some space
-        // to account for the status line and headers.)
-        1024
-    )
-}
-
 #[cfg(feature = "relay")]
 upload_request! {
     /// A request to upload a router descriptor and optional extra-info document.
