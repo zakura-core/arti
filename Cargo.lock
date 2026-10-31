@@ -4072,7 +4072,6 @@ dependencies = [
  "cfg-if",
  "data-encoding",
  "derive-deftly",
- "derive_builder_fork_arti",
  "derive_more",
  "dyn-clone",
  "fs-mistrust",
