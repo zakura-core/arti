@@ -25,11 +25,11 @@ use crate::config::CircuitTiming;
 use crate::usage::{SupportedTunnelUsage, TargetTunnelUsage};
 use crate::{DirInfo, Error, PathConfig, Result, timeouts};
 
-use retry_error::RetryError;
 use tor_async_utils::mpsc_channel_no_memquota;
 use tor_basic_utils::onionperf_types::{OnionperfCircuitStatus, OnionperfEvent};
 use tor_basic_utils::retry::RetryDelay;
 use tor_config::MutCfg;
+use tor_error::RetryError;
 use tor_error::{AbsRetryTime, HasRetryTime, debug_report, info_report, internal, warn_report};
 #[cfg(feature = "vanguards")]
 use tor_guardmgr::vanguards::VanguardMgr;

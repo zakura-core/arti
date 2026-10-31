@@ -29,7 +29,6 @@ use tor_proto::client::circuit::handshake::hs_ntor::{self, HsNtorHkdfKeyGenerato
 use tracing::{debug, instrument, trace, warn};
 use web_time_compat::{Duration, Instant, SystemTime};
 
-use retry_error::RetryError;
 use safelog::{DispRedacted, Sensitive};
 use tor_cell::relaycell::RelayMsg;
 use tor_cell::relaycell::hs::{
@@ -39,6 +38,7 @@ use tor_checkable::{TimeBound, timed::TimeRangeBound};
 use tor_circmgr::hspool::HsCircPool;
 use tor_circmgr::timeouts::Action as TimeoutsAction;
 use tor_dirclient::request::Requestable as _;
+use tor_error::RetryError;
 use tor_error::{HasRetryTime as _, RetryTime};
 use tor_error::{internal, into_internal};
 use tor_hscrypto::RendCookie;

@@ -1,53 +1,4 @@
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc = include_str!("../README.md")]
-// @@ begin lint list maintained by maint/add_warning @@
-#![allow(renamed_and_removed_lints)] // @@REMOVE_WHEN(ci_arti_stable)
-#![allow(unknown_lints)] // @@REMOVE_WHEN(ci_arti_nightly)
-#![warn(missing_docs)]
-#![warn(noop_method_call)]
-#![warn(unreachable_pub)]
-#![warn(clippy::all)]
-#![deny(clippy::await_holding_lock)]
-#![deny(clippy::cargo_common_metadata)]
-#![deny(clippy::cast_lossless)]
-#![deny(clippy::checked_conversions)]
-#![allow(clippy::cognitive_complexity)] // See arti#2556
-#![deny(clippy::debug_assert_with_mut_call)]
-#![deny(clippy::exhaustive_enums)]
-#![deny(clippy::exhaustive_structs)]
-#![deny(clippy::expl_impl_clone_on_copy)]
-#![deny(clippy::fallible_impl_from)]
-#![deny(clippy::implicit_clone)]
-#![deny(clippy::large_stack_arrays)]
-#![warn(clippy::manual_ok_or)]
-#![deny(clippy::missing_docs_in_private_items)]
-#![warn(clippy::needless_borrow)]
-#![warn(clippy::needless_pass_by_value)]
-#![warn(clippy::option_option)]
-#![warn(clippy::or_fun_call)]
-#![deny(clippy::print_stderr)]
-#![deny(clippy::print_stdout)]
-#![warn(clippy::rc_buffer)]
-#![deny(clippy::ref_option_ref)]
-#![warn(clippy::semicolon_if_nothing_returned)]
-#![warn(clippy::trait_duplication_in_bounds)]
-#![deny(clippy::unchecked_time_subtraction)]
-#![deny(clippy::unnecessary_wraps)]
-#![warn(clippy::unseparated_literal_suffix)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::mod_module_files)]
-#![allow(clippy::let_unit_value)] // This can reasonably be done for explicitness
-#![allow(clippy::uninlined_format_args)]
-#![allow(clippy::significant_drop_in_scrutinee)] // arti/-/merge_requests/588/#note_2812945
-#![allow(clippy::result_large_err)] // temporary workaround for arti#587
-#![allow(clippy::needless_raw_string_hashes)] // complained-about code is fine, often best
-#![allow(clippy::needless_lifetimes)] // See arti#1765
-#![allow(mismatched_lifetime_syntaxes)] // temporary workaround for arti#2060
-#![allow(clippy::collapsible_if)] // See arti#2342
-#![deny(clippy::unused_async)]
-#![deny(clippy::string_slice)] // See arti#2571
-#![allow(recursion_depth_exceeding_limit)] // arti#2715, rust/issues/159228
-//! <!-- @@ end lint list maintained by maint/add_warning @@ -->
+#![doc = include_str!("retry_error.md")]
 
 use std::error::Error;
 use std::fmt::{self, Debug, Display, Error as FmtError, Formatter};
@@ -87,14 +38,15 @@ pub struct RetryError<E> {
     /// This is used for human-readable display of absolute timestamps.
     ///
     /// We store both types because they serve different purposes:
-    /// - `Instant` (in the errors vec): Monotonic clock for reliable duration calculations.
-    ///   Immune to clock adjustments, but can't be displayed as wall-clock time.
-    /// - `SystemTime` (here): Wall-clock time for displaying when the first error occurred
-    ///   in a human-readable format (e.g., "2025-12-09T10:24:02Z").
+    /// - `Instant` (in the errors vec): Monotonic clock for reliable duration
+    ///   calculations. Immune to clock adjustments, but cannot be displayed as
+    ///   wall-clock time.
+    /// - `SystemTime` (here): Wall-clock time for displaying when the first error
+    ///   occurred in a readable format (e.g., "2025-12-09T10:24:02Z").
     ///
-    /// We only store `SystemTime` for the first error to show users *when* the problem
-    /// started. Subsequent errors are displayed relative to the first ("+2m 30s"),
-    /// using the reliable `Instant` timestamps.
+    /// We only store `SystemTime` for the first error to show when the problem
+    /// started. Subsequent errors are displayed relative to the first
+    /// ("+2m 30s"), using the reliable `Instant` timestamps.
     first_error_at: Option<SystemTime>,
 }
 
@@ -138,14 +90,14 @@ impl<E> RetryError<E> {
     /// The `instant` parameter should be the monotonic time when the error
     /// occurred, typically obtained from a runtime's `now()` method.
     ///
-    /// The `wall_clock` parameter is the wall-clock time when the error occurred,
-    /// used for human-readable display. Pass `None` to skip wall-clock tracking,
-    /// or `Some(SystemTime::now())` for the current time.
+    /// The `wall_clock` parameter records when the error occurred for display.
+    /// Pass `None` to skip wall-clock tracking, or `Some(SystemTime::now())` for
+    /// the current time.
     ///
     /// # Example
     /// ```
     /// # #![allow(clippy::disallowed_methods)]
-    /// # use retry_error::RetryError;
+    /// # use tor_error::RetryError;
     /// # use std::time::{Instant, SystemTime};
     /// let mut retry_err: RetryError<&str> = RetryError::in_attempt_to("connect");
     /// let now = Instant::now();
@@ -174,7 +126,7 @@ impl<E> RetryError<E> {
     ///
     /// This is a convenience wrapper around [`push_timed()`](Self::push_timed)
     /// that uses `Instant::now()` and `SystemTime::now()` for the timestamps.
-    /// For code that needs mockable time (such as in tests), prefer `push_timed()`.
+    /// For mockable time, prefer [`push_timed()`](Self::push_timed).
     pub fn push<T>(&mut self, err: T)
     where
         T: Into<E>,
@@ -201,12 +153,12 @@ impl<E> RetryError<E> {
     /// Add multiple errors to this RetryError using the current time.
     ///
     /// This method uses [`push()`](Self::push) internally, which captures
-    /// `SystemTime::now()`. For code that needs mockable time (such as in tests),
-    /// iterate manually and call [`push_timed()`](Self::push_timed) instead.
+    /// `SystemTime::now()`. For mockable time, iterate manually and call
+    /// [`push_timed()`](Self::push_timed) instead.
     ///
     /// # Example
     /// ```
-    /// # use retry_error::RetryError;
+    /// # use tor_error::RetryError;
     /// let mut err: RetryError<anyhow::Error> = RetryError::in_attempt_to("parse");
     /// let errors = vec!["error1", "error2"].into_iter().map(anyhow::Error::msg);
     /// err.extend(errors);
@@ -245,11 +197,10 @@ impl<E> RetryError<E> {
         }
     }
 
-    /// Add multiple errors to this RetryError, preserving their original timestamps.
+    /// Add multiple errors, preserving their original timestamps.
     ///
-    /// The errors from other will be added to this RetryError, with their original
-    /// timestamps retained. The `Attempt` counters will be updated to continue from
-    /// the current state of this RetryError. `Attempt::Range` entries are preserved as ranges
+    /// The `Attempt` counters continue from the current state of this
+    /// [`RetryError`]. `Attempt::Range` entries are preserved as ranges.
     pub fn extend_from_retry_error(&mut self, other: RetryError<E>) {
         if self.first_error_at.is_none() {
             self.first_error_at = other.first_error_at;
@@ -396,7 +347,8 @@ impl<E: AsRef<dyn Error>> Display for RetryError<E> {
 /// A wrapper for formatting a [`Duration`] in a human-readable way.
 /// Produces output like "2m 30s", "5h 12m", "45s", "500ms".
 ///
-/// We use this instead of `humantime::format_duration` because humantime tends to produce overly verbose output.
+/// We use this because `humantime::format_duration` produces more verbose
+/// output.
 struct FormatDuration(Duration);
 
 impl Display for FormatDuration {
@@ -413,7 +365,7 @@ impl Display for FormatTimeAgo {
         let secs = self.0.as_secs();
         let millis = self.0.as_millis();
 
-        // Special case: very recent times show as "just now" rather than "0s ago" or "0ms ago"
+        // Very recent times show as "just now" rather than "0s ago" or "0ms ago".
         if secs == 0 && millis == 0 {
             return write!(f, "just now");
         }
@@ -458,14 +410,13 @@ fn fmt_duration_impl(duration: Duration, f: &mut Formatter<'_>) -> fmt::Result {
     }
 }
 
-/// Helper: formats a [`std::error::Error`] and its sources (as `"error: source"`)
+/// Format a [`std::error::Error`] and its sources (as `"error: source"`).
 ///
 /// Avoids duplication in messages by not printing messages which are
 /// wholly-contained (textually) within already-printed messages.
 ///
 /// Offered as a `fmt` function:
-/// this is for use in more-convenient higher-level error handling functionality,
-/// rather than directly in application/functional code.
+/// this supports higher-level error handling functionality.
 ///
 /// This is used by `RetryError`'s impl of `Display`,
 /// but will be useful for other error-handling situations.
@@ -488,7 +439,7 @@ fn fmt_duration_impl(duration: Duration, f: &mut Formatter<'_>) -> fmt::Result {
 /// struct Wrapper(Box<dyn std::error::Error>);
 /// impl Display for Wrapper {
 ///     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-///         retry_error::fmt_error_with_sources(&*self.0, f)
+///         tor_error::fmt_error_with_sources(&*self.0, f)
 ///     }
 /// }
 ///
@@ -499,16 +450,16 @@ fn fmt_duration_impl(duration: Duration, f: &mut Formatter<'_>) -> fmt::Result {
 /// assert_eq!(printed, "everything is terrible: some pernickety problem");
 /// ```
 pub fn fmt_error_with_sources(mut e: &dyn Error, f: &mut fmt::Formatter) -> fmt::Result {
-    // We deduplicate the errors here under the assumption that the `Error` trait is poorly defined
-    // and contradictory, and that some error types will duplicate error messages. This is
-    // controversial, and since there isn't necessarily agreement, we should stick with the status
+    // We deduplicate the errors here because the `Error` trait is poorly
+    // defined and contradictory, and some error types duplicate error messages.
+    // This is controversial; without agreement, we should stick with the status
     // quo here and avoid changing this behaviour without further discussion.
     let mut last = String::new();
     let mut sep = iter::once("").chain(iter::repeat(": "));
 
-    // Note that this loop does not use tor_basic_utils::ErrorSources.  We can't, because `e` is not
-    // `Error + 'static`.  But we shouldn't use ErrorSources here, since io::Error will format
-    // its inner by_ref() error, and so it's desirable that `source` skips over it.
+    // This loop cannot use tor_basic_utils::ErrorSources: `e` is not
+    // `Error + 'static`. We also want `source` to skip over the inner by_ref()
+    // error which io::Error formats itself.
     loop {
         let this = e.to_string();
         if !last.contains(&this) {

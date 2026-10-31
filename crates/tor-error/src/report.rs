@@ -20,7 +20,7 @@ where
         /// Non-generic inner function avoids code bloat
         fn inner(e: &dyn StdError, f: &mut fmt::Formatter) -> fmt::Result {
             write!(f, "error: ")?;
-            retry_error::fmt_error_with_sources(e, f)?;
+            crate::fmt_error_with_sources(e, f)?;
             Ok(())
         }
 
