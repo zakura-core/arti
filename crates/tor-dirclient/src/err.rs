@@ -238,7 +238,7 @@ impl HasKind for Error {
     }
 }
 
-#[cfg(any(feature = "hs-client", feature = "hs-service"))]
+#[cfg(feature = "hs-client")]
 impl Error {
     /// Return true if this error is one that we should report as a suspicious event,
     /// along with the dirserver and description of the relevant document,
@@ -252,7 +252,7 @@ impl Error {
         }
     }
 }
-#[cfg(any(feature = "hs-client", feature = "hs-service"))]
+#[cfg(feature = "hs-client")]
 impl RequestError {
     /// Return true if this error is one that we should report as a suspicious event,
     /// along with the dirserver and description of the relevant document,

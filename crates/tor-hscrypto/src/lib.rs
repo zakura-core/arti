@@ -53,8 +53,6 @@
 use rand::RngExt;
 
 mod macros;
-#[cfg(feature = "ope")]
-pub mod ope;
 pub mod ops;
 pub mod pk;
 pub mod pow;
