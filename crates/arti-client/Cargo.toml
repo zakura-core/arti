@@ -97,7 +97,6 @@ static = ["static-sqlite", "__is_nonadditive"]
 static-sqlite = ["tor-dirmgr/static", "__is_nonadditive"]
 
 accel-sha1-asm = ["tor-llcrypto/with-sha1-asm", "__is_nonadditive"]
-accel-openssl = ["tor-llcrypto/with-openssl", "__is_nonadditive"]
 
 onion-service-client = ["tor-hsclient", "tor-hscrypto"]
 

@@ -276,7 +276,6 @@ implementation with another.
 
 * `accel-sha1-asm` -- Accelerate cryptography by using an assembly
   implementation of SHA1, if one is available.
-* `accel-openssl` -- Accelerate cryptography by using openssl as a backend.
 
 ### Experimental and unstable features
 

@@ -12,3 +12,6 @@ BREAKING: Remove the `load-config` feature, `config::default_config_files`,
 and the `load::TopLevel` implementation for `TorClientConfig`. Applications
 supply Rust configuration values directly; directory builders and validation
 retain their existing behavior.
+
+REMOVED: The `accel-openssl` Cargo feature. Existing default RustCrypto
+implementations remain in use.

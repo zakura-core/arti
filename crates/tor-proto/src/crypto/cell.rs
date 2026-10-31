@@ -326,10 +326,6 @@ pub(crate) type Tor1Hsv3RelayCrypto =
     tor1::CryptStatePair<tor_llcrypto::cipher::aes::Aes256Ctr, tor_llcrypto::d::Sha3_256>;
 
 /// Counter galois onion relay crypto.
-//
-// We use `aes` directly here instead of tor_llcrypto::aes, which may or may not be OpenSSL:
-// the OpenSSL implementations have bad performance when it comes to re-keying
-// or changing IVs.
 pub(crate) type CgoRelayCrypto = cgo::CryptStatePair<aes::Aes128, aes::Aes128Enc>;
 
 #[cfg(test)]

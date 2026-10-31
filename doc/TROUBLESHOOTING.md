@@ -14,8 +14,7 @@ See [rusqlite's build notes](https://github.com/rusqlite/rusqlite#notes-on-build
 for platform-specific configuration.
 
 The TLS backend is Rustls with Ring; it does not link the platform's TLS
-library. The separate optional `arti-client/accel-openssl` cryptographic
-acceleration feature still requires OpenSSL when selected.
+library.
 
 ## Selecting a runtime
 
