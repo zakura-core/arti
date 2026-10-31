@@ -3,8 +3,10 @@
 use std::path::PathBuf;
 
 use tor_basic_utils::PathExt;
+#[cfg(feature = "key-encoding")]
 use tor_key_forge::KeystoreItemType;
 
+#[cfg(feature = "key-encoding")]
 use crate::ArtiPath;
 
 /// The raw identifier of a key inside a [`Keystore`](crate::Keystore).
@@ -35,6 +37,7 @@ pub(crate) enum RawEntryId {
     // We might want to remove this variant entirely,
     // and make `RawEntryId` optional in e.g. `KeystoreEntry`.
     #[display("{} {:?}", _0.0, _0.1)]
+    #[cfg(feature = "key-encoding")]
     Ephemeral((ArtiPath, KeystoreItemType)),
     // TODO: when/if we add support for non on-disk keystores,
     // new variants will be added

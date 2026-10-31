@@ -12,7 +12,10 @@ categories = ["cryptography"]
 repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
 
 [features]
-default = []
+default = ["key-encoding"]
+# Convert in-memory onion keys to key-store encodings.
+key-encoding = ["dep:tor-key-forge"]
+
 memquota-memcost = [
     "tor-memquota",
     "tor-units/memquota-memcost",
@@ -22,6 +25,7 @@ ope = ["cipher", "zeroize"]
 
 
 full = [
+    "key-encoding",
     "memquota-memcost",
     "ope",
     "safelog/full",
@@ -31,7 +35,7 @@ full = [
     "tor-units/full",
     "tor-error/full",
     "tor-memquota?/full",
-    "tor-key-forge/full",
+    "tor-key-forge?/full",
     "web-time-compat/full",
 ]
 
@@ -54,7 +58,7 @@ thiserror = "2"
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-bytes = { version = "0.47.0", path = "../tor-bytes" }
 tor-error = { version = "0.47.0", path = "../tor-error" }
-tor-key-forge = { version = "0.47.0", path = "../tor-key-forge" }
+tor-key-forge = { optional = true, version = "0.47.0", path = "../tor-key-forge" }
 tor-llcrypto = { version = "0.47.0", path = "../tor-llcrypto", features = ["hsv3-client", "hsv3-service"] }
 tor-memquota = { version = "0.47.0", path = "../tor-memquota", default-features = false, optional = true }
 tor-units = { path = "../tor-units", version = "0.47.0" }
