@@ -7,3 +7,13 @@ BREAKING: `Isolation` now extends `std::any::Any` instead of
 `into_any_rc`, `as_any` and `as_any_mut`, are removed. Upcast a trait object
 to `dyn Any` for standard checked downcasts. Isolation compatibility and join
 rules, including rejection of different concrete isolation types, are unchanged.
+
+BREAKING: `StreamIsolationBuilder::build` returns `StreamIsolation`
+directly, since both fields have defaults and construction cannot fail.
+Remove the unused `StreamIsolationBuilderError` enum, its
+`UninitializedField` and `ValidationError` variants/payloads, and its
+`Debug`, `Display`, `Error`, `From<String>`,
+`From<derive_builder::UninitializedFieldError>`, and
+`From<derive_builder::SubfieldBuildError<E>>` implementations.
+The explicit builder retains its setters, constructor, `Clone`, and
+`Default` without adding any public or crate-visible name.
