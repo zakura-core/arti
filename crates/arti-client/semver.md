@@ -23,3 +23,10 @@ BREAKING: Remove the `rpc` and implicit `dyn-clone` Cargo features and public
 `ResolvePtrWithPrefs` with all their public fields and RPC trait implementations.
 The RPC `Object` implementation for `TorClient` is removed. Native embedded
 client operations and optional persistent key stores are unchanged.
+
+BREAKING: Remove the `async-std` and `smol` Cargo features. `full` and
+`experimental` no longer enable these backends. The default Tokio/Rustls
+runtime and `TorClient<PreferredRuntime>` APIs retain their signatures,
+identity and behavior; `TorClient::with_runtime` remains generic.
+The preferred `TorClient::{create_bootstrapped, builder}` implementations now
+require `tokio` with `rustls`, replacing the former Tokio-or-async-std gate.

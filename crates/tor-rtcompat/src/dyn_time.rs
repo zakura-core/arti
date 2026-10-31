@@ -18,7 +18,7 @@ use crate::{CoarseInstant, CoarseTimeProvider, SleepProvider};
 /// See the other implementation
 #[allow(unused_macros)] // Will be redefined if there *is* a preferred runtime
 macro_rules! if_preferred_runtime {{ [$($y:tt)*] [$($n:tt)*] } => { $($n)* }}
-#[cfg(all(feature = "rustls", any(feature = "async-std", feature = "tokio"),))]
+#[cfg(all(feature = "rustls", feature = "tokio",))]
 /// `if_preferred_runtime!{[ Y ] [ N ]}` expands to `Y` (if there's `PreferredRuntime`) or `N`
 macro_rules! if_preferred_runtime {{ [$($y:tt)*] [$($n:tt)*] } => { $($y)* }}
 
