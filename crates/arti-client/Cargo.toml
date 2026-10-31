@@ -25,7 +25,6 @@ full = [
     "onion-service-client",
     "vanguards",
     "tokio",
-    "async-std",
     "memquota",
     "rustls",
     "compression",
@@ -69,8 +68,6 @@ full = [
 
 # Read configuration files through the re-exported configuration sources.
 
-async-std = ["tor-rtcompat/async-std"]
-smol = ["tor-rtcompat/smol", "__is_experimental"]
 bridge-client = ["tor-guardmgr/bridge-client", "tor-dirmgr/bridge-client"]
 # the "memquota" feature is now a no-op as the functionality is always-enabled,
 # but the feature is kept for backwards compatibility
@@ -121,7 +118,6 @@ experimental = [
     "tor-config/experimental",
     "tor-guardmgr/experimental",
     "tor-keymgr/experimental",
-    "smol",
 ]
 
 # Enable experimental APIs that are not yet officially supported.

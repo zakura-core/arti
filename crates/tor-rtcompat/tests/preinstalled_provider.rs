@@ -1,10 +1,6 @@
 //! The testing fallback must preserve the application's provider selection.
 
-#![cfg(all(
-    feature = "testing",
-    feature = "rustls",
-    any(feature = "tokio", feature = "async-std", feature = "smol")
-))]
+#![cfg(all(feature = "testing", feature = "rustls", feature = "tokio"))]
 
 use futures_rustls::rustls::crypto::{CryptoProvider, ring};
 use std::sync::Arc;
