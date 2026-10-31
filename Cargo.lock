@@ -1562,16 +1562,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fslock-guard"
-version = "0.9.0"
-dependencies = [
- "libc",
- "test-temp-dir",
- "thiserror 2.0.21",
- "windows-sys 0.61.2",
-]
-
-[[package]]
 name = "funty"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4399,7 +4389,6 @@ dependencies = [
  "filetime",
  "float_eq",
  "fs-mistrust",
- "fslock-guard",
  "futures",
  "hex",
  "hex-literal",
@@ -4904,11 +4893,11 @@ dependencies = [
  "extend",
  "filetime",
  "fs-mistrust",
- "fslock-guard",
  "futures",
  "getset",
  "humantime",
  "itertools 0.15.0",
+ "libc",
  "oneshot-fused-workaround",
  "paste",
  "serde",
@@ -4923,6 +4912,7 @@ dependencies = [
  "tracing-test",
  "void",
  "web-time-compat",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
