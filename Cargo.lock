@@ -4721,7 +4721,6 @@ dependencies = [
  "criterion-cycles-per-byte",
  "ctr",
  "derive-deftly",
- "derive_builder_fork_arti",
  "derive_more",
  "digest 0.10.7",
  "educe",
