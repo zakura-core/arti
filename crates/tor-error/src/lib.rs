@@ -57,6 +57,9 @@ pub use internal::*;
 mod report;
 pub use report::*;
 
+mod retry_error;
+pub use retry_error::{RetryError, fmt_error_with_sources};
+
 mod retriable;
 pub use retriable::*;
 

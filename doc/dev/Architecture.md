@@ -88,7 +88,6 @@ The current crates are:
 * [`arti-ureq`](../../crates/arti-ureq/README.md) -- Use ureq in combination with ureq to make requests over the Tor network.
 * [`caret`](../../crates/caret/README.md) -- Integers with some named values.
 * [`fs-mistrust`](../../crates/fs-mistrust/README.md) -- Check whether file permissions are private.
-* [`retry-error`](../../crates/retry-error/README.md) -- An error attempt to represent multiple failures.
 * [`safelog`](../../crates/safelog/README.md) -- Mark data as sensitive for logging purposes.
 * [`tor-basic-utils`](../../crates/tor-basic-utils/README.md) -- Utilities (low-level) for Tor
 * [`tor-bytes`](../../crates/tor-bytes/README.md) -- Utilities to decode/encode things into bytes.

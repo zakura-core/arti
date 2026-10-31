@@ -18,7 +18,6 @@ keymgr = ["tor-keymgr/keymgr", "__is_experimental"]
 
 
 full = [
-    "retry-error/full",
     "safelog/full",
     "tor-checkable/full",
     "tor-circmgr/full",
@@ -59,7 +58,6 @@ futures = "0.3.34"
 itertools = "0.15.0"
 oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
 rand = "0.10.3"
-retry-error = { path = "../retry-error", version = "0.14.0" }
 safelog = { path = "../safelog", version = "0.10.0" }
 slotmap-careful = { path = "../slotmap-careful", version = "0.9.0" }
 strum = { version = "0.28.0", features = ["derive"] }

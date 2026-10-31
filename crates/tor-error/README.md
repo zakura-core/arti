@@ -5,6 +5,9 @@ Support for error handling in Tor and Arti
 Primarily, this crate provides the [`ErrorKind`] enum,
 and associated [`HasKind`] trait.
 
+[`RetryError`] accumulates failures from repeated attempts and preserves their
+timestamps. [`fmt_error_with_sources`] formats an error and its source chain.
+
 There is also some other miscellany, supporting error handling in
 crates higher up the dependency stack.
 
