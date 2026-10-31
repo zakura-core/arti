@@ -41,7 +41,6 @@ but please do so judiciously.
 
 ### Onion service development
 ### Relay development
-### RPC development
 ### (Other area of development)
 
 <!-- These sections are for areas where there is enough development going on -->

@@ -21,7 +21,6 @@ full = [
     "hs-service",
     "pt-client",
     "tokio",
-    "rpc",
     "send-control-msg",
     "stream-ctrl",
     "safelog/full",
@@ -48,7 +47,6 @@ full = [
     "tor-relay-crypto/full",
     "web-time-compat/full",
     "tor-relay-crypto?/full",
-    "tor-rpcbase?/full",
 ]
 
 experimental = [
@@ -78,7 +76,6 @@ relay = [
     "tor-relay-crypto",
     "__is_experimental",
 ]
-rpc = ["stream-ctrl", "dep:tor-rpcbase", "dep:serde"]
 
 # Enable testing-only APIs.  APIs under this feature are not
 # covered by semver.
@@ -117,7 +114,6 @@ rand = "0.10.3"
 rand09 = { package = "rand", version = "0.9", optional = true }
 rand_core = "0.10.1"
 safelog = { path = "../safelog", version = "0.10.0" }
-serde = { version = "1.0.229", features = ["derive"], optional = true }
 slotmap-careful = { path = "../slotmap-careful", version = "0.9.0" }
 smallvec = { version = "1.16", features = ["const_generics"] }
 static_assertions = "1"
@@ -141,7 +137,6 @@ tor-log-ratelim = { path = "../tor-log-ratelim", version = "0.47.0" }
 tor-memquota = { version = "0.47.0", path = "../tor-memquota", default-features = false }
 tor-protover = { version = "0.47.0", path = "../tor-protover" }
 tor-relay-crypto = { version = "0.47.0", path = "../tor-relay-crypto", optional = true }
-tor-rpcbase = { version = "0.47.0", path = "../tor-rpcbase", optional = true }
 tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0" }
 tor-rtmock = { path = "../tor-rtmock", version = "0.47.0", optional = true }
 tor-units = { path = "../tor-units", version = "0.47.0", features = ["memquota-memcost"] }

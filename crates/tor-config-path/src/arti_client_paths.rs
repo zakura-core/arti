@@ -1,7 +1,7 @@
 //! Base paths for use with arti clients.
 //!
-//! This code is defined in `tor-config-path` rather than in `arti-client` so that other programs
-//! (notably `arti-rpc-client-core`) can use it.
+//! Embedded clients share these base paths without depending on the
+//! `arti-client` package.
 
 use std::{borrow::Cow, path::PathBuf};
 

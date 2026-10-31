@@ -5,9 +5,6 @@
 //! connections ("streams") over the Tor network using
 //! [`TorClient::connect`].
 
-#[cfg(feature = "rpc")]
-use {derive_deftly::Deftly, tor_rpcbase::templates::*};
-
 use crate::address::{IntoTorAddr, ResolveInstructions, StreamInstructions};
 
 use crate::config::{ClientAddrConfig, StreamTimeoutConfig, TorClientConfig};
@@ -74,23 +71,6 @@ use tor_persist::TestingStateMgr as UsingStateMgr;
 /// While it's running, it will fetch directory information, build
 /// circuits, and make connections for you.
 ///
-/// # In the Arti RPC System
-///
-/// An open client on the Tor network.
-///
-/// A `TorClient` can be used to open anonymous connections,
-/// and (eventually) perform other activities.
-///
-/// You can use an `RpcSession` as a `TorClient`, or use the `isolated_client` method
-/// to create a new `TorClient` whose stream will not share circuits with any other Tor client.
-///
-/// This ObjectID for this object can be used as the target of a SOCKS stream.
-#[cfg_attr(
-    feature = "rpc",
-    derive(Deftly),
-    derive_deftly(Object),
-    deftly(rpc(expose_outside_of_session))
-)]
 pub struct TorClient<R: Runtime> {
     /// Default isolation token for streams through this client.
     ///
