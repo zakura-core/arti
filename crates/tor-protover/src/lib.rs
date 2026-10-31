@@ -309,6 +309,58 @@ enum ParseStrictness {
     CTorCompatible,
 }
 
+#[cfg(feature = "serde")]
+/// Implement string serialization and parsing, including UTF-8 byte input.
+macro_rules! impl_serde_via_string {
+    ($type:ty) => {
+        impl serde_core::Serialize for $type {
+            fn serialize<S: serde_core::Serializer>(
+                &self,
+                serializer: S,
+            ) -> std::result::Result<S::Ok, S::Error> {
+                serializer.collect_str::<&Self>(&self)
+            }
+        }
+
+        impl<'de> serde_core::Deserialize<'de> for $type {
+            fn deserialize<D: serde_core::Deserializer<'de>>(
+                deserializer: D,
+            ) -> std::result::Result<Self, D::Error> {
+                /// Parse the serialized string representation.
+                struct StringVisitor;
+
+                impl serde_core::de::Visitor<'_> for StringVisitor {
+                    type Value = $type;
+
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
+                        std::fmt::Display::fmt("a string", formatter)
+                    }
+
+                    fn visit_str<E: serde_core::de::Error>(
+                        self,
+                        value: &str,
+                    ) -> std::result::Result<Self::Value, E> {
+                        value.parse().map_err(E::custom)
+                    }
+
+                    fn visit_bytes<E: serde_core::de::Error>(
+                        self,
+                        value: &[u8],
+                    ) -> std::result::Result<Self::Value, E> {
+                        let value = std::str::from_utf8(value).map_err(E::custom)?;
+                        self.visit_str(value)
+                    }
+                }
+
+                deserializer.deserialize_str(StringVisitor)
+            }
+        }
+    };
+}
+
 /// A set of supported or required subprotocol versions.
 ///
 /// This type supports both recognized subprotocols (listed in ProtoKind),
@@ -328,10 +380,6 @@ enum ParseStrictness {
 ///
 /// This type is an Arc internally; it is cheap to clone.
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
-#[cfg_attr(
-    feature = "serde",
-    derive(serde_with::DeserializeFromStr, serde_with::SerializeDisplay)
-)]
 pub struct Protocols(
     /// We intern ProtocolsInner objects because:
     ///  - There are very few _distinct_ values in any given set of relays.
@@ -339,6 +387,9 @@ pub struct Protocols(
     ///  - We often want to copy them when we're remembering information about circuits.
     Intern<ProtocolsInner>,
 );
+
+#[cfg(feature = "serde")]
+impl_serde_via_string!(Protocols);
 
 /// Inner representation of Protocols.
 ///
@@ -1257,5 +1308,44 @@ mod test {
         assert!(NumberedSubver::new(5, 7) < NumberedSubver::new(7, 5));
         assert!(NumberedSubver::new(7, 5) < NumberedSubver::new(7, 6));
         assert!(NumberedSubver::new(7, 6) < NumberedSubver::new(8, 6));
+    }
+}
+
+#[cfg(all(test, feature = "serde"))]
+mod serde_tests {
+    #![allow(clippy::unwrap_used)]
+
+    use super::Protocols;
+
+    /// Check the stored string and Serde's string/byte token variants.
+    fn assert_encoding<T>(value: &T, text: &'static str)
+    where
+        T: serde_core::Serialize
+            + for<'de> serde_core::Deserialize<'de>
+            + PartialEq
+            + std::fmt::Debug,
+    {
+        use serde_test::{Token, assert_de_tokens, assert_de_tokens_error, assert_tokens};
+        assert_tokens(value, &[Token::Str(text)]);
+        assert_de_tokens(value, &[Token::BorrowedStr(text)]);
+        assert_de_tokens(value, &[Token::String(text)]);
+        assert_de_tokens(value, &[Token::Bytes(text.as_bytes())]);
+        assert_de_tokens(value, &[Token::BorrowedBytes(text.as_bytes())]);
+        assert_de_tokens(value, &[Token::ByteBuf(text.as_bytes())]);
+        assert_de_tokens_error::<T>(
+            &[Token::Bytes(b"\xff")],
+            "invalid utf-8 sequence of 1 bytes from index 0",
+        );
+        assert_de_tokens_error::<T>(
+            &[Token::Bool(true)],
+            "invalid type: boolean `true`, expected a string",
+        );
+    }
+
+    #[test]
+    fn string_and_byte_tokens() {
+        for text in ["", "Link=1-3", "Wombat=7-9"] {
+            assert_encoding(&text.parse::<Protocols>().unwrap(), text);
+        }
     }
 }

@@ -76,6 +76,57 @@ pub(crate) mod private {
     pub trait Sealed {}
 }
 
+/// Implement string serialization and parsing, including UTF-8 byte input.
+macro_rules! impl_serde_via_string {
+    ($type:ty) => {
+        impl serde::Serialize for $type {
+            fn serialize<S: serde::Serializer>(
+                &self,
+                serializer: S,
+            ) -> std::result::Result<S::Ok, S::Error> {
+                serializer.collect_str::<&Self>(&self)
+            }
+        }
+
+        impl<'de> serde::Deserialize<'de> for $type {
+            fn deserialize<D: serde::Deserializer<'de>>(
+                deserializer: D,
+            ) -> std::result::Result<Self, D::Error> {
+                /// Parse the serialized string representation.
+                struct StringVisitor;
+
+                impl serde::de::Visitor<'_> for StringVisitor {
+                    type Value = $type;
+
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
+                        std::fmt::Display::fmt("a string", formatter)
+                    }
+
+                    fn visit_str<E: serde::de::Error>(
+                        self,
+                        value: &str,
+                    ) -> std::result::Result<Self::Value, E> {
+                        value.parse().map_err(E::custom)
+                    }
+
+                    fn visit_bytes<E: serde::de::Error>(
+                        self,
+                        value: &[u8],
+                    ) -> std::result::Result<Self::Value, E> {
+                        let value = std::str::from_utf8(value).map_err(E::custom)?;
+                        self.visit_str(value)
+                    }
+                }
+
+                deserializer.deserialize_str(StringVisitor)
+            }
+        }
+    };
+}
+
 #[cfg(test)]
 #[allow(unused)]
 fn test_as_mut_compiles() {

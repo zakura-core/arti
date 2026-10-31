@@ -2320,17 +2320,10 @@ mod nickname {
     ///
     /// Nicknames are required to be ASCII, alphanumeric, and between 1 and 19
     /// characters inclusive.
-    #[derive(
-        Clone,
-        Debug,
-        PartialEq,
-        Eq,
-        Ord,
-        PartialOrd,
-        serde_with::SerializeDisplay,
-        serde_with::DeserializeFromStr,
-    )]
+    #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
     pub struct Nickname(ArrayString<MAX_NICKNAME_LEN>);
+
+    impl_serde_via_string!(Nickname);
 
     /// Invalid nickname
     #[derive(Clone, Debug, thiserror::Error)]
@@ -2532,17 +2525,12 @@ mod contact_info {
     ///
     /// Also used for authority entries in netstatus documents.
     #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Deftly)] //
-    #[derive(
-        derive_more::Into,
-        derive_more::AsRef,
-        derive_more::Deref,
-        derive_more::Display,
-        serde_with::SerializeDisplay,
-        serde_with::DeserializeFromStr,
-    )]
+    #[derive(derive_more::Into, derive_more::AsRef, derive_more::Deref, derive_more::Display)]
     #[derive_deftly(ItemValueEncodable)]
     #[non_exhaustive]
     pub struct ContactInfo(#[deftly(netdoc(rest))] String);
+
+    impl_serde_via_string!(ContactInfo);
 
     /// Contact information (`contact` item value) has invalid syntax
     #[derive(Clone, Debug, thiserror::Error)]
@@ -3620,5 +3608,48 @@ mod test {
         ed25519_cert_invalid::<Ed25519IdentityCert>(true);
         ed25519_cert_invalid::<Ed25519FamilyCert>(true);
         ed25519_cert_invalid::<Ed25519NtorCrossCert>(false);
+    }
+}
+
+#[cfg(test)]
+mod serde_tests {
+    #![allow(clippy::unwrap_used)]
+
+    use super::{ContactInfo, Nickname};
+    use crate::types::policy::AddrPortPattern;
+
+    /// Check the stored string and Serde's string/byte token variants.
+    fn assert_encoding<T>(value: &T, text: &'static str)
+    where
+        T: serde::Serialize + for<'de> serde::Deserialize<'de> + PartialEq + std::fmt::Debug,
+    {
+        use serde_test::{Token, assert_de_tokens, assert_de_tokens_error, assert_tokens};
+        assert_tokens(value, &[Token::Str(text)]);
+        assert_de_tokens(value, &[Token::BorrowedStr(text)]);
+        assert_de_tokens(value, &[Token::String(text)]);
+        assert_de_tokens(value, &[Token::Bytes(text.as_bytes())]);
+        assert_de_tokens(value, &[Token::BorrowedBytes(text.as_bytes())]);
+        assert_de_tokens(value, &[Token::ByteBuf(text.as_bytes())]);
+        assert_de_tokens_error::<T>(
+            &[Token::Bytes(b"\xff")],
+            "invalid utf-8 sequence of 1 bytes from index 0",
+        );
+        assert_de_tokens_error::<T>(
+            &[Token::Bool(true)],
+            "invalid type: boolean `true`, expected a string",
+        );
+    }
+
+    #[test]
+    fn string_and_byte_tokens() {
+        for text in ["Relay42", "Untr1gonometr1cally"] {
+            assert_encoding(&text.parse::<Nickname>().unwrap(), text);
+        }
+        for text in ["", "relay operator", "relay operator 🧅"] {
+            assert_encoding(&text.parse::<ContactInfo>().unwrap(), text);
+        }
+        for text in ["127.0.0.1/8:9-10", "*:80"] {
+            assert_encoding(&text.parse::<AddrPortPattern>().unwrap(), text);
+        }
     }
 }

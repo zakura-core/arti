@@ -17,15 +17,18 @@ derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_more = { version = "2.1.1", features = ["full"] }
 itertools = "0.15.0"
 paste = "1.0.15"
-serde_with = { version = "3.24.0", default-features = false, features = ["alloc", "macros"], optional = true }
+serde_core = { version = "1.0.229", default-features = false, features = ["alloc"], optional = true }
 thiserror = "2"
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-bytes = { path = "../tor-bytes", version = "0.47.0", optional = true }
 
+[dev-dependencies]
+serde_test = "1.0.177"
+
 [features]
 default = []
 full = ["caret/full", "serde", "tor-bytes", "tor-bytes?/full", "tor-basic-utils/full"]
-serde = ["serde_with"]
+serde = ["dep:serde_core"]
 tor-bytes = ["dep:tor-bytes"]
 
 [package.metadata.docs.rs]
