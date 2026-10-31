@@ -384,7 +384,7 @@ mod test {
     fn pending_channel(ids: RelayIds) -> PendingEntry {
         use crate::mgr::state::UniqPendingChanId;
         use futures::FutureExt;
-        use oneshot_fused_workaround as oneshot;
+        use tor_basic_utils::oneshot;
 
         PendingEntry {
             ids,

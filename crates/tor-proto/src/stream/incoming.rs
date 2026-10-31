@@ -2,7 +2,7 @@
 
 use bitvec::prelude::*;
 use derive_deftly::Deftly;
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 
 use tor_cell::relaycell::{RelayCellFormat, RelayCmd, StreamId, UnparsedRelayMsg, msg};
 use tor_cell::restricted_msg;

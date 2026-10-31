@@ -24,7 +24,6 @@ full = [
     "fs-mistrust/full",
     "tor-error/full",
     "tor-basic-utils/full",
-    "oneshot-fused-workaround/full",
     "web-time-compat/full",
 ]
 
@@ -40,7 +39,6 @@ fs-mistrust = { path = "../fs-mistrust", version = "0.16.0", features = ["walkdi
 futures = "0.3.34"
 getset = { version = "0.1.7", optional = true }
 itertools = "0.15.0"
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
 paste = "1.0.15"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"

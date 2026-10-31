@@ -8,7 +8,7 @@ use crate::pending::{GuardStatus, RequestId};
 
 use futures::{channel::mpsc, stream::StreamExt};
 #[cfg(test)]
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 use tor_proto::ClockSkew;
 use tracing::instrument;
 

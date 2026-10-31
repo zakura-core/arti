@@ -2333,13 +2333,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
-name = "oneshot-fused-workaround"
-version = "0.8.0"
-dependencies = [
- "futures",
-]
-
-[[package]]
 name = "oorandom"
 version = "11.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3828,7 +3821,6 @@ dependencies = [
  "extend",
  "futures",
  "futures-await-test",
- "oneshot-fused-workaround",
  "pin-project",
  "slotmap-careful",
  "sync_wrapper",
@@ -3853,6 +3845,7 @@ dependencies = [
  "derive_more",
  "educe",
  "extend",
+ "futures",
  "getrandom 0.4.3",
  "hex",
  "itertools 0.15.0",
@@ -3976,7 +3969,6 @@ dependencies = [
  "httparse",
  "itertools 0.15.0",
  "metrics",
- "oneshot-fused-workaround",
  "percent-encoding",
  "rand 0.10.3",
  "safelog",
@@ -4032,7 +4024,6 @@ dependencies = [
  "humantime-serde",
  "itertools 0.15.0",
  "once_cell",
- "oneshot-fused-workaround",
  "pin-project",
  "rand 0.10.3",
  "safelog",
@@ -4205,7 +4196,6 @@ dependencies = [
  "humantime-serde",
  "itertools 0.15.0",
  "memmap2",
- "oneshot-fused-workaround",
  "paste",
  "rand 0.10.3",
  "rusqlite",
@@ -4290,7 +4280,6 @@ dependencies = [
  "humantime",
  "humantime-serde",
  "itertools 0.15.0",
- "oneshot-fused-workaround",
  "pin-project",
  "rand 0.10.3",
  "safelog",
@@ -4332,7 +4321,6 @@ dependencies = [
  "futures",
  "humantime",
  "itertools 0.15.0",
- "oneshot-fused-workaround",
  "rand 0.10.3",
  "safelog",
  "slotmap-careful",
@@ -4701,7 +4689,6 @@ dependencies = [
  "humantime",
  "itertools 0.15.0",
  "libc",
- "oneshot-fused-workaround",
  "paste",
  "serde",
  "serde_json",
@@ -4750,7 +4737,6 @@ dependencies = [
  "humantime",
  "itertools 0.15.0",
  "maybenot",
- "oneshot-fused-workaround",
  "pin-project",
  "polyval",
  "rand 0.10.3",
@@ -4896,7 +4882,6 @@ dependencies = [
  "futures-await-test",
  "humantime",
  "itertools 0.15.0",
- "oneshot-fused-workaround",
  "pin-project",
  "priority-queue",
  "rand 0.10.3",

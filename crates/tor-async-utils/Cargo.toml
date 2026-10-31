@@ -17,7 +17,6 @@ all-features = true
 
 [features]
 full = [
-    "oneshot-fused-workaround/full",
     "slotmap-careful/full",
     "tokio",
     "tor-basic-utils/full",
@@ -36,7 +35,6 @@ educe = "0.4.23"
 event-listener = "5"
 extend = "1.2.0"
 futures = "0.3.34"
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
 pin-project = "1"
 slotmap-careful = { path = "../slotmap-careful", version = "0.9.0" }
 sync_wrapper = "1.0.2"

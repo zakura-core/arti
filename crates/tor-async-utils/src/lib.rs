@@ -78,7 +78,7 @@ pub use sink_try_send::{SinkTrySend, SinkTrySendError};
 
 pub use watch_ext::{DropNotifyEofSignallable, DropNotifyWatchSender, PostageWatchSenderExt};
 
-pub use oneshot_fused_workaround as oneshot;
+pub use tor_basic_utils::oneshot;
 
 use futures::channel::mpsc;
 

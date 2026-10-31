@@ -119,7 +119,7 @@ pub(crate) use testing_exports::*;
 use asynchronous_codec;
 use futures::channel::mpsc;
 use futures::io::{AsyncRead, AsyncWrite};
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 
 use educe::Educe;
 use futures::{FutureExt as _, Sink};

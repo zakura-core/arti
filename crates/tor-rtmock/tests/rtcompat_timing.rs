@@ -20,8 +20,8 @@ use tor_rtcompat::{SleepProvider, SleepProviderExt, Timeout, TimeoutError};
 use tor_rtmock::time::MockSleepProvider;
 
 use futures::FutureExt;
-use oneshot_fused_workaround as oneshot;
 use std::sync::atomic::{AtomicBool, Ordering};
+use tor_basic_utils::oneshot;
 use web_time_compat::{Duration, SystemTime, SystemTimeExt};
 
 #[test]

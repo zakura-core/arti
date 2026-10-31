@@ -13,7 +13,7 @@ use tor_cell::chancell::msg::DestroyReason;
 use crate::circuit::celltypes::CreateResponse;
 use crate::client::circuit::halfcirc::HalfCirc;
 
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 
 use rand::Rng;
 use rand::distr::Distribution;

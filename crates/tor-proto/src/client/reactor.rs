@@ -52,7 +52,7 @@ use cfg_if::cfg_if;
 use futures::StreamExt;
 use futures::channel::mpsc;
 use futures::{FutureExt as _, select_biased};
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 
 use std::result::Result as StdResult;
 use std::sync::Arc;

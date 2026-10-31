@@ -5,11 +5,11 @@ use crate::timeouts::{self, Action};
 use crate::{Error, Result};
 use async_trait::async_trait;
 use futures::Future;
-use oneshot_fused_workaround as oneshot;
 use std::sync::{
     Arc,
     atomic::{AtomicU32, Ordering},
 };
+use tor_basic_utils::oneshot;
 use tor_chanmgr::{ChanMgr, ChanProvenance, ChannelUsage};
 use tor_error::into_internal;
 use tor_guardmgr::GuardStatus;

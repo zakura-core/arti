@@ -100,7 +100,7 @@ pub mod vanguards;
 pub use config::testing::TestConfig;
 
 #[cfg(test)]
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 
 pub use config::GuardMgrConfig;
 pub use err::{GuardMgrConfigError, GuardMgrError, PickGuardError};

@@ -22,7 +22,7 @@ use crate::{
 
 use futures::FutureExt;
 use futures::StreamExt;
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 use tor_dirclient::DirResponse;
 use tor_error::{info_report, warn_report};
 use tor_rtcompat::Runtime;

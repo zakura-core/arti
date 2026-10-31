@@ -28,7 +28,7 @@ use tor_error::error_report;
 use tor_rtcompat::StreamOps;
 
 use futures::channel::mpsc;
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 
 use futures::Sink;
 use futures::StreamExt as _;
@@ -1163,7 +1163,7 @@ pub(crate) mod test {
     #[test]
     fn deliver_relay() {
         tor_rtcompat::test_with_all_runtimes!(|rt| async move {
-            use oneshot_fused_workaround as oneshot;
+            use tor_basic_utils::oneshot;
 
             let (_chan, mut reactor, _output, mut input) =
                 new_reactor(rt.clone(), ChannelMode::Client);
@@ -1256,7 +1256,7 @@ pub(crate) mod test {
     fn deliver_destroy() {
         tor_rtcompat::test_with_all_runtimes!(|rt| async move {
             use crate::circuit::celltypes::*;
-            use oneshot_fused_workaround as oneshot;
+            use tor_basic_utils::oneshot;
 
             let (_chan, mut reactor, _output, mut input) =
                 new_reactor(rt.clone(), ChannelMode::Client);

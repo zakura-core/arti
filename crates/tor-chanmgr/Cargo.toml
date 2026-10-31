@@ -29,7 +29,6 @@ full = [
     "tor-socksproto/full",
     "tor-units/full",
     "tor-async-utils/full",
-    "oneshot-fused-workaround/full",
     "tor-memquota/full",
     "caret/full",
     "web-time-compat/full",
@@ -51,7 +50,6 @@ educe = "0.4.23"
 futures = "0.3.34"
 httparse = "1.10"
 metrics = { version = "0.24.6", optional = true }
-oneshot-fused-workaround = { path = "../oneshot-fused-workaround", version = "0.8.0" }
 percent-encoding = "2.3.2"
 rand = "0.10.3"
 safelog = { path = "../safelog", version = "0.10.0" }

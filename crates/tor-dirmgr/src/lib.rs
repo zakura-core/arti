@@ -89,7 +89,7 @@ use tor_netdir::{DirEvent, MdReceiver, NetDir, NetDirProvider};
 
 use async_trait::async_trait;
 use futures::stream::BoxStream;
-use oneshot_fused_workaround as oneshot;
+use tor_basic_utils::oneshot;
 use tor_netdoc::doc::netstatus::ProtoStatuses;
 use tor_rtcompat::scheduler::{TaskHandle, TaskSchedule};
 use tor_rtcompat::{Runtime, SpawnExt};

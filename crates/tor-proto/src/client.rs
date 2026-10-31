@@ -9,9 +9,9 @@ pub(crate) mod msghandler;
 pub(crate) mod reactor;
 
 use derive_deftly::Deftly;
-use oneshot_fused_workaround as oneshot;
 use std::net::IpAddr;
 use std::sync::Arc;
+use tor_basic_utils::oneshot;
 use tracing::instrument;
 
 use crate::circuit::UniqId;
