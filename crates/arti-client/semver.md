@@ -15,3 +15,11 @@ retain their existing behavior.
 
 REMOVED: The `accel-openssl` Cargo feature. Existing default RustCrypto
 implementations remain in use.
+
+BREAKING: Remove the `rpc` and implicit `dyn-clone` Cargo features and public
+`rpc` module. This removes `TorClient::rpc_methods`, `ClientStatusInfo` and its
+`From<BootstrapStatus>` conversion, `IsolatedClient`, `ClientConnectionError`,
+`ClientConnectionResult`, and `ConnectWithPrefs`, `ResolveWithPrefs` and
+`ResolvePtrWithPrefs` with all their public fields and RPC trait implementations.
+The RPC `Object` implementation for `TorClient` is removed. Native embedded
+client operations and optional persistent key stores are unchanged.

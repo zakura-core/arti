@@ -22,10 +22,8 @@ full = [
     "web-time-compat/full",
 ]
 
-experimental = ["experimental-api", "rpc"]
-experimental-api = ["rpc", "__is_experimental"]
-
-rpc = ["__is_experimental"]
+experimental = ["experimental-api"]
+experimental-api = ["__is_experimental"]
 
 tracing = ["dep:tracing", "static_assertions"]
 

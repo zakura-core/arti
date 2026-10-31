@@ -31,7 +31,6 @@ full = [
     "compression",
     "bridge-client",
     "pt-client",
-    "rpc",
     "tor-rtcompat/full",
     "tor-proto/full",
     "tor-netdoc/full",
@@ -51,7 +50,6 @@ full = [
     "tor-netdir/full",
     "tor-persist/full",
     "tor-ptmgr?/full",
-    "tor-rpcbase?/full",
     "tor-keymgr/full",
     "tor-linkspec/full",
     "tor-memquota/full",
@@ -101,7 +99,6 @@ onion-service-client = ["tor-hsclient", "tor-hscrypto"]
 keymgr = ["tor-keymgr/keymgr", "tor-hsclient/keymgr"]
 vanguards = ["tor-guardmgr/vanguards", "tor-circmgr/vanguards"]
 
-rpc = ["dyn-clone", "dep:tor-rpcbase"]
 
 __is_nonadditive = []
 
@@ -142,7 +139,6 @@ cfg-if = "1.0.5"
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_builder = { version = "0.11.2", package = "derive_builder_fork_arti" }
 derive_more = { version = "2.1.1", features = ["full"] }
-dyn-clone = { version = "1.0.20", optional = true }
 educe = "0.4.23"
 fs-mistrust = { path = "../fs-mistrust", version = "0.16.0", features = ["serde"] }
 futures = "0.3.34"
@@ -178,7 +174,6 @@ tor-persist = { path = "../tor-persist", version = "0.47.0" }
 tor-proto = { path = "../tor-proto", version = "0.47.0" }
 tor-protover = { path = "../tor-protover", version = "0.47.0" }
 tor-ptmgr = { path = "../tor-ptmgr", version = "0.47.0", optional = true }
-tor-rpcbase = { path = "../tor-rpcbase", version = "0.47.0", optional = true }
 tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0" }
 tracing = "0.1.44"
 visibility = { version = "0.1.1", optional = true }

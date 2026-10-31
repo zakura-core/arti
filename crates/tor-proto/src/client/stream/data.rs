@@ -159,11 +159,6 @@ assert_impl_all! { DataStream: Send, Sync }
 /// need to have a single owner for the `AsyncRead` and `AsyncWrite` APIs to
 /// work correctly.
 #[cfg(feature = "stream-ctrl")]
-#[cfg_attr(
-    feature = "rpc",
-    derive(derive_deftly::Deftly),
-    derive_deftly(tor_rpcbase::templates::Object)
-)]
 #[derive(Debug)]
 pub struct ClientDataStreamCtrl {
     /// The circuit to which this stream is attached.
@@ -178,7 +173,7 @@ pub struct ClientDataStreamCtrl {
 
     /// Shared user-visible information about the state of this stream.
     ///
-    /// TODO RPC: This will probably want to be a watch channel or something
+    /// TODO: This will probably want to be a watch channel or something
     /// similar, if and when it stops moving around.
     #[cfg(feature = "stream-ctrl")]
     status: Arc<Mutex<DataStreamStatus>>,
@@ -460,7 +455,7 @@ impl BufferIsEmpty for DataReaderInner {
 ///
 /// We expect to refactor this a bit, so it's not exposed at all.
 //
-// TODO RPC: Possibly instead of manipulating the fields of DataStreamStatus
+// TODO: Possibly instead of manipulating the fields of DataStreamStatus
 // from various points in this module, we should instead construct
 // DataStreamStatus as needed from information available elsewhere.  In any
 // case, we should really  eliminate as much duplicate state here as we can.
@@ -474,7 +469,7 @@ struct DataStreamStatus {
     received_connected: bool,
     /// True if we have decided to send an END message.
     //
-    // TODO RPC: There is not an easy way to set this from this module!  Really,
+    // TODO: There is not an easy way to set this from this module!  Really,
     // the decision to send an "end" is made when the StreamTarget object is
     // dropped, but we don't currently have any way to see when that happens.
     // Perhaps we need a different shared StreamStatus object that the
@@ -520,7 +515,7 @@ restricted_msg! {
     }
 }
 
-// TODO RPC: Should we also implement this trait for everything that holds a
+// TODO: Should we also implement this trait for everything that holds a
 // ClientDataStreamCtrl?
 #[cfg(feature = "stream-ctrl")]
 impl super::ctrl::ClientStreamCtrl for ClientDataStreamCtrl {
@@ -538,7 +533,7 @@ impl ClientDataStreamCtrl {
         s.received_connected && !(s.sent_end || s.received_end || s.received_err)
     }
 
-    // TODO RPC: Add more functions once we have the desired API more nailed
+    // TODO: Add more functions once we have the desired API more nailed
     // down.
 }
 
@@ -893,7 +888,7 @@ impl DataWriterInner {
 
                     #[cfg(feature = "stream-ctrl")]
                     {
-                        // TODO RPC:  This is not sufficient to track every case
+                        // TODO:  This is not sufficient to track every case
                         // where we might have sent an End.  See note on the
                         // `sent_end` field.
                         imp.status.lock().expect("lock poisoned").sent_end = true;

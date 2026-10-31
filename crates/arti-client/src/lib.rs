@@ -57,8 +57,6 @@ mod builder;
 mod client;
 mod protostatus;
 mod release_date;
-#[cfg(feature = "rpc")]
-pub mod rpc;
 mod util;
 
 pub mod config;

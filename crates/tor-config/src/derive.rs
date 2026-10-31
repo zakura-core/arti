@@ -971,26 +971,28 @@ pub mod doc_generated_code {}
 /// It should contain a short prepositional phrase
 /// describing how the program needs to be built with
 /// in order to make this feature present.
-/// Examples might be "with RPC support" or "for Windows".
+/// Examples might be "with file watching enabled" or "for Windows".
 ///
 ///
 /// Example:
 /// ```
-/// # #![allow(unexpected_cfgs)]
 /// # use derive_deftly::Deftly;
 /// # use tor_config::{derive::prelude::*, ConfigBuildError};
-/// #[cfg(feature = "rpc")]
-/// pub type RpcOptionType = String;
+/// #[cfg(unix)]
+/// pub type UnixOptionType = String;
 ///
-/// #[cfg(not(feature = "rpc"))]
-/// type RpcOptionType = ();
+/// #[cfg(not(unix))]
+/// type UnixOptionType = ();
 ///
 /// #[derive(Clone,Debug,PartialEq,Deftly)]
 /// #[derive_deftly(TorConfig)]
 /// pub struct OnionSoupConfig {
-///     #[deftly(tor_config(cfg = { feature="rpc" }, cfg_desc = "with RPC support"))]
-///     #[deftly(tor_config(default))]
-///     rpc_option: RpcOptionType,
+///     #[deftly(tor_config(
+///         cfg = { unix },
+///         cfg_desc = "for Unix",
+///     ))]
+///     #[deftly(tor_config(default, no_magic))]
+///     unix_option: UnixOptionType,
 /// }
 /// ```
 ///

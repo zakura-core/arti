@@ -159,9 +159,7 @@ def run_black_ok(targets) -> bool:
 
 # Some of our scripts require extra dependencies;
 # we list them here.
-EXTRA_DEPS: dict[Path, list[Path]] = {
-    Path("maint/rpc-docs-tool"): [Path("python/arti_rpc")]
-}
+EXTRA_DEPS: dict[Path, list[Path]] = {}
 # Some of our scripts support strict type-checking;
 # we list them here.
 #
