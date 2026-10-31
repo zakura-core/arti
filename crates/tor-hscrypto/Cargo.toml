@@ -18,12 +18,10 @@ memquota-memcost = [
     "tor-units/memquota-memcost",
     "tor-llcrypto/memquota-memcost",
 ]
-ope = ["cipher", "zeroize"]
 
 
 full = [
     "memquota-memcost",
-    "ope",
     "safelog/full",
     "tor-basic-utils/full",
     "tor-bytes/full",
@@ -36,7 +34,6 @@ full = [
 ]
 
 [dependencies]
-cipher = { version = "0.5.2", features = ["zeroize"], optional = true }
 data-encoding = "2.11.1"                                                                                    # want MSVC i686 build fix, data-encoding/issues/33
 derive-deftly = { version = "~1.14.0" }
 derive_more = { version = "2.1.1", features = ["full"] }
@@ -60,7 +57,6 @@ tor-memquota = { version = "0.47.0", path = "../tor-memquota", default-features 
 tor-units = { path = "../tor-units", version = "0.47.0" }
 void = "1"
 web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
-zeroize = { version = "1", optional = true }
 
 [dev-dependencies]
 hex-literal = "1.1"
