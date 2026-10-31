@@ -683,9 +683,8 @@ mod test {
 
     #[test]
     fn serde() {
-        // TODO: clone-and-hack with tor_hsservice::::nickname::test::serde
-        // perhaps there should be some utility in tor-basic-utils for testing
-        // validated string newtypes, or something
+        // TODO: Add a shared utility in tor-basic-utils for testing validated
+        // string newtypes.
         #[derive(Serialize, Deserialize, Debug)]
         struct T {
             n: Slug,

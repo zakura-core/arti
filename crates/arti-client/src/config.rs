@@ -58,21 +58,12 @@ pub mod pt {
     pub use tor_ptmgr::config::{TransportConfig, TransportConfigBuilder};
 }
 
-/// Types for configuring onion services.
-#[cfg(feature = "onion-service-service")]
-pub mod onion_service {
-    pub use tor_hsservice::config::{OnionServiceConfig, OnionServiceConfigBuilder};
-}
-
 /// Types for configuring vanguards.
 pub mod vanguards {
     pub use tor_guardmgr::{VanguardConfig, VanguardConfigBuilder};
 }
 
-#[cfg(not(all(
-    feature = "vanguards",
-    any(feature = "onion-service-client", feature = "onion-service-service"),
-)))]
+#[cfg(not(all(feature = "vanguards", feature = "onion-service-client")))]
 use {
     std::sync::LazyLock,
     tor_config::ExplicitOrAuto,
@@ -82,10 +73,7 @@ use {
 /// A [`VanguardConfig`] which is disabled.
 // It would be nice if the builder were const, but this is the best we can do.
 // Boxed so that this is guaranteed to use very little space if it's unused.
-#[cfg(not(all(
-    feature = "vanguards",
-    any(feature = "onion-service-client", feature = "onion-service-service"),
-)))]
+#[cfg(not(all(feature = "vanguards", feature = "onion-service-client")))]
 static DISABLED_VANGUARDS: LazyLock<Box<VanguardConfig>> = LazyLock::new(|| {
     Box::new(
         VanguardConfigBuilder::default()
@@ -670,7 +658,7 @@ impl AsRef<tor_guardmgr::VanguardConfig> for TorClientConfig {
         cfg_if::cfg_if! {
             if #[cfg(all(
                 feature = "vanguards",
-                any(feature = "onion-service-client", feature = "onion-service-service"),
+                feature = "onion-service-client",
             ))]
             {
                 &self.vanguards
@@ -686,12 +674,9 @@ impl tor_circmgr::CircMgrConfig for TorClientConfig {}
 #[cfg(feature = "onion-service-client")]
 impl tor_hsclient::HsClientConnectorConfig for TorClientConfig {}
 
-#[cfg(any(feature = "onion-service-client", feature = "onion-service-service"))]
+#[cfg(feature = "onion-service-client")]
 impl tor_circmgr::hspool::HsCircPoolConfig for TorClientConfig {
-    #[cfg(all(
-        feature = "vanguards",
-        any(feature = "onion-service-client", feature = "onion-service-service")
-    ))]
+    #[cfg(all(feature = "vanguards", feature = "onion-service-client"))]
     fn vanguard_config(&self) -> &tor_guardmgr::VanguardConfig {
         &self.vanguards
     }
@@ -963,10 +948,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(all(
-        feature = "vanguards",
-        any(feature = "onion-service-client", feature = "onion-service-service"),
-    )))]
+    #[cfg(not(all(feature = "vanguards", feature = "onion-service-client")))]
     fn check_disabled_vanguards_static() {
         // Force us to evaluate the closure to ensure that it builds correctly.
         #[allow(clippy::borrowed_box)]

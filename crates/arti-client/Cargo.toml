@@ -23,7 +23,6 @@ full = [
     "anyhow",
     "keymgr",
     "onion-service-client",
-    "onion-service-service",
     "vanguards",
     "tokio",
     "async-std",
@@ -55,7 +54,6 @@ full = [
     "tor-rpcbase?/full",
     "tor-keymgr/full",
     "tor-linkspec/full",
-    "tor-hsservice?/full",
     "tor-memquota/full",
     "tor-config-path/full",
     "tor-protover/full",
@@ -100,7 +98,6 @@ accel-sha1-asm = ["tor-llcrypto/with-sha1-asm", "__is_nonadditive"]
 
 onion-service-client = ["tor-hsclient", "tor-hscrypto"]
 
-onion-service-service = ["tor-hsservice", "tor-hscrypto", "tor-persist/state-dir", "keymgr"]
 keymgr = ["tor-keymgr/keymgr", "tor-hsclient/keymgr"]
 vanguards = ["tor-guardmgr/vanguards", "tor-circmgr/vanguards"]
 
@@ -114,7 +111,6 @@ experimental = [
     "dirfilter",
     "ephemeral-keystore",
     "hsc-negotiate-extensions",
-    "hss-negotiate-extensions",
     "experimental-api",
     "error_detail",
     "testing",
@@ -124,9 +120,7 @@ experimental = [
     "tor-circmgr/experimental",
     "tor-config/experimental",
     "tor-guardmgr/experimental",
-    "tor-hsservice/experimental",
     "tor-keymgr/experimental",
-    "restricted-discovery",
     "smol",
 ]
 
@@ -139,13 +133,6 @@ dirfilter = ["tor-dirmgr/dirfilter", "__is_experimental"]
 ephemeral-keystore = ["tor-keymgr/ephemeral-keystore", "__is_experimental"]
 error_detail = ["__is_experimental"]
 hsc-negotiate-extensions = ["tor-hsclient?/negotiate-extensions", "__is_experimental"]
-hss-negotiate-extensions = ["tor-hsservice?/negotiate-extensions", "__is_experimental"]
-
-restricted-discovery = [
-    "onion-service-service",
-    "tor-hsservice/restricted-discovery",
-    "__is_experimental",
-]
 __is_experimental = []
 
 [dependencies]
@@ -181,7 +168,6 @@ tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] 
 tor-guardmgr = { path = "../tor-guardmgr", version = "0.47.0" }
 tor-hsclient = { path = "../tor-hsclient", version = "0.47.0", optional = true }
 tor-hscrypto = { path = "../tor-hscrypto", version = "0.47.0", optional = true }
-tor-hsservice = { path = "../tor-hsservice", version = "0.47.0", optional = true }
 tor-keymgr = { path = "../tor-keymgr", version = "0.47.0", default-features = false }
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
 tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0" }

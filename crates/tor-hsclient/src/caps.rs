@@ -1,7 +1,6 @@
 //! Functionality for negotiating protocol capabilities.
 
-// TODO #2598: Remove duplicate code between tor_hsclient::caps,
-// tor_hsservice::caps, and tor_proto::circuit (to the extent possible).
+// TODO #2598: Share capability negotiation with tor_proto::circuit where possible.
 
 use cfg_if::cfg_if;
 

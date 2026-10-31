@@ -41,13 +41,8 @@ use {
     tor_keymgr::CTorClientKeystore,
     tor_netdir::DirEvent,
 };
-#[cfg(feature = "onion-service-service")]
-use {tor_keymgr::CTorServiceKeystore, tor_persist::state_dir::StateDirectory};
-
-#[cfg(all(feature = "onion-service-service", feature = "experimental-api"))]
-use tor_hsservice::HsIdKeypairSpecifier;
 #[cfg(all(feature = "onion-service-client", feature = "experimental-api"))]
-use {tor_hscrypto::pk::HsId, tor_hscrypto::pk::HsIdKeypair, tor_keymgr::KeystoreSelector};
+use {tor_hscrypto::pk::HsId, tor_keymgr::KeystoreSelector};
 
 use tor_keymgr::{ArtiNativeKeystore, KeyMgr, KeyMgrBuilder, config::ArtiKeystoreKind};
 
@@ -130,14 +125,6 @@ struct ClientShared<R: Runtime> {
     /// Used for accessing the key manager and other persistent state.
     inert_client: InertTorClient,
 
-    /// Location on disk where we store persistent data containing both location and Mistrust information.
-    ///
-    ///
-    /// This path is configured via `[storage]` in the config but is not used directly as a
-    /// StateDirectory in most places. Instead, its path and Mistrust information are copied
-    /// to subsystems like `dirmgr`, `keymgr`, and `statemgr` during `TorClient` creation.
-    #[cfg(feature = "onion-service-service")]
-    state_directory: StateDirectory,
     /// Location on disk where we store persistent data (cooked state manager).
     statemgr: UsingStateMgr,
 
@@ -268,8 +255,8 @@ struct RunningInner<R: Runtime> {
     /// HS client connector
     #[cfg(feature = "onion-service-client")]
     hsclient: HsClientConnector<R>,
-    /// Circuit pool for providing onion services with circuits.
-    #[cfg(any(feature = "onion-service-client", feature = "onion-service-service"))]
+    /// Circuit pool for onion-service connections.
+    #[cfg(feature = "onion-service-client")]
     hs_circ_pool: Arc<tor_circmgr::hspool::HsCircPool<R>>,
     /// Guard manager
     #[cfg_attr(not(feature = "bridge-client"), allow(dead_code))]
@@ -341,20 +328,6 @@ impl InertTorClient {
         };
 
         let mut builder = KeyMgrBuilder::default().primary_store(primary_store);
-
-        #[cfg(feature = "onion-service-service")]
-        for config in config.storage.keystore().ctor_svc_stores() {
-            let store: Box<dyn Keystore> = Box::new(CTorServiceKeystore::from_path_and_mistrust(
-                config.path(),
-                permissions,
-                config.id().clone(),
-                // TODO: these nicknames should be cross-checked with configured
-                // svc nicknames as part of config validation!!!
-                config.nickname().clone(),
-            )?);
-
-            builder.secondary_stores().push(store);
-        }
 
         #[cfg(feature = "onion-service-client")]
         for config in config.storage.keystore().ctor_client_stores() {
@@ -537,34 +510,6 @@ impl InertTorClient {
             Some(_) => Ok(Some(())),
             None => Ok(None),
         }
-    }
-
-    /// Create (but do not launch) a new
-    /// [`OnionService`](tor_hsservice::OnionService)
-    /// using the given configuration.
-    ///
-    /// See [`TorClient::create_onion_service`].
-    #[cfg(feature = "onion-service-service")]
-    #[instrument(skip_all, level = "trace")]
-    pub fn create_onion_service(
-        &self,
-        config: &TorClientConfig,
-        svc_config: tor_hsservice::OnionServiceConfig,
-    ) -> crate::Result<tor_hsservice::OnionService> {
-        let keymgr = self.keymgr.as_ref().ok_or(ErrorDetail::KeystoreRequired {
-            action: "create onion service",
-        })?;
-
-        let (state_dir, mistrust) = config.state_dir()?;
-        let state_dir =
-            self::StateDirectory::new(state_dir, mistrust).map_err(ErrorDetail::StateAccess)?;
-
-        Ok(tor_hsservice::OnionService::builder()
-            .config(svc_config)
-            .keymgr(keymgr.clone())
-            .state_dir(state_dir)
-            .build()
-            .map_err(ErrorDetail::OnionServiceSetup)?)
     }
 }
 
@@ -982,11 +927,7 @@ impl<R: Runtime> TorClient<R> {
 
         let path_resolver = Arc::new(config.path_resolver.clone());
 
-        let (state_dir, mistrust) = config.state_dir()?;
-        #[cfg(feature = "onion-service-service")]
-        let state_directory =
-            StateDirectory::new(&state_dir, mistrust).map_err(ErrorDetail::StateAccess)?;
-
+        let _ = config.state_dir()?;
         let dormant = DormantMode::Normal;
 
         let statemgr = Self::statemgr_from_config(config)?;
@@ -1046,8 +987,6 @@ impl<R: Runtime> TorClient<R> {
             bootstrap_setting_sender,
             should_bootstrap: autobootstrap,
             dormant: Mutex::new(dormant_send),
-            #[cfg(feature = "onion-service-service")]
-            state_directory,
             path_resolver,
         });
 
@@ -1219,7 +1158,7 @@ impl<R: Runtime> RunningInner<R> {
         // TODO: We can just construct this.
         let bridge_desc_mgr = Arc::new(Mutex::new(None));
 
-        #[cfg(any(feature = "onion-service-client", feature = "onion-service-service"))]
+        #[cfg(feature = "onion-service-client")]
         let hs_circ_pool = {
             let circpool = Arc::new(tor_circmgr::hspool::HsCircPool::new(&circmgr));
             circpool
@@ -1308,7 +1247,7 @@ impl<R: Runtime> RunningInner<R> {
             pt_mgr,
             #[cfg(feature = "onion-service-client")]
             hsclient,
-            #[cfg(any(feature = "onion-service-client", feature = "onion-service-service"))]
+            #[cfg(feature = "onion-service-client")]
             hs_circ_pool,
             guardmgr,
         });
@@ -1330,7 +1269,7 @@ impl<R: Runtime> RunningInner<R> {
             .reconfigure(new_config, how)
             .map_err(wrap_err)?;
 
-        #[cfg(any(feature = "onion-service-client", feature = "onion-service-service"))]
+        #[cfg(feature = "onion-service-client")]
         if retire_circuits != RetireCircuits::None {
             self.hs_circ_pool.retire_all_circuits().map_err(wrap_err)?;
         }
@@ -1823,13 +1762,9 @@ impl<R: Runtime> TorClient<R> {
     /// Return a reference to this client's circuit pool.
     ///
     /// This function is unstable. It is only enabled if the crate was
-    /// built with the `experimental-api` feature and any of `onion-service-client`
-    /// or `onion-service-service` features. This method is required to invoke
-    /// tor_hsservice::OnionService::launch()
-    #[cfg(all(
-        feature = "experimental-api",
-        any(feature = "onion-service-client", feature = "onion-service-service")
-    ))]
+    /// built with both the `experimental-api` and `onion-service-client`
+    /// features.
+    #[cfg(all(feature = "experimental-api", feature = "onion-service-client"))]
     pub fn hs_circ_pool(&self) -> crate::Result<Arc<tor_circmgr::hspool::HsCircPool<R>>> {
         Ok(self
             .client
@@ -1916,129 +1851,6 @@ impl<R: Runtime> TorClient<R> {
         }
         // Failure should be impossible with this builder.
         b.build().expect("Failed to construct StreamIsolation")
-    }
-
-    /// Try to launch an onion service with a given configuration.
-    ///
-    /// Returns `Ok(None)` if the service specified is disabled in the config.
-    ///
-    /// This onion service will not actually handle any requests on its own: you
-    /// will need to
-    /// pull [`RendRequest`](tor_hsservice::RendRequest) objects from the returned stream,
-    /// [`accept`](tor_hsservice::RendRequest::accept) the ones that you want to
-    /// answer, and then wait for them to give you [`StreamRequest`](tor_hsservice::StreamRequest)s.
-    ///
-    /// You may find the [`tor_hsservice::handle_rend_requests`] API helpful for
-    /// translating `RendRequest`s into `StreamRequest`s.
-    ///
-    /// If you want to forward all the requests from an onion service to a set
-    /// of local ports, you may want to use the `tor-hsrproxy` crate.
-    #[cfg(feature = "onion-service-service")]
-    #[instrument(skip_all, level = "trace")]
-    pub fn launch_onion_service(
-        &self,
-        config: tor_hsservice::OnionServiceConfig,
-    ) -> crate::Result<
-        Option<(
-            Arc<tor_hsservice::RunningOnionService>,
-            impl futures::Stream<Item = tor_hsservice::RendRequest> + use<R>,
-        )>,
-    > {
-        let nickname = config.nickname();
-
-        if !config.enabled() {
-            info!(
-                nickname=%nickname,
-                "Skipping onion service because it was disabled in the config"
-            );
-            return Ok(None);
-        }
-
-        let running = self
-            .client
-            .initiate_bootstrap_if_needed("launch onion service")?;
-
-        let keymgr = self
-            .client
-            .inert_client
-            .keymgr
-            .as_ref()
-            .ok_or(ErrorDetail::KeystoreRequired {
-                action: "launch onion service",
-            })?
-            .clone();
-        let state_dir = self.client.state_directory.clone();
-
-        let service = tor_hsservice::OnionService::builder()
-            .config(config) // TODO #1186: Allow override of KeyMgr for "ephemeral" operation?
-            .keymgr(keymgr)
-            // TODO #1186: Allow override of StateMgr for "ephemeral" operation?
-            .state_dir(state_dir)
-            .build()
-            .map_err(ErrorDetail::LaunchOnionService)?;
-        Ok(service
-            .launch(
-                self.client.runtime.clone(),
-                running.dirmgr.clone().upcast_arc(),
-                running.hs_circ_pool.clone(),
-                Arc::clone(&self.client.path_resolver),
-            )
-            .map_err(ErrorDetail::LaunchOnionService)?)
-    }
-
-    /// Try to launch an onion service with a given configuration and provided
-    /// [`HsIdKeypair`]. If an onion service with the given nickname already has an
-    /// associated `HsIdKeypair`  in this `TorClient`'s `KeyMgr`, then this operation
-    /// fails rather than overwriting the existing key.
-    ///
-    /// Returns `Ok(None)` if the service specified is disabled in the config.
-    ///
-    /// The specified `HsIdKeypair` will be inserted in the primary keystore.
-    ///
-    /// **Important**: depending on the configuration of your
-    /// [primary keystore](tor_keymgr::config::PrimaryKeystoreConfig),
-    /// the `HsIdKeypair` **may** get persisted to disk.
-    /// By default, Arti's primary keystore is the [native](ArtiKeystoreKind::Native),
-    /// disk-based keystore.
-    ///
-    /// This onion service will not actually handle any requests on its own: you
-    /// will need to
-    /// pull [`RendRequest`](tor_hsservice::RendRequest) objects from the returned stream,
-    /// [`accept`](tor_hsservice::RendRequest::accept) the ones that you want to
-    /// answer, and then wait for them to give you [`StreamRequest`](tor_hsservice::StreamRequest)s.
-    ///
-    /// You may find the [`tor_hsservice::handle_rend_requests`] API helpful for
-    /// translating `RendRequest`s into `StreamRequest`s.
-    ///
-    /// If you want to forward all the requests from an onion service to a set
-    /// of local ports, you may want to use the `tor-hsrproxy` crate.
-    #[cfg(all(feature = "onion-service-service", feature = "experimental-api"))]
-    #[instrument(skip_all, level = "trace")]
-    pub fn launch_onion_service_with_hsid(
-        &self,
-        config: tor_hsservice::OnionServiceConfig,
-        id_keypair: HsIdKeypair,
-    ) -> crate::Result<
-        Option<(
-            Arc<tor_hsservice::RunningOnionService>,
-            impl futures::Stream<Item = tor_hsservice::RendRequest> + use<R>,
-        )>,
-    > {
-        let nickname = config.nickname();
-        let hsid_spec = HsIdKeypairSpecifier::new(nickname.clone());
-        let selector = KeystoreSelector::Primary;
-
-        let _kp = self
-            .client
-            .inert_client
-            .keymgr
-            .as_ref()
-            .ok_or(ErrorDetail::KeystoreRequired {
-                action: "launch onion service ex",
-            })?
-            .insert::<HsIdKeypair>(id_keypair, &hsid_spec, selector, false)?;
-
-        self.launch_onion_service(config)
     }
 
     /// Generate a service discovery keypair for connecting to a hidden service running in
@@ -2214,37 +2026,6 @@ impl<R: Runtime> TorClient<R> {
         self.client
             .inert_client
             .remove_service_discovery_key(selector, hsid)
-    }
-
-    /// Create (but do not launch) a new
-    /// [`OnionService`](tor_hsservice::OnionService)
-    /// using the given configuration.
-    ///
-    /// This is useful for managing an onion service without needing to start a `TorClient` or the
-    /// onion service itself.
-    /// If you only wish to run the onion service, see
-    /// [`TorClient::launch_onion_service()`]
-    /// which allows you to launch an onion service from a running `TorClient`.
-    ///
-    /// The returned `OnionService` can be launched using
-    /// [`OnionService::launch()`](tor_hsservice::OnionService::launch).
-    /// Note that `launch()` requires a [`NetDirProvider`],
-    /// [`HsCircPool`](tor_circmgr::hspool::HsCircPool), etc,
-    /// which you should obtain from a running `TorClient`.
-    /// But these are only accessible from a `TorClient` if the "experimental-api" feature is
-    /// enabled.
-    /// The behaviour is not specified if you create the `OnionService` with
-    /// `create_onion_service()` using one [`TorClientConfig`],
-    /// but launch it using a `TorClient` generated from a different `TorClientConfig`.
-    // TODO #2249: Look into this behaviour more, and possibly error if there is a different config.
-    #[cfg(feature = "onion-service-service")]
-    #[instrument(skip_all, level = "trace")]
-    pub fn create_onion_service(
-        config: &TorClientConfig,
-        svc_config: tor_hsservice::OnionServiceConfig,
-    ) -> crate::Result<tor_hsservice::OnionService> {
-        let inert_client = InertTorClient::new(config)?;
-        inert_client.create_onion_service(config, svc_config)
     }
 
     /// Return a current [`status::BootstrapStatus`] describing how close this client

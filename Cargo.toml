@@ -60,7 +60,6 @@ members = [
     "crates/tor-dirclient",
     "crates/tor-dirmgr",
     "crates/tor-hsclient",
-    "crates/tor-hsservice",
     "crates/arti-client",
 
 
