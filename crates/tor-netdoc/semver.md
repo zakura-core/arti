@@ -61,3 +61,17 @@ returning the domain set; flag `&`, `-`, `^`, `!`, and
 `MixedEnumSet<RelayFlag>` can no longer be used with this enum. Use
 `RelayFlags::from_flags` for constants and `RelayFlag::A | RelayFlag::B` or
 `RelayFlags::from(flag)` at runtime. No `pub(crate)` interfaces are changed.
+
+BREAKING: Remove `hs-service`, `HsDescBuilder`,
+`create_desc_sign_key_cert`, `IntroPointDesc::builder`,
+`IntroPointDescBuilder`, and both generated builder error types and their
+members/trait implementations. Onion descriptor publication and service
+signing-key certificate generation are outside this wallet-client fork.
+Client descriptor parsing/decryption, intro-point getters, and restricted
+client authentication remain available.
+
+REMOVED (internal): Descriptor publication layer structs/fields and their
+`NetdocBuilder` implementations, plus service-only test fixture helpers.
+`HsDescEncryption::encrypt` is now private test-only code; production
+ciphertext processing retains the same decrypt/KDF/MAC implementation.
+No public or crate-visible Rust API is added.
