@@ -1,6 +1,6 @@
 [package]
-name = "tor-key-forge"
-version = "0.47.0"
+name = "zakura-tor-key-forge"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc."]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Low level cryptography wrappers used by Tor"
 keywords = ["tor", "arti", "cryptography"]
 categories = ["cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = []
@@ -33,16 +33,19 @@ rsa = "0.9.10"
 signature = "2"
 ssh-key = { version = "0.6.7", package = "ssh-key-fork-arti", features = ["std", "rsa"] }
 thiserror = "2"
-tor-bytes = { path = "../tor-bytes", version = "0.47.0", default-features = false }
-tor-cert = { path = "../tor-cert", version = "0.47.0", features = ["experimental-api"] }
-tor-checkable = { path = "../tor-checkable", version = "0.47.0" }
-tor-error = { version = "0.47.0", path = "../tor-error" }
-tor-llcrypto = { version = "0.47.0", path = "../tor-llcrypto" }
+tor-bytes = { package = "zakura-tor-bytes", path = "../tor-bytes", version = "0.47.0-zakura.1", default-features = false }
+tor-cert = { package = "zakura-tor-cert", path = "../tor-cert", version = "0.47.0-zakura.1", features = ["experimental-api"] }
+tor-checkable = { package = "zakura-tor-checkable", path = "../tor-checkable", version = "0.47.0-zakura.1" }
+tor-error = { package = "zakura-tor-error", version = "0.47.0-zakura.1", path = "../tor-error" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", version = "0.47.0-zakura.1", path = "../tor-llcrypto" }
 
 [dev-dependencies]
 signature = "2"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-llcrypto = { version = "0.47.0", path = "../tor-llcrypto", features = ["testing"] }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", version = "0.47.0-zakura.1", path = "../tor-llcrypto", features = ["testing"] }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_key_forge"

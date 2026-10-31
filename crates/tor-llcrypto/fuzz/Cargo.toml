@@ -13,6 +13,7 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 
 [dependencies.tor-llcrypto]
+package = "zakura-tor-llcrypto"
 path = ".."
 
 # Prevent this from interfering with workspaces

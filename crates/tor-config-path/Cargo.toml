@@ -1,6 +1,6 @@
 [package]
-name = "tor-config-path"
-version = "0.47.0"
+name = "zakura-tor-config-path"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Low-level file path handling for configuration of the Arti Tor implementation"
 keywords = ["tor", "arti"]
 categories = ["config"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = ["expand-paths"]
@@ -40,7 +40,7 @@ __is_experimental = []
 directories = { version = "6", optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
 thiserror = "2"
-tor-error = { path = "../tor-error", version = "0.47.0" }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }
 
 [dev-dependencies]
 assert_matches = "1.5.0"
@@ -50,3 +50,6 @@ toml = "1.1.8"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_config_path"

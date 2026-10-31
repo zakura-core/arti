@@ -13,10 +13,12 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 
 [dependencies.tor-cell]
+package = "zakura-tor-cell"
 path = ".."
 features = ["hs", "experimental"]
 
 [dependencies.tor-bytes]
+package = "zakura-tor-bytes"
 path = "../../tor-bytes"
 
 # Prevent this from interfering with workspaces

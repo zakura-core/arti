@@ -1,6 +1,6 @@
 [package]
-name = "tor-cert"
-version = "0.47.0"
+name = "zakura-tor-cert"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Non-standard certificate formats used by Tor"
 keywords = ["tor", "arti", "certificate"]
 categories = ["parser-implementations"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 [package.metadata.docs.rs]
 all-features = true
 
@@ -38,20 +38,23 @@ experimental-api = ["__is_experimental"]
 __is_experimental = []
 
 [dependencies]
-caret = { path = "../caret", version = "0.11.0" }
+caret = { package = "zakura-caret", path = "../caret", version = "0.11.0-zakura.1" }
 derive_more = { version = "2.1.1", features = ["full"] }
 digest = "0.10.7"
 thiserror = "2"
-tor-bytes = { path = "../tor-bytes", version = "0.47.0" }
-tor-cert-x509 = { path = "../tor-cert-x509", version = "0.47.0", optional = true }
-tor-checkable = { path = "../tor-checkable", version = "0.47.0" }
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0" }
-web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
+tor-bytes = { package = "zakura-tor-bytes", path = "../tor-bytes", version = "0.47.0-zakura.1" }
+tor-cert-x509 = { package = "zakura-tor-cert-x509", path = "../tor-cert-x509", version = "0.47.0-zakura.1", optional = true }
+tor-checkable = { package = "zakura-tor-checkable", path = "../tor-checkable", version = "0.47.0-zakura.1" }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1" }
+web-time-compat = { package = "zakura-web-time-compat", path = "../web-time-compat", version = "0.3.0-zakura.1" }
 
 [dev-dependencies]
 base64ct = "1.8.3"
 hex-literal = "1.1"
 humantime = "2"
 rand = "0.10.3"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+
+[lib]
+name = "tor_cert"
