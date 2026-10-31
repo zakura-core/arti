@@ -7,40 +7,35 @@
 //! Other code should access these digests via the traits in the
 //! [`digest`] crate.
 
-#[cfg(feature = "with-openssl")]
-pub use openssl_compat::Sha1;
-#[cfg(not(feature = "with-openssl"))]
 pub use sha1::Sha1;
 
 pub use sha2::{Sha256, Sha512};
 pub use sha3::{Sha3_256, Shake128, Shake256, Shake256Reader};
 
-/// Compatibility layer between OpenSSL and `digest`
-#[cfg(feature = "with-openssl")]
-mod openssl_compat {
-    use openssl::sha::Sha1 as OpenSslSha1;
+#[cfg(test)]
+mod test {
+    use super::Sha1;
+    use digest::Digest as _;
+    use hex_literal::hex;
 
-    use digest::{FixedOutput, HashMarker, Output, OutputSizeUser, Update};
-
-    /// Wrapper around OpenSSL Sha1 to make it compatible with `digest`
-    #[derive(Default, Clone)]
-    pub struct Sha1(OpenSslSha1);
-
-    impl Update for Sha1 {
-        fn update(&mut self, data: &[u8]) {
-            self.0.update(data);
+    /// NIST's one- and two-block SHA-1 message samples.
+    #[test]
+    fn sha1_nist() {
+        // NIST CSRC example values, SHA1.pdf (FIPS 180-2 samples).
+        let cases: &[(&[u8], [u8; 20])] = &[
+            (b"abc", hex!("a9993e364706816aba3e25717850c26c9cd0d89d")),
+            (
+                b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+                hex!("84983e441c3bd26ebaae4aa1f95129e5e54670f1"),
+            ),
+        ];
+        for (message, expected) in cases {
+            assert_eq!(&Sha1::digest(message)[..], expected);
+            let mut digest = Sha1::new();
+            for byte in *message {
+                digest.update([*byte]);
+            }
+            assert_eq!(&digest.finalize()[..], expected);
         }
     }
-
-    impl OutputSizeUser for Sha1 {
-        type OutputSize = typenum::consts::U20;
-    }
-
-    impl FixedOutput for Sha1 {
-        fn finalize_into(self, out: &mut Output<Self>) {
-            *out = self.0.finish().into();
-        }
-    }
-
-    impl HashMarker for Sha1 {}
 }
