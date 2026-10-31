@@ -277,9 +277,14 @@ impl StorageConfig {
 ///
 /// Finally, you can get fine-grained control over the members of a
 /// TorClientConfig using [`TorClientConfigBuilder`].
+///
+/// Deserializing the builder rejects unknown top-level settings. This includes
+/// removed bridge and pluggable-transport configuration; it cannot silently
+/// fall back to direct Tor connections.
 #[derive(Clone, Deftly, Debug, AsRef, educe::Educe)]
 #[educe(PartialEq, Eq)]
 #[derive_deftly(TorConfig)]
+#[deftly(tor_config(attr = { serde(deny_unknown_fields) }))]
 #[non_exhaustive]
 pub struct TorClientConfig {
     /// Information about the Tor network we want to connect to.
@@ -609,6 +614,30 @@ mod test {
         let val = bld.build().unwrap();
 
         assert_ne!(val, TorClientConfig::default());
+    }
+
+    #[test]
+    fn removed_bridge_configuration_is_rejected() {
+        // Reject old bridge settings before a client can bootstrap directly.
+        for config in [
+            serde_json::json!({"bridges": {"enabled": true}}),
+            serde_json::json!({"bridges": {"transports": []}}),
+            serde_json::json!({"bridgse": {"enabled": true}}),
+        ] {
+            let error = serde_json::from_value::<TorClientConfigBuilder>(config)
+                .unwrap_err()
+                .to_string();
+            assert!(error.contains("unknown field"), "{error}");
+        }
+        let error = toml::from_str::<TorClientConfigBuilder>("[bridges]\nenabled = true\n")
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("unknown field `bridges`"), "{error}");
+
+        // Direct wallet configuration still uses the ordinary typed builder.
+        TorClientConfigBuilder::from_directories("state", "cache")
+            .build()
+            .unwrap();
     }
 
     #[test]

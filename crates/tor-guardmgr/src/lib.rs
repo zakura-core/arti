@@ -1596,7 +1596,8 @@ mod test {
     fn removed_bridge_guard_set_stays_opaque() {
         // Old bridge samples must never become ordinary public-relay guards.
         let bridge_set = serde_json::json!({"sample": [{"legacy": "bridge"}]});
-        let saved = serde_json::json!({"bridges": bridge_set});
+        let mut saved = serde_json::to_value(GuardSets::default()).unwrap();
+        saved["bridges"] = bridge_set.clone();
         let guards: GuardSets = serde_json::from_value(saved).unwrap();
         assert_eq!(guards.active_set, GuardSetSelector::Default);
         let encoded = serde_json::to_value(&guards).unwrap();
