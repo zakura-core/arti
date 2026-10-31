@@ -3,7 +3,10 @@
 //! Supports SOCKS4/4a/5 and HTTP CONNECT proxies.
 #![allow(dead_code)]
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{
+    net::{IpAddr, SocketAddr},
+    sync::Arc,
+};
 
 use base64ct::{Base64, Encoding};
 use futures::io::{AsyncBufReadExt, BufReader};
@@ -128,7 +131,11 @@ async fn do_socks_handshake<R: NetStreamProvider + Send + Sync>(
 
 /// Format target address for HTTP CONNECT request line and Host header.
 fn format_connect_target(target: &SocketAddr) -> String {
-    target.to_string()
+    let host = match target.ip() {
+        IpAddr::V4(ip) => ip.to_string(),
+        IpAddr::V6(ip) => format!("[{ip}]"),
+    };
+    format!("{}:{}", host, target.port())
 }
 
 /// Build HTTP CONNECT request string with optional Basic auth.
@@ -397,9 +404,13 @@ mod test {
 
     #[test]
     fn connect_target_uses_numeric_relay_address() {
-        for address in ["192.0.2.1:9001", "[2001:db8::1]:443"] {
+        for (address, expected) in [
+            ("192.0.2.1:9001", "192.0.2.1:9001"),
+            ("[2001:db8::1]:443", "[2001:db8::1]:443"),
+            ("[fe80::1%4]:443", "[fe80::1]:443"),
+        ] {
             let target = address.parse().unwrap();
-            assert_eq!(format_connect_target(&target), address);
+            assert_eq!(format_connect_target(&target), expected);
         }
     }
 
