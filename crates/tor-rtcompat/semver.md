@@ -163,3 +163,14 @@ Rustls/server feature gates), rather than accepting a removed backend feature.
 The public test macros likewise require Tokio/Rustls. Provided methods of the
 removed trait implementations disappear with those types; their generic trait
 definitions and default bodies remain unchanged.
+
+BREAKING: The six socket-option builders now build infallibly. For
+`CommonListenOptionsBuilder`, `TcpListenOptionsBuilder`,
+`UnixListenOptionsBuilder`, `CommonConnectOptionsBuilder`,
+`TcpConnectOptionsBuilder` and `UnixConnectOptionsBuilder`, `build(&self)`
+returns the corresponding options value directly instead of a `Result`.
+Remove their six generated `*BuilderError` enums, `UninitializedField` and
+`ValidationError` variants and payloads, and `Debug`, `Display`, `Error` and
+`From` implementations. The builders remain available through the existing
+options' `builder()` methods; they retain `Clone`, `Default`, buffer setters
+and nested `common()` accessors. No builder re-exports or visibility are added.
