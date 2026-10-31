@@ -196,12 +196,8 @@ pub(crate) struct ChanMgrMetrics {
     pub(crate) inbound_channels_built_failure_missing_id: metrics::Counter,
     /// Number of inbound channels that we tried to build but had an [`Error::IdentityConflict`] error.
     pub(crate) inbound_channels_built_failure_identity_conflict: metrics::Counter,
-    /// Number of inbound channels that we tried to build but had an [`Error::NoSuchTransport`] error.
-    pub(crate) inbound_channels_built_failure_no_such_transport: metrics::Counter,
     /// Number of inbound channels that we tried to build but had an [`Error::RequestCancelled`] error.
     pub(crate) inbound_channels_built_failure_request_cancelled: metrics::Counter,
-    /// Number of inbound channels that we tried to build but had an [`Error::Pt`] error.
-    pub(crate) inbound_channels_built_failure_pt: metrics::Counter,
     /// Number of inbound channels that we tried to build but had an [`Error::Memquota`] error.
     pub(crate) inbound_channels_built_failure_memquota: metrics::Counter,
     /// Number of inbound channels that we tried to build but had an [`Error::Internal`] error.
@@ -292,14 +288,6 @@ impl ChanMgrMetrics {
                 "direction" => "inbound",
                 "error" => "identity_conflict",
             ),
-            inbound_channels_built_failure_no_such_transport: metrics::counter!(
-                description: "Total number of channels built",
-                unit: metrics::Unit::Count,
-                "arti_chanmgr_channels_built",
-                "result" => "failure",
-                "direction" => "inbound",
-                "error" => "no_such_transport",
-            ),
             inbound_channels_built_failure_request_cancelled: metrics::counter!(
                 description: "Total number of channels built",
                 unit: metrics::Unit::Count,
@@ -307,14 +295,6 @@ impl ChanMgrMetrics {
                 "result" => "failure",
                 "direction" => "inbound",
                 "error" => "request_cancelled",
-            ),
-            inbound_channels_built_failure_pt: metrics::counter!(
-                description: "Total number of channels built",
-                unit: metrics::Unit::Count,
-                "arti_chanmgr_channels_built",
-                "result" => "failure",
-                "direction" => "inbound",
-                "error" => "pt",
             ),
             inbound_channels_built_failure_memquota: metrics::counter!(
                 description: "Total number of channels built",
@@ -356,13 +336,9 @@ impl ChanMgrMetrics {
             Err(Error::IdentityConflict) => self
                 .inbound_channels_built_failure_identity_conflict
                 .increment(1),
-            Err(Error::NoSuchTransport(_)) => self
-                .inbound_channels_built_failure_no_such_transport
-                .increment(1),
             Err(Error::RequestCancelled) => self
                 .inbound_channels_built_failure_request_cancelled
                 .increment(1),
-            Err(Error::Pt(_)) => self.inbound_channels_built_failure_pt.increment(1),
             Err(Error::Memquota(_)) => self.inbound_channels_built_failure_memquota.increment(1),
             Err(Error::Internal(_)) => self.inbound_channels_built_failure_internal.increment(1),
         }
