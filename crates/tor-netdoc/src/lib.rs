@@ -1,5 +1,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
+#![cfg_attr(saturating_time_nightly, feature(time_saturating_systemtime))]
+#![cfg_attr(all(test, saturating_time_nightly), feature(time_systemtime_limits))]
 // @@ begin lint list maintained by maint/add_warning @@
 #![allow(renamed_and_removed_lints)] // @@REMOVE_WHEN(ci_arti_stable)
 #![allow(unknown_lints)] // @@REMOVE_WHEN(ci_arti_nightly)

@@ -29,7 +29,6 @@ full = [
     "tor-units?/full",
     "tor-cell/full",
     "web-time-compat/full",
-    "saturating-time/full",
 ]
 experimental = [
     "build_docs",
@@ -88,7 +87,6 @@ paste = "1.0.15"
 rand = { version = "0.10.3" }
 rangemap = "1.8"
 regex = { version = "1", optional = true }
-saturating-time = { path = "../saturating-time", version = "0.5.0" }
 serde = { version = "1.0.229", features = ["derive"] }
 signature = "2"
 smallvec = "1.16"
@@ -127,3 +125,6 @@ tor-basic-utils = { version = "0.47.0", path = "../tor-basic-utils" }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(saturating_time_nightly)"] }
