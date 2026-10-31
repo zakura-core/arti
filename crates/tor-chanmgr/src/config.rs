@@ -354,7 +354,7 @@ fn encode_userinfo(username: &str, password: Option<&str>) -> (String, Option<St
 }
 
 #[cfg(test)]
-mod previous_proxy;
+mod proxy_tests;
 
 impl ProxyProtocol {
     /// Create a new SOCKS proxy configuration with no authentication
