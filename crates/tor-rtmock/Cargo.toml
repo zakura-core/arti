@@ -38,7 +38,7 @@ futures-await-test = "0.3.0"
 rand = "0.10.3"
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-general-addr = { path = "../tor-general-addr", version = "0.47.0" }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "native-tls"] }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "rustls"] }
 tracing-test = "0.2.6"
 
 [features]

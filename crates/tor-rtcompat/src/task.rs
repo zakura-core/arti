@@ -40,7 +40,7 @@ impl Future for YieldFuture {
 
 #[cfg(all(
     test,
-    any(feature = "native-tls", feature = "rustls"),
+    feature = "rustls",
     any(feature = "tokio", feature = "async-std", feature = "smol"),
     not(miri), // this typically results in use of a yield syscall
 ))]

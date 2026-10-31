@@ -98,7 +98,7 @@ tor-guardmgr = { path = "../tor-guardmgr", version = "0.47.0", features = ["test
 tor-netdir = { path = "../tor-netdir", version = "0.47.0", features = ["testing"] }
 tor-netdoc = { path = "../tor-netdoc", version = "0.47.0", features = ["testing"] }
 tor-persist = { path = "../tor-persist", version = "0.47.0", features = ["testing"] }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "native-tls"] }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "rustls"] }
 tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
 tracing-test = "0.2.6"
 

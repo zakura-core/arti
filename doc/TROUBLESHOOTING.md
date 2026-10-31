@@ -1,87 +1,44 @@
 # Fixing some common (and not-so-common) problems
 
-Here's an infrequently-asked-questions list about fixing some common (and
-not-so-common) issues in your Arti compilation or usage.
+Here's an infrequently-asked-questions list about compiling or embedding this
+Arti library fork.
 
-If you run into a problem that isn't on this list, please let us know on
-[our bugtracker](../README.md#reporting-bugs).
+## Linking with SQLite
 
-## Compilation issues
+Arti uses SQLite via `rusqlite`. Install the SQLite development libraries and
+`pkg-config` when linking against the system library. Alternatively, enable
+`arti-client/static-sqlite` (also selected by `arti-client/static`) to build
+SQLite from source and link it statically.
 
-### When I try to build Arti, linking fails!
+See [rusqlite's build notes](https://github.com/rusqlite/rusqlite#notes-on-building-rusqlite-and-libsqlite3-sys)
+for platform-specific configuration.
 
-Arti uses your system's sqlite3 and TLS libraries. Make sure that you have
-development libraries for sqlite3 installed.  You might also need to install
-the development libraries for OpenSSL, if you aren't on Windows or OSX.
-You may also need to install `pkg-config`.
+The TLS backend is Rustls with Ring; it does not link the platform's TLS
+library. The separate optional `arti-client/accel-openssl` cryptographic
+acceleration feature still requires OpenSSL when selected.
 
-#### In more detail...
+## Selecting a runtime
 
-We use sqlite3 via the `rusqlite` crate.  Our TLS implementation is the
-`native_tls` crate, which relies on `security-framework` (on OSX),
-`schannel` (on Windows), or `openssl` (elsewhere).
+The `arti-client` defaults select Tokio and Rustls. When disabling defaults,
+select `rustls` and an asynchronous runtime such as `tokio` or `async-std`.
+The experimental `smol` feature is also retained.
 
-Both of these crates, by default, access their dependencies via
-`pkg-config` or `vpkg` as appropriate.  But you can override this
-behavior if you run into trouble:
+Cargo unifies features across dependencies. If both `tokio` and `async-std`
+are enabled, `tor_rtcompat::PreferredRuntime` prefers Tokio. To choose a
+runtime explicitly, use `tor_rtcompat::tokio::TokioRustlsRuntime`,
+`tor_rtcompat::async_std::AsyncStdRustlsRuntime`, or
+`tor_rtcompat::smol::SmolRustlsRuntime` with the corresponding features.
+Applications may also supply a custom implementation of the runtime traits.
 
-  * You can build `arti` or `arti-client` with the `static` feature, and
-    the underlying crates will be told to build their own dependencies
-    from source and link statically.
+Rustls enables its Ring cryptographic provider. Applications that install a
+custom Rustls provider must do so before constructing a runtime.
 
-  * For more information on building `rusqlite` in different
-    environments, see [this section of their README](https://github.com/rusqlite/rusqlite#notes-on-building-rusqlite-and-libsqlite3-sys).
+## Running the public Tor network test
 
-  * For more information on building the `openssl` crate in different
-    environments, see the
-    ["building" section](https://docs.rs/openssl/latest/openssl/#building)
-    of their documentation.
-
-
-### I get a weird segfault on startup on Alpine Linux!
-
-If you're seeing this kind of error from inside the native_tls crate
-
-```
-arti[62370]: segfault at 0 ip 0000000000000000 sp 00007fff9fa01128 error 14
-```
-
-then you might be hitting a
-[known issue](https://githubmemory.com/repo/sfackler/rust-native-tls/issues/190)
-on native_tls on Alpine linux.
-
-You can solve this by building with `RUSTFLAGS=-Ctarget-feature=-crt-static`.
-
-### I get an error about "configuring both an async runtime and a TLS stack" when building Arti!
-
-If you're getting
-
-```
-error: You must configure both an async runtime and a TLS stack. See doc/TROUBLESHOOTING.md for more.
-```
-
-...then the combination of [Cargo features](https://doc.rust-lang.org/cargo/reference/features.html) (`--features`) you
-you configured while compiling Arti doesn't specify both an asynchronous runtime *and* a TLS stack to use.
-
-You must choose:
-
-- at least one asynchronous runtime (features `tokio`, `async-std`)
-  - (if you choose both, `tokio` will be used)
-- at least one TLS stack (features `native-tls`, `rustls`)
-  - (if you choose both, `native-tls` will be used)
-
-Pass these in with the `--features` argument when compiling (e.g. `--features tokio,native-tls`).
-
-Note that Arti configures Tokio and native-tls by default, so if you're gettnig this error, you probably tried to do
-something fancy with `--no-default-features`.
-
-### Arti isn't respecting my custom runtime choice!
-
-Make sure you're building just the Arti binary, and not the whole workspace; to do this, you'll need to specify `-p arti`
-when invoking Cargo, e.g.
-
-    $ cargo build -p arti --no-default-features --features async-std,native-tls
-
-You can verify which runtime is being used by passing `--version` to Arti, e.g.
-
-    $ target/release/arti --version
+The ignored `arti-client` `live_tor` test uses the wallet's Tokio/Rustls
+selection and explicitly installs Ring. Its destination HTTPS connection
+validates the hostname and certificate chain using a system PEM CA bundle.
+Set `SSL_CERT_FILE` to a bundle path if it is outside the standard Linux/macOS
+locations. Unsupported locations and invalid or empty bundles are test setup
+errors; the test never disables certificate validation. This only configures
+the test's destination HTTPS trust store, not Tor relay authentication.

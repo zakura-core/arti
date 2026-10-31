@@ -44,9 +44,6 @@ crypto: (see arti#146 for discussion)
 ed25519 trait:
 * Batch signature verification support. (or do they have this already?)
 
-native-tls:
-* Support for RFC5705 exporters where available.
-
 webpki:
 * Support for cert without extensions and/or without alpn
   https://github.com/briansmith/webpki/issues/219

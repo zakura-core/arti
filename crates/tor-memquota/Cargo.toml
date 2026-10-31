@@ -43,7 +43,7 @@ rand = "0.10.3"
 safelog = { path = "../safelog", version = "0.10.0" }
 serde_json = "1.0.154"
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-rtcompat = { version = "0.47.0", path = "../tor-rtcompat", features = ["tokio", "native-tls"] }
+tor-rtcompat = { version = "0.47.0", path = "../tor-rtcompat", features = ["tokio", "rustls"] }
 tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
 tracing-test = "0.2.6"
 

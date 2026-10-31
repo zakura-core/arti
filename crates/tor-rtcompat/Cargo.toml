@@ -20,7 +20,7 @@ full = [
     "arbitrary",
     "async-std",
     "tokio",
-    "native-tls",
+    "rustls",
     "tls-server",
     "tor-error/full",
     "tor-general-addr/full",
@@ -34,13 +34,9 @@ __is_experimental = []
 async-std = ["async-std-crate", "async-io", "dep:async_executors", "async_executors/async_std"]
 tokio = ["tokio-crate", "tokio-util"]
 smol = ["dep:smol", "async-io", "blocking", "__is_experimental"]
-static = ["native-tls-crate?/vendored", "__is_nonadditive"]
-native-tls = ["native-tls-crate", "async-native-tls"]
 testing = ["__is_experimental", "futures-rustls?/aws-lc-rs"]
 
-# This is not nonadditive from a software POV, but we mark it as such because it
-# includes code licensed under the old OpenSSL license (which was 4-clause BSD),
-# which in turn introduces a GPL-incompatibility.
+# TLS backend used by the embedded wallet runtime.
 rustls = [
     "futures-rustls",
     "dep:rustls-dont-use",
@@ -57,7 +53,6 @@ __is_nonadditive = []
 [dependencies]
 arbitrary = { version = "1.5.0", optional = true, features = ["derive"] }
 async-io = { version = "2.6.0", optional = true }
-async-native-tls = { version = "0.6.0", optional = true }
 async-std-crate = { package = "async-std", version = "1.13.2", optional = true }
 async-trait = "0.1.92"
 async_executors = { version = "0.7.0", default-features = false, optional = true }
@@ -73,12 +68,12 @@ futures = "0.3.34"
 futures-rustls = { version = "0.26.0", optional = true, default-features = false, features = [
     "tls12",
     "logging",
+    "ring",
 ] }
 
 getset = "0.1.7"
 hex = "0.4.3"
 
-native-tls-crate = { package = "native-tls", version = "0.2", optional = true }
 paste = "1.0.15"
 pin-project = "1"
 # We access the rustls library through the `futures_rustls::rustls` re-export,
@@ -115,8 +110,6 @@ libc = "0.2"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
-# Used for testing our TLS implementation.
-native-tls-crate = { package = "native-tls", version = "0.2" }
 tor-basic-utils = { version = "0.47.0", path = "../tor-basic-utils" }
 # Ensure that we have aws-lc-rs for testing, but only if we're building with rustls.
 # (We need to do it this way because we can't have conditional dev-dependencies.)

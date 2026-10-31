@@ -53,7 +53,7 @@
 #![cfg_attr(not(all(feature = "full")), allow(unused))]
 
 #[cfg(all(
-    any(feature = "native-tls", feature = "rustls"),
+    feature = "rustls",
     any(feature = "async-std", feature = "tokio", feature = "smol")
 ))]
 pub(crate) mod impls;
@@ -92,7 +92,7 @@ pub use timer::{SleepProviderExt, Timeout, TimeoutError};
 /// create them.
 pub mod tls {
     #[cfg(all(
-        any(feature = "native-tls", feature = "rustls"),
+        feature = "rustls",
         any(feature = "async-std", feature = "tokio", feature = "smol")
     ))]
     pub use crate::impls::unimpl_tls::UnimplementedTls;
@@ -100,11 +100,6 @@ pub mod tls {
         CertifiedConn, TlsAcceptorSettings, TlsConnector, TlsServerUnsupported,
     };
 
-    #[cfg(all(
-        feature = "native-tls",
-        any(feature = "tokio", feature = "async-std", feature = "smol")
-    ))]
-    pub use crate::impls::native_tls::NativeTlsProvider;
     #[cfg(all(
         feature = "rustls",
         any(feature = "tokio", feature = "async-std", feature = "smol")
@@ -118,24 +113,20 @@ pub mod tls {
     pub use crate::impls::rustls::rustls_server::{RustlsAcceptor, RustlsServerStream};
 }
 
-#[cfg(all(any(feature = "native-tls", feature = "rustls"), feature = "tokio"))]
+#[cfg(all(feature = "rustls", feature = "tokio"))]
 pub mod tokio;
 
-#[cfg(all(any(feature = "native-tls", feature = "rustls"), feature = "async-std"))]
+#[cfg(all(feature = "rustls", feature = "async-std"))]
 pub mod async_std;
 
-#[cfg(all(any(feature = "native-tls", feature = "rustls"), feature = "smol"))]
+#[cfg(all(feature = "rustls", feature = "smol"))]
 pub mod smol;
 
 pub use compound::{CompoundRuntime, RuntimeSubstExt};
 
-#[cfg(all(
-    any(feature = "native-tls", feature = "rustls"),
-    feature = "async-std",
-    not(feature = "tokio")
-))]
+#[cfg(all(feature = "rustls", feature = "async-std", not(feature = "tokio")))]
 use async_std as preferred_backend_mod;
-#[cfg(all(any(feature = "native-tls", feature = "rustls"), feature = "tokio"))]
+#[cfg(all(feature = "rustls", feature = "tokio"))]
 use tokio as preferred_backend_mod;
 
 /// The runtime that we prefer to use, out of all the runtimes compiled into the
@@ -143,34 +134,24 @@ use tokio as preferred_backend_mod;
 ///
 /// If `tokio` and `async-std` are both available, we prefer `tokio` for its
 /// performance.
-/// If `native_tls` and `rustls` are both available, we prefer `native_tls` since
-/// it has been used in Arti for longer.
+/// TLS is provided by Rustls.
 ///
 /// The process [**may not fork**](crate#do-not-fork)
 /// (except, very carefully, before exec)
 /// after creating this or any other `Runtime`.
-#[cfg(all(
-    any(feature = "native-tls", feature = "rustls"),
-    any(feature = "async-std", feature = "tokio")
-))]
+#[cfg(all(feature = "rustls", any(feature = "async-std", feature = "tokio")))]
 #[derive(Clone)]
 pub struct PreferredRuntime {
     /// The underlying runtime object.
     inner: preferred_backend_mod::PreferredRuntime,
 }
 
-#[cfg(all(
-    any(feature = "native-tls", feature = "rustls"),
-    any(feature = "async-std", feature = "tokio")
-))]
+#[cfg(all(feature = "rustls", any(feature = "async-std", feature = "tokio")))]
 crate::opaque::implement_opaque_runtime! {
     PreferredRuntime { inner : preferred_backend_mod::PreferredRuntime }
 }
 
-#[cfg(all(
-    any(feature = "native-tls", feature = "rustls"),
-    any(feature = "async-std", feature = "tokio")
-))]
+#[cfg(all(feature = "rustls", any(feature = "async-std", feature = "tokio")))]
 impl PreferredRuntime {
     /// Obtain a [`PreferredRuntime`] from the currently running asynchronous runtime.
     /// Generally, this is what you want.
@@ -315,29 +296,14 @@ macro_rules! declare_conditional_macro {
 #[doc(hidden)]
 pub mod cond {
     declare_conditional_macro! {
-        /// Expand a token tree if the TokioNativeTlsRuntime is available.
-        #[doc(hidden)]
-        macro if_tokio_native_tls_present = ("tokio", "native-tls")
-    }
-    declare_conditional_macro! {
         /// Expand a token tree if the TokioRustlsRuntime is available.
         #[doc(hidden)]
         macro if_tokio_rustls_present = ("tokio", "rustls")
     }
     declare_conditional_macro! {
-        /// Expand a token tree if the TokioNativeTlsRuntime is available.
-        #[doc(hidden)]
-        macro if_async_std_native_tls_present = ("async-std", "native-tls")
-    }
-    declare_conditional_macro! {
-        /// Expand a token tree if the TokioNativeTlsRuntime is available.
+        /// Expand a token tree if the AsyncStdRustlsRuntime is available.
         #[doc(hidden)]
         macro if_async_std_rustls_present = ("async-std", "rustls")
-    }
-    declare_conditional_macro! {
-        /// Expand a token tree if the SmolNativeTlsRuntime is available.
-        #[doc(hidden)]
-        macro if_smol_native_tls_present = ("smol", "native-tls")
     }
     declare_conditional_macro! {
         /// Expand a token tree if the SmolRustlsRuntime is available.
@@ -363,7 +329,7 @@ pub mod cond {
 //            this macro, like in scheduler.rs
 #[macro_export]
 #[cfg(all(
-    any(feature = "native-tls", feature = "rustls"),
+    feature = "rustls",
     any(feature = "tokio", feature = "async-std", feature = "smol"),
 ))]
 macro_rules! test_with_all_runtimes {
@@ -374,20 +340,11 @@ macro_rules! test_with_all_runtimes {
         // the ? operator or calling expect() because some of the closures that
         // we use this macro with return (), and some return Result.
 
-        if_tokio_native_tls_present! {{
-           $crate::tokio::TokioNativeTlsRuntime::run_test($fn).check_ok();
-        }}
         if_tokio_rustls_present! {{
             $crate::tokio::TokioRustlsRuntime::run_test($fn).check_ok();
         }}
-        if_async_std_native_tls_present! {{
-            $crate::async_std::AsyncStdNativeTlsRuntime::run_test($fn).check_ok();
-        }}
         if_async_std_rustls_present! {{
             $crate::async_std::AsyncStdRustlsRuntime::run_test($fn).check_ok();
-        }}
-        if_smol_native_tls_present! {{
-            $crate::smol::SmolNativeTlsRuntime::run_test($fn).check_ok();
         }}
         if_smol_rustls_present! {{
             $crate::smol::SmolRustlsRuntime::run_test($fn).check_ok();
@@ -407,17 +364,14 @@ macro_rules! test_with_all_runtimes {
 ///
 /// (Always prefers tokio if present.)
 #[macro_export]
-#[cfg(all(
-    any(feature = "native-tls", feature = "rustls"),
-    any(feature = "tokio", feature = "async-std"),
-))]
+#[cfg(all(feature = "rustls", any(feature = "tokio", feature = "async-std"),))]
 macro_rules! test_with_one_runtime {
     ( $fn:expr ) => {{ $crate::PreferredRuntime::run_test($fn) }};
 }
 
 #[cfg(all(
     test,
-    any(feature = "native-tls", feature = "rustls"),
+    feature = "rustls",
     any(feature = "async-std", feature = "tokio", feature = "smol"),
     not(miri), // Many of these tests use real sockets or SystemTime.
 ))]
@@ -444,7 +398,6 @@ mod test {
 
     use futures::io::{AsyncReadExt, AsyncWriteExt};
     use futures::stream::StreamExt;
-    use native_tls_crate as native_tls;
     use std::io::Result as IoResult;
     use std::net::SocketAddr;
     use std::net::{Ipv4Addr, SocketAddrV4};
@@ -634,59 +587,55 @@ mod test {
         })
     }
 
-    // Try listening on an address and connecting there, except using TLS.
-    //
-    // Note that since we didn't have TLS server support when this test was first written,
-    // we're going to use a thread.
+    // Exercise the unvalidated Tor TLS connector with an expired certificate.
     fn simple_tls<R: ToplevelRuntime>(runtime: &R) -> IoResult<()> {
-        /*
-         A simple expired self-signed rsa-2048 certificate.
+        use futures_rustls::rustls::{
+            self,
+            pki_types::{CertificateDer, PrivatePkcs8KeyDer},
+        };
+        use std::sync::Arc;
 
-         Generated by running the make-cert.c program in tor-rtcompat/test-data-helper,
-         and then making a PFX file using
-
-         openssl pkcs12 -export -certpbe PBE-SHA1-3DES -out test.pfx -inkey test.key -in test.crt
-
-         The password is "abc".
-        */
-        static PFX_ID: &[u8] = include_bytes!("test.pfx");
-        // Note that we need to set a password on the pkcs12 file, since apparently
-        // OSX doesn't support pkcs12 with empty passwords. (That was arti#111).
-        static PFX_PASSWORD: &str = "abc";
+        // The certificate and RSA key are the existing test.pfx fixture,
+        // converted to DER without regenerating either value. The certificate
+        // has Tor-style v3 encoding without extensions and is expired.
+        let certificate = CertificateDer::from(include_bytes!("test-cert.der").to_vec());
+        let private_key = PrivatePkcs8KeyDer::from(include_bytes!("test-key.der").to_vec());
+        let config = rustls::ServerConfig::builder()
+            .with_no_client_auth()
+            .with_single_cert(vec![certificate.clone()], private_key.into())
+            .unwrap();
 
         let localhost = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0);
         let listener = std::net::TcpListener::bind(localhost)?;
         let addr = listener.local_addr()?;
 
-        let identity = native_tls::Identity::from_pkcs12(PFX_ID, PFX_PASSWORD).unwrap();
-
-        // See note on function for why we're using a thread here.
         let th = std::thread::spawn(move || {
-            // Accept a single TLS connection and run an echo server
             use std::io::{Read, Write};
-            let acceptor = native_tls::TlsAcceptor::new(identity).unwrap();
-            let (con, _addr) = listener.accept()?;
-            let mut con = acceptor.accept(con).unwrap();
+            let (socket, _addr) = listener.accept()?;
+            let connection = rustls::ServerConnection::new(Arc::new(config)).unwrap();
+            let mut connection = rustls::StreamOwned::new(connection, socket);
             let mut buf = [0_u8; 16];
             loop {
-                let n = con.read(&mut buf)?;
+                let n = connection.read(&mut buf)?;
                 if n == 0 {
                     break;
                 }
-                con.write_all(&buf[..n])?;
+                connection.write_all(&buf[..n])?;
+                connection.flush()?;
             }
             IoResult::Ok(())
         });
 
         let connector = runtime.tls_connector();
-
         runtime.block_on(async {
             let text = b"I Suddenly Dont Understand Anything";
             let mut buf = vec![0_u8; text.len()];
-            let connect_options = Default::default();
-            let conn = runtime.connect(&addr, &connect_options).await?;
+            let conn = runtime.connect(&addr, &Default::default()).await?;
             let mut conn = connector.negotiate_unvalidated(conn, "Kan.Aya").await?;
-            assert!(conn.peer_certificate()?.is_some());
+            assert_eq!(
+                conn.peer_certificate()?.unwrap().as_ref(),
+                certificate.as_ref()
+            );
             conn.write_all(text).await?;
             conn.flush().await?;
             conn.read_exact(&mut buf[..]).await?;
@@ -694,7 +643,6 @@ mod test {
             conn.close().await?;
             IoResult::Ok(())
         })?;
-
         th.join().unwrap()?;
         IoResult::Ok(())
     }
@@ -788,6 +736,7 @@ mod test {
             mod smol_runtime_tests {
                 tests_with_runtime! { &crate::smol::PreferredRuntime::create()? => $($id),* }
             }
+            #[cfg(any(feature="tokio", feature="async-std"))]
             mod default_runtime_tests {
                 tests_with_runtime! { &crate::PreferredRuntime::create()? => $($id),* }
             }
@@ -797,18 +746,6 @@ mod test {
     macro_rules! tls_runtime_tests {
         { $($id:ident),* $(,)? } =>
         {
-            #[cfg(all(feature="tokio", feature = "native-tls"))]
-            mod tokio_native_tls_tests {
-                tests_with_runtime! { &crate::tokio::TokioNativeTlsRuntime::create()? => $($id),* }
-            }
-            #[cfg(all(feature="async-std", feature = "native-tls"))]
-            mod async_std_native_tls_tests {
-                tests_with_runtime! { &crate::async_std::AsyncStdNativeTlsRuntime::create()? => $($id),* }
-            }
-            #[cfg(all(feature="smol", feature = "native-tls"))]
-            mod smol_native_tls_tests {
-                tests_with_runtime! { &crate::smol::SmolNativeTlsRuntime::create()? => $($id),* }
-            }
             #[cfg(all(feature="tokio", feature="rustls"))]
             mod tokio_rustls_tests {
                 tests_with_runtime! {  &crate::tokio::TokioRustlsRuntime::create()? => $($id),* }
@@ -821,6 +758,7 @@ mod test {
             mod smol_rustls_tests {
                 tests_with_runtime! {  &crate::smol::SmolRustlsRuntime::create()? => $($id),* }
             }
+            #[cfg(any(feature="tokio", feature="async-std"))]
             mod default_runtime_tls_tests {
                 tests_with_runtime! { &crate::PreferredRuntime::create()? => $($id),* }
             }

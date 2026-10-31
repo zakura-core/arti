@@ -38,13 +38,13 @@ def combination(*args):
 
 
 supplementary_targets["tor-rtcompat"] = combination(
-    ["async-std", "tokio", "native-tls", "rustls"]
+    ["async-std", "tokio", "rustls"]
 )
 supplementary_targets["arti-client"] = combination(
-    ["async-std", "tokio", "native-tls", "rustls"]
+    ["async-std", "tokio", "rustls"]
 )
 supplementary_targets["arti"] = combination(
-    ["async-std", "tokio"], ["native-tls", "rustls"]
+    ["async-std", "tokio"], ["rustls"]
 )
 
 

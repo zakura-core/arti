@@ -70,9 +70,8 @@ However, changing the set of Cargo features available can affect this; see
 [`PreferredRuntime`] for more.
 
   * If you want to use a runtime with an explicitly chosen backend,
-    name its type directly as [`async_std::AsyncStdNativeTlsRuntime`],
-    [`async_std::AsyncStdRustlsRuntime`], [`tokio::TokioNativeTlsRuntime`],
-    [`tokio::TokioRustlsRuntime`], [`smol::SmolNativeTlsRuntime`] or [`smol::SmolRustlsRuntime`].
+    name its type directly as [`async_std::AsyncStdRustlsRuntime`],
+    [`tokio::TokioRustlsRuntime`] or [`smol::SmolRustlsRuntime`].
     To construct one of these runtimes, call its `create()` method.  Or if you have already constructed a
     Tokio runtime that you want to use, you can wrap it as a
     [`Runtime`] explicitly with `current()`.
@@ -142,18 +141,17 @@ Features supported by this crate:
 
 * `tokio` -- build with [Tokio](https://tokio.rs/) support
 * `async-std` -- build with [async-std](https://async.rs/) support.
-* `native-tls` --  build with the [native-tls](https://github.com/sfackler/rust-native-tls)
-  crate for TLS support.
-* `static` -- link the native TLS library statically (enables the `vendored` feature of the
-  `native-tls` crate).
-* `rustls` -- build with the [rustls](https://github.com/rustls/rustls) crate for TLS support.
+* `rustls` -- build with [Rustls](https://github.com/rustls/rustls) and its
+  Ring cryptographic provider for TLS support. Applications may install their
+  own Rustls provider before constructing a runtime. If another built-in
+  provider is also enabled, applications must explicitly install their choice.
 
 ### Experimental and unstable features
 * `smol` -- build with [smol](https://github.com/smol-rs/smol) support.
 
 
 By default, *this* crate doesn't enable any features. However, you're almost certainly
-using this as part of the `arti-client` crate, which will enable `tokio` and `native-tls` in
+using this as part of the `arti-client` crate, which will enable `tokio` and `rustls` in
 its default configuration.
 
 ## Design FAQ

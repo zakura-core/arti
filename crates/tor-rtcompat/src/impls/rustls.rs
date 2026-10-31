@@ -31,25 +31,12 @@ use std::{
 ///
 /// # Cryptographic providers
 ///
-/// The application is responsible for calling [`CryptoProvider::install_default()`]
-/// before constructing [`TlsProvider`].  If they do not, rustls will fail,
-/// and arti will not run.
+/// The built-in Ring provider is enabled by this fork. Rustls selects it when
+/// no process-wide provider has been installed. Applications may install a
+/// different [`CryptoProvider`] before constructing a runtime.
+/// If another built-in provider is also enabled through Cargo features, an
+/// application must explicitly install its chosen provider first.
 ///
-/// We currently recommend the [aws-lc-rs] provider because,
-/// of the two builtin providers that ship with rustls,
-/// it appears to have better performance,
-/// and it supports hybrid post-quantum handshakes.
-/// It used to have a [problematic license][aws-lc-old-license],
-/// but [this has been fixed][aws-lc-relicense] since March 2026.
-///
-/// See the [rustls documentation][all-providers] for a list of other rustls
-/// cryptography providers.
-///
-/// [ring]: https://crates.io/crates/ring
-/// [aws-lc-rs]: https://github.com/aws/aws-lc-rs
-/// [aws-lc-old-license]: https://github.com/aws/aws-lc/issues/2203
-/// [all-providers]: https://docs.rs/rustls/latest/rustls/#cryptography-providers
-/// [aws-lc-relicense]: https://github.com/aws/aws-lc/pull/3091
 #[cfg_attr(
     docsrs,
     doc(cfg(all(
@@ -169,7 +156,7 @@ where
 fn ensure_testing_provider_installed() {
     if CryptoProvider::get_default().is_none() {
         // If we haven't installed a CryptoProvider at this point, we warn and install
-        // the `ring` provider.  That isn't great, but the alternative would be to
+        // the `aws-lc-rs` provider. That is not ideal, but the alternative would be to
         // panic.  Right now, that would cause many of our tests to fail.
         tracing::warn!(
             "Creating a RustlsRuntime, but no CryptoProvider is installed. The application \
