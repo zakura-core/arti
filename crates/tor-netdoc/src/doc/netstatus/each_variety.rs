@@ -11,6 +11,7 @@
 //! See [`crate::doc::ns_variety_definition_macros`].
 
 use super::*;
+use crate::util::saturating_sub;
 
 ns_use_this_variety! {
     pub use [crate::doc::netstatus::rs]::?::{
@@ -230,7 +231,7 @@ impl Preamble {
         let lifetime = self.lifetime.clone();
         let delay = self.voting_delay;
         let dist_interval = time::Duration::from_secs(delay.dist_seconds.into());
-        let starting_time = lifetime.valid_after.saturating_sub(dist_interval);
+        let starting_time = saturating_sub(*lifetime.valid_after, dist_interval);
         starting_time..*lifetime.valid_until
     }
 }
