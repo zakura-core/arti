@@ -148,72 +148,75 @@ pub use user::{TrustedGroup, TrustedUser};
 ///
 /// *  support more kinds of trust configuration, including more trusted users,
 ///    trusted groups, multiple trusted directories, etc?
-#[derive(Debug, Clone, derive_builder::Builder, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", builder(derive(Debug, Serialize, Deserialize)))]
-#[cfg_attr(not(feature = "serde"), builder(derive(Debug)))]
-#[builder(build_fn(error = "Error"))]
-#[cfg_attr(feature = "serde", builder_struct_attr(serde(default)))]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Mistrust {
-    /// If the user called [`MistrustBuilder::ignore_prefix`], what did they give us?
-    ///
-    /// (This is stored in canonical form.)
-    #[builder(
-        setter(into, strip_option),
-        field(build = "canonicalize_opt_prefix(&self.ignore_prefix)?")
-    )]
+    /// The canonical form of the prefix passed to [`MistrustBuilder::ignore_prefix`].
     ignore_prefix: Option<PathBuf>,
 
-    /// Are we configured to disable all permission and ownership tests?
-    ///
-    /// (This field is present in the builder only.)
-    #[builder(setter(custom), field(type = "Option<bool>", build = "()"))]
+    /// These settings exist only in the builder.
     dangerously_trust_everyone: (),
-
-    /// Should we check the environment to decide whether to disable permission
-    /// and ownership tests?
-    ///
-    /// (This field is present in the builder only.)
-    #[builder(setter(custom), field(type = "Option<disable::Disable>", build = "()"))]
-    #[cfg_attr(feature = "serde", builder_field_attr(serde(skip)))]
+    /// See [`MistrustBuilder::ignore_environment`].
     disable_by_environment: (),
 
-    /// Internal value combining `dangerously_trust_everyone` and
-    /// `disable_by_environment` to decide whether we're doing permissions
-    /// checks or not.
-    #[builder(setter(custom), field(build = "self.should_be_enabled()"))]
-    #[cfg_attr(feature = "serde", builder_field_attr(serde(skip)))]
+    /// Whether permission checks are enabled after resolving configuration.
     status: disable::Status,
 
-    /// What user ID do we trust by default (if any?)
+    /// The trusted user ID, if any.
     #[cfg(all(
         target_family = "unix",
         not(target_os = "ios"),
         not(target_os = "android"),
         not(target_os = "tvos")
     ))]
-    #[builder(
-        setter(into),
-        field(type = "TrustedUser", build = "self.trust_user.get_uid()?")
-    )]
     trust_user: Option<u32>,
 
-    /// What group ID do we trust by default (if any?)
+    /// The trusted group ID, if any.
     #[cfg(all(
         target_family = "unix",
         not(target_os = "ios"),
         not(target_os = "android"),
         not(target_os = "tvos")
     ))]
-    #[builder(
-        setter(into),
-        field(type = "TrustedGroup", build = "self.trust_group.get_gid()?")
-    )]
     trust_group: Option<u32>,
+}
+
+/// Builder for [`Mistrust`].
+///
+/// Defaults, environment handling, and filesystem/user validation are resolved
+/// by [`build`](Self::build).
+#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
+pub struct MistrustBuilder {
+    /// An unset prefix, an explicit removal, or a selected filesystem path.
+    #[allow(clippy::option_option)]
+    ignore_prefix: Option<Option<PathBuf>>,
+    /// Whether the caller explicitly disabled permission checks.
+    dangerously_trust_everyone: Option<bool>,
+    /// The environment policy, resolved when building.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    disable_by_environment: Option<disable::Disable>,
+    /// The configured user, resolved when building.
+    #[cfg(all(
+        target_family = "unix",
+        not(target_os = "ios"),
+        not(target_os = "android"),
+        not(target_os = "tvos")
+    ))]
+    trust_user: TrustedUser,
+    /// The configured group, resolved when building.
+    #[cfg(all(
+        target_family = "unix",
+        not(target_os = "ios"),
+        not(target_os = "android"),
+        not(target_os = "tvos")
+    ))]
+    trust_group: TrustedGroup,
 }
 
 /// Compute the canonical prefix for a given path prefix.
 ///
-/// The funny types here are used to please derive_builder.
+/// Distinguish an unset prefix from an explicitly removed prefix.
 #[allow(clippy::option_option)]
 fn canonicalize_opt_prefix(prefix: &Option<Option<PathBuf>>) -> Result<Option<PathBuf>> {
     match prefix {
@@ -228,6 +231,62 @@ fn canonicalize_opt_prefix(prefix: &Option<Option<PathBuf>>) -> Result<Option<Pa
 }
 
 impl MistrustBuilder {
+    /// Set a prefix whose ownership and permissions are not checked.
+    ///
+    /// The prefix is canonicalized when [`build`](Self::build) is called.
+    pub fn ignore_prefix<P: Into<PathBuf>>(&mut self, prefix: P) -> &mut Self {
+        self.ignore_prefix = Some(Some(prefix.into()));
+        self
+    }
+
+    /// Configure the user whose files and directories are trusted.
+    #[cfg(all(
+        target_family = "unix",
+        not(target_os = "ios"),
+        not(target_os = "android"),
+        not(target_os = "tvos")
+    ))]
+    pub fn trust_user<U: Into<TrustedUser>>(&mut self, user: U) -> &mut Self {
+        self.trust_user = user.into();
+        self
+    }
+
+    /// Configure the group whose files and directories are trusted.
+    #[cfg(all(
+        target_family = "unix",
+        not(target_os = "ios"),
+        not(target_os = "android"),
+        not(target_os = "tvos")
+    ))]
+    pub fn trust_group<G: Into<TrustedGroup>>(&mut self, group: G) -> &mut Self {
+        self.trust_group = group.into();
+        self
+    }
+
+    /// Resolve the configuration and validate filesystem and user settings.
+    pub fn build(&self) -> Result<Mistrust> {
+        Ok(Mistrust {
+            ignore_prefix: canonicalize_opt_prefix(&self.ignore_prefix)?,
+            dangerously_trust_everyone: (),
+            disable_by_environment: (),
+            status: self.should_be_enabled(),
+            #[cfg(all(
+                target_family = "unix",
+                not(target_os = "ios"),
+                not(target_os = "android"),
+                not(target_os = "tvos")
+            ))]
+            trust_user: self.trust_user.get_uid()?,
+            #[cfg(all(
+                target_family = "unix",
+                not(target_os = "ios"),
+                not(target_os = "android"),
+                not(target_os = "tvos")
+            ))]
+            trust_group: self.trust_group.get_gid()?,
+        })
+    }
+
     /// Configure this `Mistrust` to trust only the admin (root) user.
     ///
     /// By default, both the currently running user and the root user will be
@@ -989,6 +1048,66 @@ mod test {
             .require_file()
             .check(d.path("a/b/c/d"))
             .unwrap();
+    }
+
+    #[test]
+    fn builder_validates_and_removes_prefix() {
+        let directory = tempfile::tempdir().unwrap();
+        let missing = directory.path().join("missing");
+        let mut builder = Mistrust::builder();
+        builder.ignore_environment().ignore_prefix(&missing);
+        assert_matches!(builder.build(), Err(Error::NotFound(path)) if path == missing);
+
+        builder.ignore_prefix(directory.path());
+        assert_eq!(
+            builder.build().unwrap().ignore_prefix,
+            Some(directory.path().canonicalize().unwrap())
+        );
+        builder.ignore_prefix("");
+        assert_eq!(builder.build().unwrap().ignore_prefix, None);
+        builder
+            .ignore_prefix(directory.path())
+            .remove_ignored_prefix();
+        assert_eq!(builder.build().unwrap().ignore_prefix, None);
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn builder_serde_preserves_defaults_and_permission_policy() {
+        let mut expected = serde_json::json!({
+            "ignore_prefix": null,
+            "dangerously_trust_everyone": null,
+        });
+        #[cfg(all(
+            target_family = "unix",
+            not(target_os = "ios"),
+            not(target_os = "android"),
+            not(target_os = "tvos")
+        ))]
+        {
+            expected["trust_user"] = serde_json::json!(":current");
+            expected["trust_group"] = serde_json::json!(":username");
+        }
+        assert_eq!(
+            serde_json::to_value(MistrustBuilder::default()).unwrap(),
+            expected
+        );
+        for disabled in [false, true] {
+            let mut builder: MistrustBuilder = serde_json::from_value(
+                serde_json::json!({ "dangerously_trust_everyone": disabled }),
+            )
+            .unwrap();
+            builder.ignore_environment();
+            assert_eq!(builder.build().unwrap().is_disabled(), disabled);
+            expected["dangerously_trust_everyone"] = serde_json::json!(disabled);
+            assert_eq!(serde_json::to_value(builder).unwrap(), expected);
+        }
+        assert!(
+            serde_json::from_value::<MistrustBuilder>(
+                serde_json::json!({ "dangerously_trust_everyone": "false" }),
+            )
+            .is_err()
+        );
     }
 
     #[test]

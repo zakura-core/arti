@@ -124,11 +124,6 @@ pub enum Error {
         err: Arc<IoError>,
     },
 
-    /// A field was missing when we tried to construct a
-    /// [`Mistrust`](crate::Mistrust).
-    #[error("Missing field when constructing Mistrust")]
-    MissingField(#[from] derive_builder::UninitializedFieldError),
-
     /// A  group that we were configured to trust could not be found.
     #[error(r#"Configured with nonexistent group "{0}""#)]
     NoSuchGroup(String),
@@ -183,7 +178,6 @@ impl Error {
                 Error::Content(e) => return e.path(),
                 #[cfg(feature = "walkdir")]
                 Error::Listing(e) => return e.path(),
-                Error::MissingField(_) => return None,
                 Error::NoSuchGroup(_) => return None,
                 Error::NoSuchUser(_) => return None,
                 Error::PasswdGroupIoError(_) => return None,
@@ -208,7 +202,6 @@ impl Error {
             | Error::CreatingDir(_)
             | Error::InvalidSubdirectory
             | Error::Io { .. }
-            | Error::MissingField(_)
             | Error::NoSuchGroup(_)
             | Error::NoSuchUser(_)
             | Error::PasswdGroupIoError(_) => false,

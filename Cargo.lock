@@ -1548,7 +1548,6 @@ name = "fs-mistrust"
 version = "0.16.0"
 dependencies = [
  "assert_matches",
- "derive_builder_fork_arti",
  "dirs-sys",
  "extend",
  "libc",
