@@ -495,7 +495,7 @@ mod test {
     #![allow(clippy::string_slice)] // See arti#2571
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
 
-    use std::{iter, time::Duration};
+    use std::iter;
 
     use hex_literal::hex;
     use itertools::chain;
@@ -505,7 +505,6 @@ mod test {
     use crate::doc::hsdesc::{
         middle::HsDescMiddle,
         outer::HsDescOuter,
-        pow::PowParams,
         test_data::{TEST_DATA, TEST_SUBCREDENTIAL},
     };
 
