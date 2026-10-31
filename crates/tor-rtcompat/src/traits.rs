@@ -1,4 +1,5 @@
 //! Declarations for traits that we need our runtimes to implement.
+use crate::unix;
 use async_trait::async_trait;
 use asynchronous_codec::Framed;
 use futures::future::{FutureExt, RemoteHandle};
@@ -10,7 +11,6 @@ use std::borrow::Cow;
 use std::fmt::Debug;
 use std::io::{self, Result as IoResult};
 use std::net;
-use tor_general_addr::unix;
 use web_time_compat::{Duration, Instant, InstantExt, SystemTime, SystemTimeExt};
 
 #[cfg(feature = "tls-server")]

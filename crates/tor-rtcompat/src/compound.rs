@@ -4,13 +4,13 @@
 use std::{net, sync::Arc, time::Duration};
 
 use crate::traits::*;
+use crate::unix;
 use crate::{CoarseInstant, CoarseTimeProvider};
 use async_trait::async_trait;
 use educe::Educe;
 use futures::{future::FutureObj, task::Spawn};
 use std::future::Future;
 use std::io::Result as IoResult;
-use tor_general_addr::unix;
 use tracing::instrument;
 use web_time_compat::{Instant, SystemTime};
 

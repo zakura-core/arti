@@ -35,6 +35,9 @@ jobs:
       - name: Test native Windows configuration paths
         if: matrix.os == 'windows-2022'
         run: cargo test --locked --manifest-path crates/tor-config-path/Cargo.toml --all-features
+      - name: Test native Windows runtime addresses
+        if: matrix.os == 'windows-2022'
+        run: cargo test --locked --manifest-path crates/tor-rtcompat/Cargo.toml --no-default-features --features tokio,rustls,tls-server,arbitrary --lib
       - name: Test native Windows state-file locks
         if: matrix.os == 'windows-2022'
         run: cargo test --locked --manifest-path crates/tor-persist/Cargo.toml --all-features --lib file_lock::tests

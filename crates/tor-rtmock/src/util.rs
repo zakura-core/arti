@@ -102,25 +102,25 @@ define_derive_deftly! {
     }
 
     #[async_trait]
-    impl <$tgens> NetStreamProvider<tor_general_addr::unix::SocketAddr> for $ttype {
+    impl <$tgens> NetStreamProvider<tor_rtcompat::unix::SocketAddr> for $ttype {
         type Stream = FakeStream;
-        type Listener = FakeListener<tor_general_addr::unix::SocketAddr>;
+        type Listener = FakeListener<tor_rtcompat::unix::SocketAddr>;
         type ConnectOptions = tor_rtcompat::UnixConnectOptions;
         type ListenOptions = tor_rtcompat::UnixListenOptions;
 
         async fn connect(
             &self,
-            _addr: &tor_general_addr::unix::SocketAddr,
+            _addr: &tor_rtcompat::unix::SocketAddr,
             _options: &Self::ConnectOptions,
         ) -> IoResult<Self::Stream> {
-            Err(tor_general_addr::unix::NoAfUnixSocketSupport::default().into())
+            Err(tor_rtcompat::unix::NoAfUnixSocketSupport::default().into())
         }
         async fn listen(
             &self,
-            _addr: &tor_general_addr::unix::SocketAddr,
+            _addr: &tor_rtcompat::unix::SocketAddr,
             _options: &Self::ListenOptions,
         ) -> IoResult<Self::Listener> {
-            Err(tor_general_addr::unix::NoAfUnixSocketSupport::default().into())
+            Err(tor_rtcompat::unix::NoAfUnixSocketSupport::default().into())
         }
     }
 

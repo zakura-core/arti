@@ -8,6 +8,7 @@ pub(crate) mod net {
     use crate::network::{TcpConnectOptions, TcpListenOptions};
     #[cfg(unix)]
     use crate::network::{UnixConnectOptions, UnixListenOptions};
+    use crate::unix;
     use crate::{impls, traits};
     use async_trait::async_trait;
     use futures::stream::{self, Stream};
@@ -20,7 +21,6 @@ pub(crate) mod net {
     use std::net::SocketAddr;
     use std::pin::Pin;
     use std::task::{Context, Poll};
-    use tor_general_addr::unix;
     use tracing::instrument;
 
     /// Provide wrapper for different stream types

@@ -62,9 +62,6 @@ use tor_error::{ErrorKind, HasKind};
 #[cfg(all(test, feature = "expand-paths"))]
 use std::ffi::OsStr;
 
-#[cfg(feature = "address")]
-pub mod addr;
-
 #[cfg(feature = "arti-client")]
 mod arti_client_paths;
 

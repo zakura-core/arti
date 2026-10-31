@@ -18,7 +18,6 @@ members = [
     "crates/fs-mistrust",
     "crates/safelog",
     "crates/tor-error",
-    "crates/tor-general-addr",
     "crates/tor-memquota-cost",
     "crates/tor-llcrypto",
     "crates/tor-cert-x509",

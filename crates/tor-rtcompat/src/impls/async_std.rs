@@ -12,6 +12,8 @@ mod net {
     use crate::network::{UnixConnectOptions, UnixListenOptions};
     use crate::{impls, traits};
 
+    #[cfg(unix)]
+    use crate::unix;
     use async_std_crate::net::{TcpListener, TcpStream, UdpSocket as StdUdpSocket};
     #[cfg(unix)]
     use async_std_crate::os::unix::net::{UnixListener, UnixStream};
@@ -22,8 +24,6 @@ mod net {
     use std::net::SocketAddr;
     use std::pin::Pin;
     use std::task::{Context, Poll};
-    #[cfg(unix)]
-    use tor_general_addr::unix;
     use tracing::instrument;
 
     /// Implement NetStreamProvider-related functionality for a single address type.

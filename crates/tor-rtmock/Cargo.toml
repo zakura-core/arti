@@ -27,7 +27,6 @@ strum = { version = "0.28.0", features = ["derive"] }
 thiserror = "2"
 tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
 tor-error = { version = "0.47.0", path = "../tor-error", features = ["tracing"] }
-tor-general-addr = { version = "0.47.0", path = "../tor-general-addr" }
 tor-rtcompat = { version = "0.47.0", path = "../tor-rtcompat" }
 tracing = "0.1.44"
 void = "1"
@@ -36,7 +35,6 @@ web-time-compat = { version = "0.3.0", path = "../web-time-compat" }
 [dev-dependencies]
 futures-await-test = "0.3.0"
 rand = "0.10.3"
-tor-general-addr = { path = "../tor-general-addr", version = "0.47.0" }
 tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "rustls"] }
 tracing-test = "0.2.6"
 
@@ -46,7 +44,6 @@ full = [
     "tor-rtcompat/full",
     "tor-error/full",
     "slotmap-careful/full",
-    "tor-general-addr/full",
     "web-time-compat/full",
 ]
 [package.metadata.docs.rs]
