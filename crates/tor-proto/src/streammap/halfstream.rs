@@ -75,9 +75,15 @@ mod test {
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
     use super::*;
     use crate::stream::RECV_WINDOW_INIT;
-    use crate::stream::flow_ctrl::state::StreamFlowCtrl;
+    use crate::stream::flow_ctrl::params::FlowCtrlParameters;
+    use crate::stream::flow_ctrl::state::{
+        HalfStreamFlowCtrlHooks, StreamFlowCtrl, StreamRateLimit, WithSidechannelMitigations,
+    };
+    use crate::util::notify::NotifySender;
     use crate::{client::stream::OutboundDataCmdChecker, congestion::sendme::StreamSendWindow};
     use rand::{CryptoRng, Rng};
+    use std::sync::Arc;
+    use tor_async_utils::watch;
     use tor_basic_utils::test_rng::testing_rng;
     use tor_cell::relaycell::{
         AnyRelayMsgOuter, RelayCellFormat, StreamId,
@@ -160,6 +166,38 @@ mod test {
         assert_eq!(
             format!("{}", e),
             "Circuit protocol violation: Received a data cell in violation of a window"
+        );
+    }
+
+    #[test]
+    fn halfstream_xon_xoff() {
+        let (rate_limit_updater, _rate_limit_updates) = watch::channel_with(StreamRateLimit::MAX);
+        let flow_ctrl = StreamFlowCtrl::new_xon_xoff(
+            Arc::new(FlowCtrlParameters::defaults_for_tests()),
+            WithSidechannelMitigations::Enabled,
+            rate_limit_updater,
+            NotifySender::new_typed(),
+        );
+        let mut half_flow_ctrl = flow_ctrl.half_stream();
+
+        // Unlike window flow control, this variant has no DATA receive window.
+        half_flow_ctrl
+            .handle_incoming_dropped(RECV_WINDOW_INIT + 1)
+            .unwrap();
+        let mut hs = HalfStream::new(half_flow_ctrl, OutboundDataCmdChecker::new_any());
+        let mut rng = testing_rng();
+        hs.handle_msg(to_unparsed(&mut rng, msg::Connected::new_empty().into()))
+            .unwrap();
+        let data = msg::Data::new(b"stream data").unwrap();
+        for _ in 0..=RECV_WINDOW_INIT {
+            hs.handle_msg(to_unparsed(&mut rng, data.clone().into()))
+                .unwrap();
+        }
+
+        // SENDME belongs to the window-based variant, so it must be rejected.
+        assert!(
+            hs.handle_msg(to_unparsed(&mut rng, msg::Sendme::new_empty().into()))
+                .is_err()
         );
     }
 
