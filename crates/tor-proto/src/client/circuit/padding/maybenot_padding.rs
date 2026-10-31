@@ -49,15 +49,7 @@ type PaddingEventQueue = VecDeque<PaddingEvent>;
 type PerHopPaddingEventVec = Vec<PerHopPaddingEvent>;
 
 /// Specifications for a set of maybenot padding machines as used in Arti: used to construct a `maybenot::Framework`.
-#[derive(Clone, Debug, derive_builder::Builder)]
-#[builder(build_fn(
-    validate = "Self::validate",
-    private,
-    error = "CircuitPadderConfigError"
-))]
-#[builder(name = "CircuitPadderConfig")]
-#[cfg_attr(not(feature = "circ-padding-manual"), builder(private))]
-#[cfg_attr(feature = "circ-padding-manual", builder(public))]
+#[derive(Clone, Debug)]
 pub(crate) struct PaddingRules {
     /// List of padding machines to use for shaping traffic.
     ///
@@ -70,7 +62,6 @@ pub(crate) struct PaddingRules {
     /// See [`maybenot::Framework::new`] for details.
     ///
     /// Must be between 0.0 and 1.0
-    #[builder(default = "1.0")]
     max_outbound_blocking_frac: f64,
     /// Maximum allowable outbound blocking fraction.
     ///
@@ -78,14 +69,27 @@ pub(crate) struct PaddingRules {
     /// See [`maybenot::Framework::new`] for details.
     ///
     /// Must be between 0.0 and 1.0.
-    #[builder(default = "1.0")]
     max_outbound_padding_frac: f64,
     /// Maximum allowable fraction of inbound padding
-    #[builder(default = "1.0")]
     max_inbound_padding_frac: f64,
     /// Number of cells before which we should not enforce max_inbound_padding_frac.
-    #[builder(default = "1")]
     enforce_inbound_padding_after_cells: u16,
+}
+
+/// Specifications for constructing a circuit padder.
+#[derive(Clone, Default)]
+#[cfg_attr(feature = "circ-padding-manual", visibility::make(pub))]
+struct CircuitPadderConfig {
+    /// The configured padding machines.
+    machines: Option<Arc<[maybenot::Machine]>>,
+    /// The configured outbound blocking fraction.
+    max_outbound_blocking_frac: Option<f64>,
+    /// The configured outbound padding fraction.
+    max_outbound_padding_frac: Option<f64>,
+    /// The configured inbound padding fraction.
+    max_inbound_padding_frac: Option<f64>,
+    /// The configured number of cells before enforcing the inbound limit.
+    enforce_inbound_padding_after_cells: Option<u16>,
 }
 
 /// An error returned from validating a [`CircuitPadderConfig`].
@@ -104,13 +108,68 @@ pub(crate) enum CircuitPadderConfigError {
     MaybenotError(#[from] maybenot::Error),
 }
 
-impl From<derive_builder::UninitializedFieldError> for CircuitPadderConfigError {
-    fn from(value: derive_builder::UninitializedFieldError) -> Self {
-        Self::UninitializedField(value.field_name())
-    }
-}
+/// Fraction limit used when no explicit value was configured.
+const DEFAULT_MAX_FRACTION: f64 = 1.0;
 
 impl CircuitPadderConfig {
+    /// Set the machines used for shaping traffic.
+    #[cfg_attr(feature = "circ-padding-manual", visibility::make(pub))]
+    fn machines(&mut self, value: Arc<[maybenot::Machine]>) -> &mut Self {
+        self.machines = Some(value);
+        self
+    }
+
+    /// Set the maximum outbound blocking fraction.
+    #[cfg_attr(feature = "circ-padding-manual", visibility::make(pub))]
+    fn max_outbound_blocking_frac(&mut self, value: f64) -> &mut Self {
+        self.max_outbound_blocking_frac = Some(value);
+        self
+    }
+
+    /// Set the maximum outbound padding fraction.
+    #[cfg_attr(feature = "circ-padding-manual", visibility::make(pub))]
+    fn max_outbound_padding_frac(&mut self, value: f64) -> &mut Self {
+        self.max_outbound_padding_frac = Some(value);
+        self
+    }
+
+    /// Set the maximum inbound padding fraction.
+    #[cfg_attr(feature = "circ-padding-manual", visibility::make(pub))]
+    fn max_inbound_padding_frac(&mut self, value: f64) -> &mut Self {
+        self.max_inbound_padding_frac = Some(value);
+        self
+    }
+
+    /// Set the cell count before enforcing the inbound padding limit.
+    #[cfg_attr(feature = "circ-padding-manual", visibility::make(pub))]
+    fn enforce_inbound_padding_after_cells(&mut self, value: u16) -> &mut Self {
+        self.enforce_inbound_padding_after_cells = Some(value);
+        self
+    }
+
+    /// Validate this configuration and build its padding rules.
+    fn build(&self) -> Result<PaddingRules, CircuitPadderConfigError> {
+        self.validate()?;
+        Ok(PaddingRules {
+            machines: self
+                .machines
+                .clone()
+                .ok_or(CircuitPadderConfigError::UninitializedField("machines"))?,
+            max_outbound_blocking_frac: self
+                .max_outbound_blocking_frac
+                .unwrap_or(DEFAULT_MAX_FRACTION),
+            max_outbound_padding_frac: self
+                .max_outbound_padding_frac
+                .unwrap_or(DEFAULT_MAX_FRACTION),
+            max_inbound_padding_frac: self
+                .max_inbound_padding_frac
+                .unwrap_or(DEFAULT_MAX_FRACTION),
+            enforce_inbound_padding_after_cells: self
+                .enforce_inbound_padding_after_cells
+                .unwrap_or(1),
+        })
+    }
+
     /// Helper: Return an error if this is not a valid Builder.
     fn validate(&self) -> Result<(), CircuitPadderConfigError> {
         macro_rules! enforce_frac {
@@ -971,4 +1030,110 @@ where
     };
 
     (controller, stream)
+}
+
+#[cfg(test)]
+mod config_tests {
+    //! Regression tests for circuit-padding configuration.
+
+    #![allow(clippy::unwrap_used)]
+
+    use super::*;
+
+    #[test]
+    fn omitted_limits_keep_defaults_and_do_not_consume_the_builder() {
+        let mut config = CircuitPadderConfig::default();
+        config.machines(Arc::from([]));
+        let saved = config.clone();
+        config.enforce_inbound_padding_after_cells(0);
+        for _ in 0..2 {
+            let rules = config.build().unwrap();
+            assert_eq!(rules.machines.len(), 0);
+            assert_eq!(rules.max_outbound_blocking_frac, 1.0);
+            assert_eq!(rules.max_outbound_padding_frac, 1.0);
+            assert_eq!(rules.max_inbound_padding_frac, 1.0);
+            assert_eq!(rules.enforce_inbound_padding_after_cells, 0);
+            assert_eq!(rules.initialize_stats().enforce_max_after.get(), 1);
+        }
+        assert_eq!(
+            saved.build().unwrap().enforce_inbound_padding_after_cells,
+            1
+        );
+    }
+
+    #[test]
+    fn explicit_fractions_still_use_the_half_open_finite_range() {
+        /// A setter for one circuit-padding fraction limit.
+        type Setter = fn(&mut CircuitPadderConfig, f64) -> &mut CircuitPadderConfig;
+        /// Read the corresponding limit from built padding rules.
+        type Getter = fn(&PaddingRules) -> f64;
+        let fields: [(&str, Setter, Getter); 3] = [
+            (
+                "max_outbound_blocking_frac",
+                CircuitPadderConfig::max_outbound_blocking_frac,
+                |rules| rules.max_outbound_blocking_frac,
+            ),
+            (
+                "max_outbound_padding_frac",
+                CircuitPadderConfig::max_outbound_padding_frac,
+                |rules| rules.max_outbound_padding_frac,
+            ),
+            (
+                "max_inbound_padding_frac",
+                CircuitPadderConfig::max_inbound_padding_frac,
+                |rules| rules.max_inbound_padding_frac,
+            ),
+        ];
+        for (field, setter, getter) in fields {
+            for invalid in [f64::NEG_INFINITY, -0.1, 1.0, 1.1, f64::INFINITY, f64::NAN] {
+                let mut config = CircuitPadderConfig::default();
+                config.machines(Arc::from([]));
+                setter(&mut config, invalid);
+                assert!(matches!(config.build(),
+                    Err(CircuitPadderConfigError::FractionOutOfRange(actual)) if actual == field));
+            }
+            for valid in [0.0, -0.0, 0.5, 1.0 - f64::EPSILON] {
+                let mut config = CircuitPadderConfig::default();
+                config.machines(Arc::from([]));
+                setter(&mut config, valid);
+                assert_eq!(getter(&config.build().unwrap()).to_bits(), valid.to_bits());
+            }
+        }
+    }
+
+    #[test]
+    fn fraction_validation_precedes_missing_machines_in_field_order() {
+        let mut config = CircuitPadderConfig::default();
+        config
+            .max_inbound_padding_frac(f64::NAN)
+            .max_outbound_padding_frac(f64::NAN)
+            .max_outbound_blocking_frac(f64::NAN);
+        assert!(matches!(
+            config.build(),
+            Err(CircuitPadderConfigError::FractionOutOfRange(
+                "max_outbound_blocking_frac"
+            ))
+        ));
+        config.max_outbound_blocking_frac(0.5);
+        assert!(matches!(
+            config.build(),
+            Err(CircuitPadderConfigError::FractionOutOfRange(
+                "max_outbound_padding_frac"
+            ))
+        ));
+        config.max_outbound_padding_frac(0.5);
+        assert!(matches!(
+            config.build(),
+            Err(CircuitPadderConfigError::FractionOutOfRange(
+                "max_inbound_padding_frac"
+            ))
+        ));
+        config.max_inbound_padding_frac(0.5);
+        assert!(matches!(
+            config.build(),
+            Err(CircuitPadderConfigError::UninitializedField("machines"))
+        ));
+        config.machines(Arc::from([]));
+        assert!(config.build().is_ok());
+    }
 }

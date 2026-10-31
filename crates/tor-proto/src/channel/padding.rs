@@ -31,7 +31,6 @@ use std::pin::Pin;
 // TODO, coarsetime maybe?  But see arti#496 and also we want to use the mockable SleepProvider
 use web_time_compat::{Duration, Instant};
 
-use derive_builder::Builder;
 use educe::Educe;
 use futures::FutureExt;
 use futures::future::{self, FusedFuture};
@@ -40,7 +39,6 @@ use rand::distr::Distribution;
 use tracing::error;
 
 use tor_cell::chancell::msg::{Padding, PaddingNegotiate};
-use tor_config::impl_standard_builder;
 use tor_error::into_internal;
 use tor_rtcompat::SleepProvider;
 use tor_units::IntegerMilliseconds;
@@ -122,15 +120,21 @@ pub(crate) struct Timer<R: SleepProvider> {
 }
 
 /// Timing parameters, as described in `padding-spec.txt`
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Builder)]
-#[builder(build_fn(error = "ParametersError", private, name = "build_inner"))]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Parameters {
     /// Low end of the distribution of `X`
-    #[builder(default = "1500.into()")]
     pub(crate) low: IntegerMilliseconds<u32>,
     /// High end of the distribution of `X` (inclusive)
-    #[builder(default = "9500.into()")]
     pub(crate) high: IntegerMilliseconds<u32>,
+}
+
+/// Builder for [`Parameters`].
+#[derive(Clone, Default)]
+pub struct ParametersBuilder {
+    /// The configured lower padding interval bound.
+    low: Option<IntegerMilliseconds<u32>>,
+    /// The configured upper padding interval bound.
+    high: Option<IntegerMilliseconds<u32>>,
 }
 
 /// An error that occurred whil e constructing padding parameters.
@@ -143,11 +147,26 @@ pub enum ParametersError {
 }
 
 impl ParametersBuilder {
+    /// Set the lower padding interval bound.
+    pub fn low(&mut self, value: IntegerMilliseconds<u32>) -> &mut Self {
+        self.low = Some(value);
+        self
+    }
+
+    /// Set the upper padding interval bound.
+    pub fn high(&mut self, value: IntegerMilliseconds<u32>) -> &mut Self {
+        self.high = Some(value);
+        self
+    }
+
     /// Try to construct a [`Parameters`] from this builder.
     ///
     /// returns an error if the distribution is ill-defined.
     pub fn build(&self) -> Result<Parameters, ParametersError> {
-        let parameters = self.build_inner()?;
+        let parameters = Parameters {
+            low: self.low.unwrap_or_else(|| 1500.into()),
+            high: self.high.unwrap_or_else(|| 9500.into()),
+        };
         if parameters.low > parameters.high {
             return Err(ParametersError::InvalidRange);
         }
@@ -156,9 +175,12 @@ impl ParametersBuilder {
     }
 }
 
-impl_standard_builder! { Parameters: !Deserialize + !Builder + !Default }
-
 impl Parameters {
+    /// Return a fresh, default builder.
+    pub fn builder() -> ParametersBuilder {
+        ParametersBuilder::default()
+    }
+
     /// Return a `PADDING_NEGOTIATE START` cell specifying precisely these parameters
     ///
     /// This function does not take account of the need to avoid sending particular
@@ -698,6 +720,17 @@ mod test {
             // especially since we run this repeatedly in CI.
             N *= 10;
         }
+    }
+
+    #[test]
+    fn parameter_builder_reuse_keeps_clones_independent() {
+        let mut builder = Parameters::builder();
+        let defaults = builder.build().unwrap();
+        let saved = builder.clone();
+        builder.low(0.into()).high(0.into());
+        assert_eq!(builder.build().unwrap(), Parameters::disabled());
+        assert_eq!(saved.build().unwrap(), defaults);
+        assert_eq!(saved.build().unwrap(), defaults);
     }
 
     #[test]

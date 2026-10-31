@@ -4,15 +4,20 @@
 //! found in section 6.5.1. of proposal 324.
 
 use caret::caret_int;
-use derive_builder::Builder;
 
-use tor_config::{ConfigBuildError, impl_standard_builder};
+use tor_config::ConfigBuildError;
 use tor_units::Percentage;
+
+/// Require a field, allocating its diagnostic only if it is missing.
+fn required_field<T>(value: Option<T>, field: &'static str) -> Result<T, ConfigBuildError> {
+    value.ok_or_else(|| ConfigBuildError::MissingField {
+        field: field.into(),
+    })
+}
 
 /// Fixed window parameters that are for the SENDME v0 world of fixed congestion window.
 #[non_exhaustive]
-#[derive(Builder, Copy, Clone, Debug, getset::CopyGetters)]
-#[builder(build_fn(error = "ConfigBuildError"))]
+#[derive(Copy, Clone, Debug, getset::CopyGetters)]
 pub struct FixedWindowParams {
     /// Circuit window starting point. From the "circwindow" param.
     #[getset(get_copy = "pub")]
@@ -24,7 +29,60 @@ pub struct FixedWindowParams {
     #[getset(get_copy = "pub")]
     circ_window_max: u16,
 }
-impl_standard_builder! { FixedWindowParams: !Deserialize + !Default }
+/// Builder for [`FixedWindowParams`].
+#[derive(Clone, Default)]
+pub struct FixedWindowParamsBuilder {
+    /// The configured `circ_window_start` value.
+    circ_window_start: Option<u16>,
+    /// The configured `circ_window_min` value.
+    circ_window_min: Option<u16>,
+    /// The configured `circ_window_max` value.
+    circ_window_max: Option<u16>,
+}
+
+impl FixedWindowParamsBuilder {
+    /// Set the [`FixedWindowParams::circ_window_start`] value.
+    pub fn circ_window_start(&mut self, value: u16) -> &mut Self {
+        self.circ_window_start = Some(value);
+        self
+    }
+
+    /// Set the [`FixedWindowParams::circ_window_min`] value.
+    pub fn circ_window_min(&mut self, value: u16) -> &mut Self {
+        self.circ_window_min = Some(value);
+        self
+    }
+
+    /// Set the [`FixedWindowParams::circ_window_max`] value.
+    pub fn circ_window_max(&mut self, value: u16) -> &mut Self {
+        self.circ_window_max = Some(value);
+        self
+    }
+
+    /// Build the parameters, requiring every field to be set.
+    pub fn build(&self) -> Result<FixedWindowParams, ConfigBuildError> {
+        Ok(FixedWindowParams {
+            circ_window_start: required_field(self.circ_window_start, "circ_window_start")?,
+            circ_window_min: required_field(self.circ_window_min, "circ_window_min")?,
+            circ_window_max: required_field(self.circ_window_max, "circ_window_max")?,
+        })
+    }
+}
+
+impl FixedWindowParams {
+    /// Return a fresh, default builder.
+    pub fn builder() -> FixedWindowParamsBuilder {
+        FixedWindowParamsBuilder::default()
+    }
+}
+
+impl tor_config::load::Builder for FixedWindowParamsBuilder {
+    type Built = FixedWindowParams;
+
+    fn build(&self) -> Result<FixedWindowParams, ConfigBuildError> {
+        FixedWindowParamsBuilder::build(self)
+    }
+}
 
 impl FixedWindowParams {
     #[cfg(test)]
@@ -79,8 +137,7 @@ impl From<(u32, u32, u32, u32, u32)> for VegasQueueParams {
 
 /// Vegas algorithm parameters taken from the consensus.
 #[non_exhaustive]
-#[derive(Builder, Copy, Clone, Debug, getset::Getters, getset::CopyGetters)]
-#[builder(build_fn(error = "ConfigBuildError"))]
+#[derive(Copy, Clone, Debug, getset::Getters, getset::CopyGetters)]
 pub struct VegasParams {
     /// The amount of queued cells that Vegas can tolerate before reacting.
     #[getset(get = "pub")]
@@ -99,7 +156,81 @@ pub struct VegasParams {
     #[getset(get_copy = "pub")]
     cwnd_full_per_cwnd: u32,
 }
-impl_standard_builder! { VegasParams: !Deserialize + !Default }
+/// Builder for [`VegasParams`].
+#[derive(Clone, Default)]
+pub struct VegasParamsBuilder {
+    /// The configured `cell_in_queue_params` value.
+    cell_in_queue_params: Option<VegasQueueParams>,
+    /// The configured `ss_cwnd_max` value.
+    ss_cwnd_max: Option<u32>,
+    /// The configured `cwnd_full_gap` value.
+    cwnd_full_gap: Option<u32>,
+    /// The configured `cwnd_full_min_pct` value.
+    cwnd_full_min_pct: Option<Percentage<u32>>,
+    /// The configured `cwnd_full_per_cwnd` value.
+    cwnd_full_per_cwnd: Option<u32>,
+}
+
+impl VegasParamsBuilder {
+    /// Set the [`VegasParams::cell_in_queue_params`] value.
+    pub fn cell_in_queue_params(&mut self, value: VegasQueueParams) -> &mut Self {
+        self.cell_in_queue_params = Some(value);
+        self
+    }
+
+    /// Set the [`VegasParams::ss_cwnd_max`] value.
+    pub fn ss_cwnd_max(&mut self, value: u32) -> &mut Self {
+        self.ss_cwnd_max = Some(value);
+        self
+    }
+
+    /// Set the [`VegasParams::cwnd_full_gap`] value.
+    pub fn cwnd_full_gap(&mut self, value: u32) -> &mut Self {
+        self.cwnd_full_gap = Some(value);
+        self
+    }
+
+    /// Set the [`VegasParams::cwnd_full_min_pct`] value.
+    pub fn cwnd_full_min_pct(&mut self, value: Percentage<u32>) -> &mut Self {
+        self.cwnd_full_min_pct = Some(value);
+        self
+    }
+
+    /// Set the [`VegasParams::cwnd_full_per_cwnd`] value.
+    pub fn cwnd_full_per_cwnd(&mut self, value: u32) -> &mut Self {
+        self.cwnd_full_per_cwnd = Some(value);
+        self
+    }
+
+    /// Build the parameters, requiring every field to be set.
+    pub fn build(&self) -> Result<VegasParams, ConfigBuildError> {
+        Ok(VegasParams {
+            cell_in_queue_params: required_field(
+                self.cell_in_queue_params,
+                "cell_in_queue_params",
+            )?,
+            ss_cwnd_max: required_field(self.ss_cwnd_max, "ss_cwnd_max")?,
+            cwnd_full_gap: required_field(self.cwnd_full_gap, "cwnd_full_gap")?,
+            cwnd_full_min_pct: required_field(self.cwnd_full_min_pct, "cwnd_full_min_pct")?,
+            cwnd_full_per_cwnd: required_field(self.cwnd_full_per_cwnd, "cwnd_full_per_cwnd")?,
+        })
+    }
+}
+
+impl VegasParams {
+    /// Return a fresh, default builder.
+    pub fn builder() -> VegasParamsBuilder {
+        VegasParamsBuilder::default()
+    }
+}
+
+impl tor_config::load::Builder for VegasParamsBuilder {
+    type Built = VegasParams;
+
+    fn build(&self) -> Result<VegasParams, ConfigBuildError> {
+        VegasParamsBuilder::build(self)
+    }
+}
 
 impl VegasParams {
     #[cfg(test)]
@@ -162,8 +293,7 @@ caret_int! {
 /// The round trip estimator parameters taken from consensus and used to estimate the round trip
 /// time on a circuit.
 #[non_exhaustive]
-#[derive(Builder, Clone, Debug, getset::Getters, getset::CopyGetters)]
-#[builder(build_fn(error = "ConfigBuildError"))]
+#[derive(Clone, Debug, getset::Getters, getset::CopyGetters)]
 pub struct RoundTripEstimatorParams {
     /// The "N" parameter in N-EWMA smoothing of RTT and/or bandwidth estimation, specified as a
     /// percentage of the number of SENDME acks in a congestion window.
@@ -185,7 +315,69 @@ pub struct RoundTripEstimatorParams {
     #[getset(get = "pub")]
     rtt_reset_pct: Percentage<u32>,
 }
-impl_standard_builder! { RoundTripEstimatorParams: !Deserialize + !Default }
+/// Builder for [`RoundTripEstimatorParams`].
+#[derive(Clone, Default)]
+pub struct RoundTripEstimatorParamsBuilder {
+    /// The configured `ewma_cwnd_pct` value.
+    ewma_cwnd_pct: Option<Percentage<u32>>,
+    /// The configured `ewma_max` value.
+    ewma_max: Option<u32>,
+    /// The configured `ewma_ss_max` value.
+    ewma_ss_max: Option<u32>,
+    /// The configured `rtt_reset_pct` value.
+    rtt_reset_pct: Option<Percentage<u32>>,
+}
+
+impl RoundTripEstimatorParamsBuilder {
+    /// Set the [`RoundTripEstimatorParams::ewma_cwnd_pct`] value.
+    pub fn ewma_cwnd_pct(&mut self, value: Percentage<u32>) -> &mut Self {
+        self.ewma_cwnd_pct = Some(value);
+        self
+    }
+
+    /// Set the [`RoundTripEstimatorParams::ewma_max`] value.
+    pub fn ewma_max(&mut self, value: u32) -> &mut Self {
+        self.ewma_max = Some(value);
+        self
+    }
+
+    /// Set the [`RoundTripEstimatorParams::ewma_ss_max`] value.
+    pub fn ewma_ss_max(&mut self, value: u32) -> &mut Self {
+        self.ewma_ss_max = Some(value);
+        self
+    }
+
+    /// Set the [`RoundTripEstimatorParams::rtt_reset_pct`] value.
+    pub fn rtt_reset_pct(&mut self, value: Percentage<u32>) -> &mut Self {
+        self.rtt_reset_pct = Some(value);
+        self
+    }
+
+    /// Build the parameters, requiring every field to be set.
+    pub fn build(&self) -> Result<RoundTripEstimatorParams, ConfigBuildError> {
+        Ok(RoundTripEstimatorParams {
+            ewma_cwnd_pct: required_field(self.ewma_cwnd_pct, "ewma_cwnd_pct")?,
+            ewma_max: required_field(self.ewma_max, "ewma_max")?,
+            ewma_ss_max: required_field(self.ewma_ss_max, "ewma_ss_max")?,
+            rtt_reset_pct: required_field(self.rtt_reset_pct, "rtt_reset_pct")?,
+        })
+    }
+}
+
+impl RoundTripEstimatorParams {
+    /// Return a fresh, default builder.
+    pub fn builder() -> RoundTripEstimatorParamsBuilder {
+        RoundTripEstimatorParamsBuilder::default()
+    }
+}
+
+impl tor_config::load::Builder for RoundTripEstimatorParamsBuilder {
+    type Built = RoundTripEstimatorParams;
+
+    fn build(&self) -> Result<RoundTripEstimatorParams, ConfigBuildError> {
+        RoundTripEstimatorParamsBuilder::build(self)
+    }
+}
 
 impl RoundTripEstimatorParams {
     #[cfg(test)]
@@ -203,8 +395,7 @@ impl RoundTripEstimatorParams {
 /// The parameters of what constitute a congestion window. This is used by all congestion control
 /// algorithms as in it is not specific to an algorithm.
 #[non_exhaustive]
-#[derive(Builder, Clone, Copy, Debug, getset::Getters, getset::CopyGetters)]
-#[builder(build_fn(error = "ConfigBuildError"))]
+#[derive(Clone, Copy, Debug, getset::Getters, getset::CopyGetters)]
 pub struct CongestionWindowParams {
     /// Initial size of the congestion window.
     #[getset(get_copy = "pub")]
@@ -229,7 +420,96 @@ pub struct CongestionWindowParams {
     #[getset(get_copy = "pub")]
     sendme_inc: u8,
 }
-impl_standard_builder! { CongestionWindowParams: !Deserialize + !Default}
+/// Builder for [`CongestionWindowParams`].
+#[derive(Clone, Default)]
+pub struct CongestionWindowParamsBuilder {
+    /// The configured `cwnd_init` value.
+    cwnd_init: Option<u32>,
+    /// The configured `cwnd_inc_pct_ss` value.
+    cwnd_inc_pct_ss: Option<Percentage<u32>>,
+    /// The configured `cwnd_inc` value.
+    cwnd_inc: Option<u32>,
+    /// The configured `cwnd_inc_rate` value.
+    cwnd_inc_rate: Option<u32>,
+    /// The configured `cwnd_min` value.
+    cwnd_min: Option<u32>,
+    /// The configured `cwnd_max` value.
+    cwnd_max: Option<u32>,
+    /// The configured `sendme_inc` value.
+    sendme_inc: Option<u8>,
+}
+
+impl CongestionWindowParamsBuilder {
+    /// Set the [`CongestionWindowParams::cwnd_init`] value.
+    pub fn cwnd_init(&mut self, value: u32) -> &mut Self {
+        self.cwnd_init = Some(value);
+        self
+    }
+
+    /// Set the [`CongestionWindowParams::cwnd_inc_pct_ss`] value.
+    pub fn cwnd_inc_pct_ss(&mut self, value: Percentage<u32>) -> &mut Self {
+        self.cwnd_inc_pct_ss = Some(value);
+        self
+    }
+
+    /// Set the [`CongestionWindowParams::cwnd_inc`] value.
+    pub fn cwnd_inc(&mut self, value: u32) -> &mut Self {
+        self.cwnd_inc = Some(value);
+        self
+    }
+
+    /// Set the [`CongestionWindowParams::cwnd_inc_rate`] value.
+    pub fn cwnd_inc_rate(&mut self, value: u32) -> &mut Self {
+        self.cwnd_inc_rate = Some(value);
+        self
+    }
+
+    /// Set the [`CongestionWindowParams::cwnd_min`] value.
+    pub fn cwnd_min(&mut self, value: u32) -> &mut Self {
+        self.cwnd_min = Some(value);
+        self
+    }
+
+    /// Set the [`CongestionWindowParams::cwnd_max`] value.
+    pub fn cwnd_max(&mut self, value: u32) -> &mut Self {
+        self.cwnd_max = Some(value);
+        self
+    }
+
+    /// Set the [`CongestionWindowParams::sendme_inc`] value.
+    pub fn sendme_inc(&mut self, value: u8) -> &mut Self {
+        self.sendme_inc = Some(value);
+        self
+    }
+
+    /// Build the parameters, requiring every field to be set.
+    pub fn build(&self) -> Result<CongestionWindowParams, ConfigBuildError> {
+        Ok(CongestionWindowParams {
+            cwnd_init: required_field(self.cwnd_init, "cwnd_init")?,
+            cwnd_inc_pct_ss: required_field(self.cwnd_inc_pct_ss, "cwnd_inc_pct_ss")?,
+            cwnd_inc: required_field(self.cwnd_inc, "cwnd_inc")?,
+            cwnd_inc_rate: required_field(self.cwnd_inc_rate, "cwnd_inc_rate")?,
+            cwnd_min: required_field(self.cwnd_min, "cwnd_min")?,
+            cwnd_max: required_field(self.cwnd_max, "cwnd_max")?,
+            sendme_inc: required_field(self.sendme_inc, "sendme_inc")?,
+        })
+    }
+}
+
+impl CongestionWindowParams {
+    /// Return a fresh, default builder.
+    pub fn builder() -> CongestionWindowParamsBuilder {
+        CongestionWindowParamsBuilder::default()
+    }
+}
+
+impl tor_config::load::Builder for CongestionWindowParamsBuilder {
+    type Built = CongestionWindowParams;
+
+    fn build(&self) -> Result<CongestionWindowParams, ConfigBuildError> {
+        CongestionWindowParamsBuilder::build(self)
+    }
+}
 
 impl CongestionWindowParams {
     /// Set the `sendme_inc` value.
@@ -258,8 +538,7 @@ impl CongestionWindowParams {
 
 /// Global congestion control parameters taken from consensus. These are per-circuit.
 #[non_exhaustive]
-#[derive(Builder, Clone, Debug, getset::Getters, getset::CopyGetters, getset::MutGetters)]
-#[builder(build_fn(error = "ConfigBuildError"))]
+#[derive(Clone, Debug, getset::Getters, getset::CopyGetters, getset::MutGetters)]
 pub struct CongestionControlParams {
     /// The congestion control algorithm to use.
     #[getset(get = "pub")]
@@ -278,7 +557,69 @@ pub struct CongestionControlParams {
     #[getset(get = "pub")]
     rtt_params: RoundTripEstimatorParams,
 }
-impl_standard_builder! { CongestionControlParams: !Deserialize + !Default }
+/// Builder for [`CongestionControlParams`].
+#[derive(Clone, Default)]
+pub struct CongestionControlParamsBuilder {
+    /// The configured `alg` value.
+    alg: Option<Algorithm>,
+    /// The configured `fixed_window_params` value.
+    fixed_window_params: Option<FixedWindowParams>,
+    /// The configured `cwnd_params` value.
+    cwnd_params: Option<CongestionWindowParams>,
+    /// The configured `rtt_params` value.
+    rtt_params: Option<RoundTripEstimatorParams>,
+}
+
+impl CongestionControlParamsBuilder {
+    /// Set the [`CongestionControlParams::alg`] value.
+    pub fn alg(&mut self, value: Algorithm) -> &mut Self {
+        self.alg = Some(value);
+        self
+    }
+
+    /// Set the [`CongestionControlParams::fixed_window_params`] value.
+    pub fn fixed_window_params(&mut self, value: FixedWindowParams) -> &mut Self {
+        self.fixed_window_params = Some(value);
+        self
+    }
+
+    /// Set the [`CongestionControlParams::cwnd_params`] value.
+    pub fn cwnd_params(&mut self, value: CongestionWindowParams) -> &mut Self {
+        self.cwnd_params = Some(value);
+        self
+    }
+
+    /// Set the [`CongestionControlParams::rtt_params`] value.
+    pub fn rtt_params(&mut self, value: RoundTripEstimatorParams) -> &mut Self {
+        self.rtt_params = Some(value);
+        self
+    }
+
+    /// Build the parameters, requiring every field to be set.
+    pub fn build(&self) -> Result<CongestionControlParams, ConfigBuildError> {
+        Ok(CongestionControlParams {
+            alg: required_field(self.alg.clone(), "alg")?,
+            fixed_window_params: required_field(self.fixed_window_params, "fixed_window_params")?,
+            cwnd_params: required_field(self.cwnd_params, "cwnd_params")?,
+            rtt_params: required_field(self.rtt_params.clone(), "rtt_params")?,
+        })
+    }
+}
+
+impl CongestionControlParams {
+    /// Return a fresh, default builder.
+    pub fn builder() -> CongestionControlParamsBuilder {
+        CongestionControlParamsBuilder::default()
+    }
+}
+
+impl tor_config::load::Builder for CongestionControlParamsBuilder {
+    type Built = CongestionControlParams;
+
+    fn build(&self) -> Result<CongestionControlParams, ConfigBuildError> {
+        CongestionControlParamsBuilder::build(self)
+    }
+}
 
 impl CongestionControlParams {
     /// Return true iff congestion control is enabled that is the algorithm is anything other than
@@ -323,6 +664,117 @@ mod test {
     use crate::{
         ccparams::is_sendme_inc_valid, congestion::test_utils::params::build_cc_vegas_params,
     };
+
+    /// Require the expected first missing field from a parameter builder.
+    fn missing_field<T>(result: Result<T, tor_config::ConfigBuildError>, expected: &str) {
+        match result {
+            Err(tor_config::ConfigBuildError::MissingField { field }) => {
+                assert_eq!(field, expected);
+            }
+            _ => panic!("expected missing field {expected}"),
+        }
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    fn required_fields_remain_required_and_ordered() {
+        use super::*;
+
+        let fixed_defaults = FixedWindowParams::defaults_for_tests();
+        let mut fixed = FixedWindowParams::builder();
+        missing_field(fixed.build(), "circ_window_start");
+        fixed.circ_window_start(fixed_defaults.circ_window_start());
+        missing_field(fixed.build(), "circ_window_min");
+        fixed.circ_window_min(fixed_defaults.circ_window_min());
+        missing_field(fixed.build(), "circ_window_max");
+        fixed.circ_window_max(fixed_defaults.circ_window_max());
+        let saved = fixed.clone();
+        fixed.circ_window_start(fixed_defaults.circ_window_start() + 1);
+        assert_eq!(
+            tor_config::load::Builder::build(&fixed)
+                .unwrap()
+                .circ_window_start(),
+            fixed_defaults.circ_window_start() + 1
+        );
+        assert_eq!(
+            saved.build().unwrap().circ_window_start(),
+            fixed_defaults.circ_window_start()
+        );
+
+        let vegas_defaults = VegasParams::defaults_for_tests();
+        let mut vegas = VegasParams::builder();
+        missing_field(vegas.build(), "cell_in_queue_params");
+        vegas.cell_in_queue_params(*vegas_defaults.cell_in_queue_params());
+        missing_field(vegas.build(), "ss_cwnd_max");
+        vegas.ss_cwnd_max(vegas_defaults.ss_cwnd_max());
+        missing_field(vegas.build(), "cwnd_full_gap");
+        vegas.cwnd_full_gap(vegas_defaults.cwnd_full_gap());
+        missing_field(vegas.build(), "cwnd_full_min_pct");
+        vegas.cwnd_full_min_pct(*vegas_defaults.cwnd_full_min_pct());
+        missing_field(vegas.build(), "cwnd_full_per_cwnd");
+        vegas.cwnd_full_per_cwnd(vegas_defaults.cwnd_full_per_cwnd());
+        assert_eq!(
+            tor_config::load::Builder::build(&vegas)
+                .unwrap()
+                .cwnd_full_gap(),
+            vegas_defaults.cwnd_full_gap()
+        );
+
+        let rtt_defaults = RoundTripEstimatorParams::defaults_for_tests();
+        let mut rtt = RoundTripEstimatorParams::builder();
+        missing_field(rtt.build(), "ewma_cwnd_pct");
+        rtt.ewma_cwnd_pct(*rtt_defaults.ewma_cwnd_pct());
+        missing_field(rtt.build(), "ewma_max");
+        rtt.ewma_max(rtt_defaults.ewma_max());
+        missing_field(rtt.build(), "ewma_ss_max");
+        rtt.ewma_ss_max(rtt_defaults.ewma_ss_max());
+        missing_field(rtt.build(), "rtt_reset_pct");
+        rtt.rtt_reset_pct(*rtt_defaults.rtt_reset_pct());
+        assert_eq!(
+            tor_config::load::Builder::build(&rtt).unwrap().ewma_max(),
+            rtt_defaults.ewma_max()
+        );
+
+        let window_defaults = CongestionWindowParams::defaults_for_tests();
+        let mut window = CongestionWindowParams::builder();
+        missing_field(window.build(), "cwnd_init");
+        window.cwnd_init(window_defaults.cwnd_init());
+        missing_field(window.build(), "cwnd_inc_pct_ss");
+        window.cwnd_inc_pct_ss(*window_defaults.cwnd_inc_pct_ss());
+        missing_field(window.build(), "cwnd_inc");
+        window.cwnd_inc(window_defaults.cwnd_inc());
+        missing_field(window.build(), "cwnd_inc_rate");
+        window.cwnd_inc_rate(window_defaults.cwnd_inc_rate());
+        missing_field(window.build(), "cwnd_min");
+        window.cwnd_min(window_defaults.cwnd_min());
+        missing_field(window.build(), "cwnd_max");
+        window.cwnd_max(window_defaults.cwnd_max());
+        missing_field(window.build(), "sendme_inc");
+        window.sendme_inc(window_defaults.sendme_inc());
+        assert_eq!(
+            tor_config::load::Builder::build(&window)
+                .unwrap()
+                .sendme_inc(),
+            window_defaults.sendme_inc()
+        );
+
+        let mut control = CongestionControlParams::builder();
+        missing_field(control.build(), "alg");
+        control.alg(Algorithm::FixedWindow(fixed_defaults));
+        missing_field(control.build(), "fixed_window_params");
+        control.fixed_window_params(fixed_defaults);
+        missing_field(control.build(), "cwnd_params");
+        control.cwnd_params(window_defaults);
+        missing_field(control.build(), "rtt_params");
+        control.rtt_params(rtt_defaults.clone());
+        assert_eq!(
+            tor_config::load::Builder::build(&control)
+                .unwrap()
+                .rtt_params()
+                .ewma_max(),
+            rtt_defaults.ewma_max()
+        );
+    }
 
     #[test]
     fn test_sendme_inc_valid() {
