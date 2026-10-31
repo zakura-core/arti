@@ -1,13 +1,9 @@
-# retry-error
+# Retrying fallible operations
 
-An error attempt to represent multiple failures.
+[`RetryError`] records the failures of an operation retried several times.
+Each attempt can fail differently, so it retains all errors for reporting.
 
-This crate implements [`RetryError`], a type to use when you
-retry something a few times, and all those attempts can fail differently
-each time.  Instead of returning only a single error, it records
-_all of the errors received_, in case they are different.
-
-This crate is developed as part of
+This helper is developed as part of
 [Arti](https://gitlab.torproject.org/tpo/core/arti/), a project to
 implement [Tor](https://www.torproject.org/) in Rust.
 It's used by higher-level crates that retry
@@ -16,7 +12,7 @@ operations.
 ### Example
 
 ```rust
-use retry_error::RetryError;
+use tor_error::RetryError;
 
 fn some_operation() -> anyhow::Result<bool> {
    unimplemented!(); // example

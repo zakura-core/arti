@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use futures::task::SpawnError;
-use retry_error::RetryError;
 use thiserror::Error;
+use tor_error::RetryError;
 
 use oneshot_fused_workaround as oneshot;
 use tor_error::{Bug, ErrorKind, HasKind, HasRetryTime};

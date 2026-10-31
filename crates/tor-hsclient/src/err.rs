@@ -7,9 +7,9 @@ use futures::task::SpawnError;
 use thiserror::Error;
 use tracing::error;
 
-use retry_error::RetryError;
 use safelog::{Redacted, Sensitive};
 use tor_cell::relaycell::hs::IntroduceAckStatus;
+use tor_error::RetryError;
 use tor_error::define_asref_dyn_std_error;
 use tor_error::{Bug, ErrorKind, ErrorReport as _, HasKind, HasRetryTime, RetryTime, internal};
 use tor_linkspec::RelayIds;

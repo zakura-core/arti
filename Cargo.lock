@@ -3061,17 +3061,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "retry-error"
-version = "0.14.0"
-dependencies = [
- "anyhow",
- "derive_more",
- "humantime",
- "thiserror 2.0.21",
- "web-time",
-]
-
-[[package]]
 name = "rfc6979"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4224,7 +4213,6 @@ dependencies = [
  "oneshot-fused-workaround",
  "pin-project",
  "rand 0.10.3",
- "retry-error",
  "safelog",
  "serde",
  "thiserror 2.0.21",
@@ -4443,14 +4431,15 @@ dependencies = [
  "derive_more",
  "futures",
  "http",
+ "humantime",
  "paste",
- "retry-error",
  "static_assertions",
  "strum",
  "thiserror 2.0.21",
  "tracing",
  "tracing-test",
  "void",
+ "web-time",
  "web-time-compat",
 ]
 
@@ -4524,7 +4513,6 @@ dependencies = [
  "itertools 0.15.0",
  "oneshot-fused-workaround",
  "rand 0.10.3",
- "retry-error",
  "safelog",
  "slotmap-careful",
  "strum",

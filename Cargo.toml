@@ -19,7 +19,6 @@ members = [
     "crates/caret",
     "crates/fs-mistrust",
     "crates/safelog",
-    "crates/retry-error",
     "crates/tor-error",
     "crates/tor-general-addr",
     "crates/tor-memquota-cost",
