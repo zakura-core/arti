@@ -39,7 +39,6 @@ __is_experimental = []
 
 [dependencies]
 caret = { path = "../caret", version = "0.11.0" }
-derive_builder = { version = "0.11.2", package = "derive_builder_fork_arti" }
 derive_more = { version = "2.1.1", features = ["full"] }
 digest = "0.10.7"
 thiserror = "2"
