@@ -427,7 +427,7 @@ mod test {
         let p = CfgPath::new("~/.arti/config".to_string());
         assert_eq!(p.to_string(), "~/.arti/config".to_string());
 
-        let expected = dirs::home_dir().unwrap().join(".arti/config");
+        let expected = BaseDirs::new().unwrap().home_dir().join(".arti/config");
         assert_eq!(p.path(&r).unwrap().to_str(), expected.to_str());
 
         let p = CfgPath::new("${USER_HOME}/.arti/config".to_string());
@@ -443,7 +443,7 @@ mod test {
         let p = CfgPath::new("~\\.arti\\config".to_string());
         assert_eq!(p.to_string(), "~\\.arti\\config".to_string());
 
-        let expected = dirs::home_dir().unwrap().join(".arti\\config");
+        let expected = BaseDirs::new().unwrap().home_dir().join(".arti\\config");
         assert_eq!(p.path(&r).unwrap().to_str(), expected.to_str());
 
         let p = CfgPath::new("${USER_HOME}\\.arti\\config".to_string());
