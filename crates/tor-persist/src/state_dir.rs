@@ -206,7 +206,7 @@ define_derive_deftly! {
 }
 
 /// Re-export of the lock guard type, as obtained via [`ContainsInstanceStateGuard`]
-pub use fslock_guard::LockFileGuard;
+pub use crate::LockFileGuard;
 
 use std::result::Result as StdResult;
 

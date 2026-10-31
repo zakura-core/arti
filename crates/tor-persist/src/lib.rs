@@ -53,6 +53,7 @@
 #![cfg_attr(not(all(feature = "experimental", feature = "full")), allow(unused))]
 
 mod err;
+mod file_lock;
 #[cfg(not(target_arch = "wasm32"))]
 mod fs;
 mod fs_mistrust_error_ext;
@@ -73,6 +74,7 @@ use std::sync::Arc;
 type Result<T> = std::result::Result<T, crate::Error>;
 
 pub use err::{Error, ErrorSource};
+pub use file_lock::LockFileGuard;
 #[cfg(not(target_arch = "wasm32"))]
 pub use fs::FsStateMgr;
 pub use fs_mistrust_error_ext::FsMistrustErrorExt;

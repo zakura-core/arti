@@ -4,12 +4,12 @@
 
 mod clean;
 
+use crate::LockFileGuard;
 use crate::err::{Action, ErrorSource, Resource};
 use crate::load_store;
 use crate::{Error, LockStatus, Result, StateMgr};
 use fs_mistrust::CheckedDir;
 use fs_mistrust::anon_home::PathExt as _;
-use fslock_guard::LockFileGuard;
 use futures::FutureExt;
 use oneshot_fused_workaround as oneshot;
 use serde::{Serialize, de::DeserializeOwned};

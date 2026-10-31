@@ -29,9 +29,9 @@ use std::result::Result as StdResult;
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use fslock_guard::LockFileGuard;
 use rusqlite::{OpenFlags, OptionalExtension, Transaction, params};
 use time::OffsetDateTime;
+use tor_persist::LockFileGuard;
 use tracing::{trace, warn};
 
 /// Possible status of a lockfile.
