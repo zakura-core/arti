@@ -20,6 +20,8 @@ def main():
     parser.add_argument("--forbid-icu", action="store_true")
     parser.add_argument("--expect-keystore", choices=["true", "false"])
     args = parser.parse_args()
+    if args.expect_keystore == "true" and not args.keymgr:
+        parser.error("--expect-keystore true requires --keymgr")
     with tempfile.TemporaryDirectory(prefix="zakura-arti-consumer-") as directory:
         consumer = Path(directory)
         dependencies = []
@@ -56,7 +58,7 @@ def main():
             "    permissions(builder.storage().permissions());\n"
             "    let _config = builder.build().expect(\"default configuration\");\n"
             + (f"    assert_eq!(_config.keystore().is_enabled(), {args.expect_keystore});\n"
-             if args.expect_keystore else "") +
+             if args.expect_keystore and args.keymgr else "") +
             "    let _runtime_type: fn(TokioRustlsRuntime) = accepts_runtime;\n"
             "}\n"
         )
@@ -70,6 +72,9 @@ def main():
         packages = {line.removesuffix(" (*)") for line in tree.splitlines()}
         names = {package.split()[0] for package in packages}
         forbidden = set(args.forbid)
+        if not args.keymgr:
+            keymgr_manifest = ROOT / "crates/tor-keymgr/Cargo.toml"
+            forbidden.add(tomllib.loads(keymgr_manifest.read_text())["package"]["name"])
         unexpected = names & forbidden
         if args.forbid_icu:
             unexpected |= {name for name in names if name.startswith("icu_")}

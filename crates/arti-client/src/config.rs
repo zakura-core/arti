@@ -770,10 +770,10 @@ impl TorClientConfig {
 }
 
 impl TorClientConfigBuilder {
-    /// Returns a `TorClientConfigBuilder` using the specified state and cache directories.
+    /// Return a builder using the specified state and cache directories.
     ///
-    /// All other configuration options are set to their defaults, except `storage.keystore.path`,
-    /// which is derived from the specified state directory.
+    /// All other configuration options use their defaults. With `keymgr`
+    /// enabled, the keystore location is derived from the state directory.
     pub fn from_directories<P, Q>(state_dir: P, cache_dir: Q) -> Self
     where
         P: AsRef<Path>,
