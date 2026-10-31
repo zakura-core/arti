@@ -13,6 +13,7 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 
 [dependencies.tor-netdoc]
+package = "zakura-tor-netdoc"
 path = ".."
 features = ["hs-client"]
 

@@ -1,6 +1,6 @@
 [package]
-name = "tor-circmgr"
-version = "0.47.0"
+name = "zakura-tor-circmgr"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -75,40 +75,43 @@ itertools = "0.15.0"
 once_cell = "1"
 pin-project = "1"
 rand = "0.10.3"
-safelog = { path = "../safelog", version = "0.10.0" }
+safelog = { package = "zakura-safelog", path = "../safelog", version = "0.10.0-zakura.1" }
 serde = { version = "1.0.229", features = ["derive"] }
 thiserror = "2"
-tor-async-utils = { version = "0.47.0", path = "../tor-async-utils" }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-cell = { path = "../tor-cell", version = "0.47.0" }
-tor-chanmgr = { path = "../tor-chanmgr", version = "0.47.0" }
-tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
-tor-dircommon = { path = "../tor-dircommon", version = "0.47.0" }
-tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
-tor-guardmgr = { path = "../tor-guardmgr", version = "0.47.0" }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
-tor-memquota = { version = "0.47.0", path = "../tor-memquota", default-features = false }
-tor-netdir = { path = "../tor-netdir", version = "0.47.0" }
-tor-netdoc = { path = "../tor-netdoc", version = "0.47.0" }
-tor-persist = { path = "../tor-persist", version = "0.47.0" }
-tor-proto = { path = "../tor-proto", version = "0.47.0" }
-tor-protover = { path = "../tor-protover", version = "0.47.0" }
-tor-relay-selection = { path = "../tor-relay-selection", version = "0.47.0" }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0" }
-tor-units = { path = "../tor-units", version = "0.47.0" }
+tor-async-utils = { package = "zakura-tor-async-utils", version = "0.47.0-zakura.1", path = "../tor-async-utils" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-cell = { package = "zakura-tor-cell", path = "../tor-cell", version = "0.47.0-zakura.1" }
+tor-chanmgr = { package = "zakura-tor-chanmgr", path = "../tor-chanmgr", version = "0.47.0-zakura.1" }
+tor-config = { package = "zakura-tor-config", path = "../tor-config", version = "0.47.0-zakura.1", default-features = false }
+tor-dircommon = { package = "zakura-tor-dircommon", path = "../tor-dircommon", version = "0.47.0-zakura.1" }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1", features = ["tracing"] }
+tor-guardmgr = { package = "zakura-tor-guardmgr", path = "../tor-guardmgr", version = "0.47.0-zakura.1" }
+tor-linkspec = { package = "zakura-tor-linkspec", path = "../tor-linkspec", version = "0.47.0-zakura.1" }
+tor-memquota = { package = "zakura-tor-memquota", version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false }
+tor-netdir = { package = "zakura-tor-netdir", path = "../tor-netdir", version = "0.47.0-zakura.1" }
+tor-netdoc = { package = "zakura-tor-netdoc", path = "../tor-netdoc", version = "0.47.0-zakura.1" }
+tor-persist = { package = "zakura-tor-persist", path = "../tor-persist", version = "0.47.0-zakura.1" }
+tor-proto = { package = "zakura-tor-proto", path = "../tor-proto", version = "0.47.0-zakura.1" }
+tor-protover = { package = "zakura-tor-protover", path = "../tor-protover", version = "0.47.0-zakura.1" }
+tor-relay-selection = { package = "zakura-tor-relay-selection", path = "../tor-relay-selection", version = "0.47.0-zakura.1" }
+tor-rtcompat = { package = "zakura-tor-rtcompat", path = "../tor-rtcompat", version = "0.47.0-zakura.1" }
+tor-units = { package = "zakura-tor-units", path = "../tor-units", version = "0.47.0-zakura.1" }
 tracing = "0.1.44"
 visibility = { version = "0.1.1", optional = true }
 weak-table = "0.4.0"
-web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
+web-time-compat = { package = "zakura-web-time-compat", path = "../web-time-compat", version = "0.3.0-zakura.1" }
 
 [dev-dependencies]
 futures-await-test = "0.3.0"
 hex = "0.4"
-tor-guardmgr = { path = "../tor-guardmgr", version = "0.47.0", features = ["testing", "vanguards"] }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0" }
-tor-netdir = { path = "../tor-netdir", version = "0.47.0", features = ["testing"] }
-tor-persist = { path = "../tor-persist", version = "0.47.0", features = ["testing"] }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "rustls"] }
-tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
+tor-guardmgr = { package = "zakura-tor-guardmgr", path = "../tor-guardmgr", version = "0.47.0-zakura.1", features = ["testing", "vanguards"] }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1" }
+tor-netdir = { package = "zakura-tor-netdir", path = "../tor-netdir", version = "0.47.0-zakura.1", features = ["testing"] }
+tor-persist = { package = "zakura-tor-persist", path = "../tor-persist", version = "0.47.0-zakura.1", features = ["testing"] }
+tor-rtcompat = { package = "zakura-tor-rtcompat", path = "../tor-rtcompat", version = "0.47.0-zakura.1", features = ["tokio", "rustls"] }
+tor-rtmock = { package = "zakura-tor-rtmock", path = "../tor-rtmock", version = "0.47.0-zakura.1" }
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_circmgr"

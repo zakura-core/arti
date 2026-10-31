@@ -14,6 +14,7 @@ libfuzzer-sys = "0.4"
  arbitrary = { version = "1", features = ["derive"] }
 
 [dependencies.tor-bytes]
+package = "zakura-tor-bytes"
 path = ".."
 
 # Prevent this from interfering with workspaces

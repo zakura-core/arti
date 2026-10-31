@@ -13,6 +13,7 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 
 [dependencies.tor-socksproto]
+package = "zakura-tor-socksproto"
 path = ".."
 features = ["proxy-handshake", "client-handshake", "arbitrary"]
 

@@ -1,6 +1,6 @@
 [package]
-name = "web-time-compat"
-version = "0.3.0"
+name = "zakura-web-time-compat"
+version = "0.3.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -10,7 +10,7 @@ description = "Compatibility layer for web-time"
 keywords = ["js", "wasm", "time"]
 # We must put *something* here and this will do
 categories = ["rust-patterns"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 [package.metadata.docs.rs]
 all-features = true
 
@@ -24,3 +24,6 @@ full = []
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 web-time = "1.1.0"
+
+[lib]
+name = "web_time_compat"

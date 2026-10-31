@@ -1,6 +1,6 @@
 [package]
-name = "caret"
-version = "0.11.0"
+name = "zakura-caret"
+version = "0.11.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Macros for declaring non-exhaustive C-style enumerations, with named members"
 keywords = ["macro", "enum"]
 categories = ["rust-patterns"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [dependencies]
 
@@ -17,3 +17,6 @@ repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
 full = []
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "caret"
