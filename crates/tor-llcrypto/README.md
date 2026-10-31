@@ -81,9 +81,6 @@ These features should never be enabled by default from libraries, since they
 are not "strictly additive": they disable one implementation in order to
 enable another.
 
-`with-openssl` -- Use `openssl` as the backend for those cryptographic
-features it supports.
-
 `with-sha1-asm` -- Use an assembly implementation of the sha1 algorithm, if
 one is enabled.
 

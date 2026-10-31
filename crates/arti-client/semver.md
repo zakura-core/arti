@@ -6,3 +6,6 @@ BREAKING: Remove geoip, CountryCode re-export and StreamPrefs::{exit_country, an
 BREAKING: Remove the `native-tls` and `static-native-tls` Cargo features.
 Default and `full` now select Rustls/Ring instead of native-TLS. The `static`
 feature retains static SQLite linking without a native-TLS backend.
+
+REMOVED: The `accel-openssl` Cargo feature. Existing default RustCrypto
+implementations remain in use.
