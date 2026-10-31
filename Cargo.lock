@@ -4270,7 +4270,6 @@ name = "tor-guardmgr"
 version = "0.47.0"
 dependencies = [
  "derive-deftly",
- "derive_builder_fork_arti",
  "derive_more",
  "educe",
  "float_eq",
