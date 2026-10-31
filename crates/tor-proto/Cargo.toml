@@ -96,7 +96,7 @@ derive-deftly = "~1.14.0"
 derive_more = { version = "2.1.1", features = ["full"] }
 digest = "0.10.7"
 educe = "0.4.23"
-futures = "0.3.34"
+futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }
 futures-util = "0.3.34"
 getset = "0.1.7"
 hkdf = "0.12.4"
@@ -145,6 +145,7 @@ zeroize = "1"
 [dev-dependencies]
 assert_matches = "1.5.0"
 criterion = "0.8.2"
+futures = { version = "0.3.34", default-features = false, features = ["executor"] }
 hex = "0.4"
 hex-literal = "1.1"
 humantime = "2"

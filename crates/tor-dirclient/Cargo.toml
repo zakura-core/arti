@@ -50,7 +50,7 @@ __is_experimental = []
 async-compression = { version = "0.4.51", features = ["futures-io", "zlib"] }
 base64ct = "1.8.3"
 derive_more = { version = "2.1.1", features = ["full"] }
-futures = "0.3.34"
+futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }
 hex = "0.4"
 http = "1.5"
 httparse = "1.10"

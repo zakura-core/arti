@@ -53,7 +53,7 @@ educe = "0.4.23"
 either = "1"
 extend = "1.2.0"
 fs-mistrust = { package = "zakura-fs-mistrust", path = "../fs-mistrust", version = "0.16.0-zakura.1" }
-futures = { version = "0.3.34", optional = true }
+futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"], optional = true }
 getset = { version = "0.1.7", optional = true }
 humantime-serde = "1.1.1"
 itertools = "0.15.0"
