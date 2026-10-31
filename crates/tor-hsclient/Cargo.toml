@@ -69,7 +69,7 @@ tor-circmgr = { version = "0.47.0", path = "../tor-circmgr", features = ["hs-cli
 tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
 tor-dirclient = { path = "../tor-dirclient", version = "0.47.0", default-features = false, features = ["hs-client"] }
 tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
-tor-hscrypto = { version = "0.47.0", path = "../tor-hscrypto" }
+tor-hscrypto = { default-features = false, version = "0.47.0", path = "../tor-hscrypto" }
 tor-keymgr = { version = "0.47.0", path = "../tor-keymgr", default-features = false, optional = true }
 tor-linkspec = { version = "0.47.0", path = "../tor-linkspec", features = ["decode", "verbatim"] }
 tor-llcrypto = { version = "0.47.0", path = "../tor-llcrypto" }

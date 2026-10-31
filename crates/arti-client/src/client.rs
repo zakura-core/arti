@@ -296,9 +296,11 @@ impl InertTorClient {
             ty => return Err(internal!("unrecognized keystore type {ty:?}").into()),
         };
 
+        // Only the optional C Tor stores append secondary keystores.
+        #[allow(unused_mut)]
         let mut builder = KeyMgrBuilder::default().primary_store(primary_store);
 
-        #[cfg(feature = "onion-service-client")]
+        #[cfg(all(feature = "onion-service-client", feature = "keymgr"))]
         for config in config.storage.keystore().ctor_client_stores() {
             let store: Box<dyn Keystore> = Box::new(CTorClientKeystore::from_path_and_mistrust(
                 config.path(),
