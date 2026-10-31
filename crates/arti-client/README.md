@@ -238,9 +238,8 @@ match tor_client.connect(("example.com", 80)).await {
 ### Additive features
 
 * `tokio` (default) -- build with [Tokio](https://tokio.rs/) support
-* `native-tls` (default) -- build with the
-  [native-tls](https://github.com/sfackler/rust-native-tls) crate for TLS
-  support.
+* `rustls` (default) -- build with [Rustls](https://github.com/rustls/rustls)
+  and its Ring cryptographic provider for TLS support.
 * `async-std` -- build with [async-std](https://async.rs/) support.
 * `compression` (default) -- Build support for downloading compressed
   documents. Requires a C compiler.
@@ -261,22 +260,14 @@ match tor_client.connect(("example.com", 80)).await {
   implementation to the exclusion of another, or those that set a build
   flag.)
 
-* `rustls` -- build with the [rustls](https://github.com/rustls/rustls)
-  crate for TLS support.  This is not currently included in `full`.
-
-Note that flags `tokio`, `native-tls`, `async-std`, `smol`, `rustls` and `static`
-will enable the flags of the same name on the [`tor_rtcompat`] crate.
+Flags `tokio`, `async-std`, `smol` and `rustls` enable the flags of the
+same name on the [`tor_rtcompat`] crate.
 
 ### Build-flag related features
 
-* `static` -- link with static versions of Arti's system dependencies, like
-  SQLite and OpenSSL (⚠ Warning ⚠: this feature will include a dependency on
-  native-tls, even if you weren't planning to use native-tls.  If you only
-  want to build with a static sqlite library, enable the `static-sqlite`
-  feature.  We'll look for better solutions here in the future.)
-* `static-sqlite` -- link with a static version of sqlite.
-* `static-native-tls` -- link with a static version of `native-tls`. Enables
-  `native-tls`.
+* `static` -- link with a static version of SQLite; an alias for
+  `static-sqlite` in this fork.
+* `static-sqlite` -- link with a static version of SQLite.
 
 ### Cryptographic acceleration features
 

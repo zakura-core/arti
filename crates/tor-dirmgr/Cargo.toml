@@ -125,6 +125,6 @@ float_eq = "1.0.1"
 hex-literal = "1.1"
 tempfile = "3"
 tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "native-tls"] }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "rustls"] }
 tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
 tracing-test = "0.2.6"

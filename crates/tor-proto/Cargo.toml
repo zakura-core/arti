@@ -164,7 +164,7 @@ statrs = { version = "0.19.1", default-features = false }
 tokio-crate = { package = "tokio", version = "1.54.1", features = ["full"] }
 tor-key-forge = { path = "../tor-key-forge", version = "0.47.0" }
 tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0", features = ["testing"] }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "native-tls"] }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "rustls"] }
 tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
 tracing-test = "0.2.6"
 

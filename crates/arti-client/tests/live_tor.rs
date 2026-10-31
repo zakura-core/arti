@@ -2,6 +2,8 @@
 //!
 //! Ordinary tests stay offline; the shared Linux CI job explicitly runs this
 //! ignored test with the wallet's Tokio/Rustls feature selection.
+//! HTTPS verification uses a system PEM CA bundle. Set `SSL_CERT_FILE` when
+//! the bundle is outside the standard Linux/macOS paths listed below.
 
 #![cfg(all(
     feature = "tokio",
@@ -12,12 +14,46 @@
 use anyhow::{Context, Result, ensure};
 use arti_client::{TorClient, config::TorClientConfigBuilder};
 use futures::io::{AsyncReadExt, AsyncWriteExt};
+use rustls::pki_types::{CertificateDer, ServerName, pem::PemObject};
+use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
+use tor_basic_utils::PathExt as _;
 use tor_rtcompat::{SleepProviderExt, ToplevelBlockOn, tokio::TokioRustlsRuntime};
 
 const LIVE_TIMEOUT: Duration = Duration::from_secs(240);
 const MAX_RESPONSE_BYTES: u64 = 16 * 1024;
 const CHECK_HOST: &str = "check.torproject.org";
+
+/// Load trust anchors for the destination HTTPS connection, never relay TLS.
+fn system_root_store() -> Result<rustls::RootCertStore> {
+    let bundle = if let Some(path) = std::env::var_os("SSL_CERT_FILE") {
+        PathBuf::from(path)
+    } else {
+        [
+            "/etc/ssl/cert.pem",
+            "/etc/ssl/certs/ca-certificates.crt",
+            "/etc/pki/tls/certs/ca-bundle.crt",
+        ]
+        .into_iter()
+        .map(PathBuf::from)
+        .find(|path| path.is_file())
+        .context("no system PEM CA bundle found; set SSL_CERT_FILE for this test")?
+    };
+    let mut roots = rustls::RootCertStore::empty();
+    for certificate in CertificateDer::pem_file_iter(&bundle)
+        .with_context(|| format!("open system PEM CA bundle {}", bundle.display_lossy()))?
+    {
+        roots
+            .add(certificate.context("decode a system CA certificate")?)
+            .context("load a system CA trust anchor")?;
+    }
+    ensure!(
+        !roots.is_empty(),
+        "system PEM CA bundle contains no certificates"
+    );
+    Ok(roots)
+}
 
 /// A fresh bootstrap authenticates real relay channels, then a Tor exit must
 /// carry an HTTPS request to the Tor Project's own exit-check service.
@@ -27,6 +63,9 @@ fn public_tor_bootstrap_and_https_request() -> Result<()> {
     rustls::crypto::ring::default_provider()
         .install_default()
         .map_err(|_| anyhow::anyhow!("live Tor test must select its own Ring provider"))?;
+    let https_config = rustls::ClientConfig::builder()
+        .with_root_certificates(system_root_store()?)
+        .with_no_client_auth();
 
     let directories = tempfile::tempdir().context("create isolated Tor state/cache root")?;
     let config = TorClientConfigBuilder::from_directories(
@@ -54,8 +93,8 @@ fn public_tor_bootstrap_and_https_request() -> Result<()> {
             // This connector validates the destination certificate using system
             // roots. The only TCP stream it receives comes from TorClient;
             // it has no direct-network fallback.
-            let mut tls = async_native_tls::TlsConnector::new()
-                .connect(CHECK_HOST, stream)
+            let mut tls = futures_rustls::TlsConnector::from(Arc::new(https_config))
+                .connect(ServerName::try_from(CHECK_HOST)?, stream)
                 .await
                 .context("authenticate the Tor check HTTPS endpoint over Tor")?;
             let request = format!(

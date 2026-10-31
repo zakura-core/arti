@@ -10,7 +10,7 @@ if sys.argv[1:] == []:
     print("You need to name a program to run with different features")
     sys.exit(1)
 
-FEATURES = ["tokio", "async-std", "native-tls", "rustls"]
+FEATURES = ["tokio", "async-std", "rustls"]
 
 COMBINATIONS: list[list[str]] = [[]]
 

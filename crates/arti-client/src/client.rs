@@ -31,10 +31,7 @@ use tor_persist::StateMgr;
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 use tor_persist::TestingStateMgr;
 use tor_proto::client::stream::{DataStream, IpVersionPreference, StreamParameters};
-#[cfg(all(
-    any(feature = "native-tls", feature = "rustls"),
-    any(feature = "async-std", feature = "tokio"),
-))]
+#[cfg(all(feature = "rustls", any(feature = "async-std", feature = "tokio"),))]
 use tor_rtcompat::PreferredRuntime;
 use tor_rtcompat::{Runtime, SleepProviderExt};
 #[cfg(feature = "onion-service-client")]
@@ -894,10 +891,7 @@ impl StreamPrefs {
     // TODO: Add some way to be IPFlexible, and require exit to support both.
 }
 
-#[cfg(all(
-    any(feature = "native-tls", feature = "rustls"),
-    any(feature = "async-std", feature = "tokio")
-))]
+#[cfg(all(feature = "rustls", any(feature = "async-std", feature = "tokio")))]
 impl TorClient<PreferredRuntime> {
     /// Bootstrap a connection to the Tor network, using the provided `config`.
     ///

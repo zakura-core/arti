@@ -1935,7 +1935,7 @@ mod test {
     use tor_llcrypto::pk::curve25519;
     use tor_netdoc::doc::{hsdesc::test_data, netstatus::Lifetime};
     use tor_rtcompat::RuntimeSubstExt as _;
-    use tor_rtcompat::tokio::TokioNativeTlsRuntime;
+    use tor_rtcompat::tokio::TokioRustlsRuntime;
     use tor_rtmock::simple_time::SimpleMockTimeProvider;
     use tracing_test::traced_test;
 
@@ -2173,7 +2173,7 @@ mod test {
     async fn test_connect() {
         use MetaCellDisposition::*;
         let netdir = build_test_netdir();
-        let runtime = TokioNativeTlsRuntime::current().unwrap();
+        let runtime = TokioRustlsRuntime::current().unwrap();
         let now = humantime::parse_rfc3339("2023-02-09T12:00:00Z").unwrap();
         let mock_sp = SimpleMockTimeProvider::from_wallclock(now);
         let runtime = runtime

@@ -106,7 +106,7 @@ toml = "1.1.8"
 tor-netdir = { path = "../tor-netdir", version = "0.47.0", features = ["testing"] }
 tor-netdoc = { path = "../tor-netdoc", version = "0.47.0" }
 tor-persist = { path = "../tor-persist", version = "0.47.0", features = ["testing"] }
-tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "native-tls"] }
+tor-rtcompat = { path = "../tor-rtcompat", version = "0.47.0", features = ["tokio", "rustls"] }
 tor-rtmock = { path = "../tor-rtmock", version = "0.47.0" }
 
 [package.metadata.docs.rs]
