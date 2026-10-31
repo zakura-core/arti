@@ -65,15 +65,12 @@ mod misc;
 pub mod mistrust;
 mod mut_cfg;
 pub mod setter_traits;
-pub mod sources;
 #[cfg(feature = "testing")]
 pub mod testing;
 
 #[doc(hidden)]
 pub mod deps {
     pub use educe;
-    #[cfg(feature = "load-config")]
-    pub use figment;
     pub use itertools::Itertools;
     pub use paste::paste;
     pub use serde;
@@ -81,20 +78,12 @@ pub mod deps {
     pub use tor_basic_utils::{if_empty, macro_first_nonempty};
 }
 
-pub use err::{ConfigBuildError, ConfigError, ConfigGetValueError, ReconfigureError};
+pub use err::{ConfigBuildError, ReconfigureError};
 pub use flatten::{Flatten, Flattenable};
 pub use list_builder::{MultilineListBuilder, MultilineListBuilderError};
 pub use listen::*;
-#[cfg(feature = "load-config")]
-#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
-pub use load::{resolve, resolve_ignore_warnings, resolve_return_results};
 pub use misc::*;
 pub use mut_cfg::MutCfg;
-#[cfg(feature = "load-config")]
-use serde::de::DeserializeOwned;
-pub use sources::{ConfigurationSource, ConfigurationSources};
-#[cfg(feature = "load-config")]
-use tor_error::into_internal;
 
 #[doc(hidden)]
 pub use derive_deftly;
@@ -102,71 +91,6 @@ pub use derive_deftly;
 pub use flatten::flattenable_extract_fields;
 
 derive_deftly::template_export_semver_check! { "0.12.1" }
-
-/// A set of configuration fields, represented as a set of nested K=V
-/// mappings.
-///
-/// (This is a wrapper for an underlying type provided by the library that
-/// actually does our configuration.)
-#[cfg(feature = "load-config")]
-#[cfg_attr(docsrs, doc(cfg(feature = "load-config")))]
-#[derive(Clone, Debug, Default)]
-#[must_use] // to prevent errors from merge_from.
-pub struct ConfigurationTree(figment::Figment);
-
-#[cfg(feature = "load-config")]
-impl ConfigurationTree {
-    #[cfg(test)]
-    pub(crate) fn get_string(&self, key: &str) -> Result<String, crate::ConfigError> {
-        use figment::value::Value as V;
-        let val = self.0.find_value(key).map_err(ConfigError::from_cfg_err)?;
-        Ok(match val {
-            V::String(_, s) => s.clone(),
-            V::Num(_, n) => n.to_i128().expect("Failed to extract i128").to_string(),
-            _ => format!("{:?}", val),
-        })
-    }
-
-    /// Return the value with a given key as some type that implements Deserialize.
-    ///
-    /// Return `None` if no such value is set in this tree.
-    pub fn get_serde_value<T: DeserializeOwned>(
-        &self,
-        key: &str,
-    ) -> Result<Option<T>, ConfigGetValueError> {
-        use figment::error::{Error as FError, Kind::MissingField};
-        match self.0.extract_inner(key) {
-            Ok(v) => Ok(Some(v)),
-            Err(FError {
-                kind: MissingField(..),
-                ..
-            }) => Ok(None),
-            Err(e) => Err(into_internal!("Unexpected error looking up config value")(e).into()),
-        }
-    }
-
-    /// Override our current tree with the settings in `config`.
-    ///
-    /// `config` must be implement [`Serialize`](serde::Serialize),
-    /// and must serialize to a map.
-    ///
-    /// This operation follows the same as are used when reading
-    /// multiple configuration files in sequence,
-    /// where option settings in later files replace earlier ones.
-    #[allow(clippy::unnecessary_wraps)]
-    pub fn merge_from<T>(&mut self, config: &T) -> Result<(), ConfigError>
-    where
-        T: serde::Serialize,
-    {
-        let provider = figment::providers::Serialized::from(config, figment::Profile::Default);
-        let mut orig = figment::Figment::new();
-        std::mem::swap(&mut orig, &mut self.0);
-        self.0 = orig.merge(provider);
-        // Figment::merge handles errors by making the type of the figment itself into an error...
-        // but we don't want our API to rely on that, so we let method returna Result.
-        Ok(())
-    }
-}
 
 /// Rules for reconfiguring a running Arti instance.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -523,8 +447,6 @@ mod test {
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
     use super::*;
     use crate as tor_config;
-    #[cfg(feature = "load-config")]
-    use crate::sources::MustRead;
     use derive_builder::Builder;
     use serde::{Deserialize, Serialize};
     use serde_json::json;
@@ -612,40 +534,5 @@ mod test {
             assert_eq!(builder_from_methods.build().unwrap(),
                        TestConfig { none: None, four: None });
         }
-    }
-
-    #[test]
-    #[cfg(feature = "load-config")]
-    fn get_value() {
-        use serde_value::Value as V;
-        let to_value = |json_str: &str| {
-            serde_value::to_value(serde_json::from_str::<serde_json::Value>(json_str).unwrap())
-                .unwrap()
-        };
-        let mut sources = ConfigurationSources::new_empty();
-
-        let source = "
-        [foo]
-        bar.baz = 7
-        quux = [[],[],{}]
-        ";
-        let source = ConfigurationSource::from_verbatim(source.to_string());
-        sources.push_source(source, MustRead::MustRead);
-
-        let tree = sources.load().unwrap();
-
-        {
-            let v1 = tree.get_serde_value::<V>("foo.quux").unwrap().unwrap();
-            let v2 = to_value(r#"[[], [], {}]"#);
-            assert_eq!(v1, v2);
-        }
-
-        assert!(tree.get_serde_value::<V>("nonexist").unwrap().is_none());
-        assert!(tree.get_serde_value::<V>("foo.nonexist").unwrap().is_none());
-        assert!(
-            tree.get_serde_value::<V>("foo.quux.nonexist")
-                .unwrap()
-                .is_none()
-        );
     }
 }

@@ -48,11 +48,9 @@ tor-general-addr = { path = "../tor-general-addr", version = "0.47.0", optional 
 
 [dev-dependencies]
 assert_matches = "1.5.0"
-derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 rmp-serde = "1"
 serde_json = "1.0.154"
 toml = "1.1.8"
-tor-config = { path = "../tor-config", version = "0.47.0", default-features = false, features = ["load-config"] }
 
 [package.metadata.docs.rs]
 all-features = true

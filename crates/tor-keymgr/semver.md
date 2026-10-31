@@ -24,3 +24,6 @@ remove that attribute. The generated `KeySpecifier`, `KeySpecifierPattern`,
 signatures and behavior. Manual `KeySpecifier` implementations, component
 formatting methods, path parsing/errors and typed key operations are unchanged.
 There are no added or changed `pub(crate)` interfaces.
+
+BREAKING: Remove the `config::ConfigurationSource` re-export with the
+configuration-file discovery API. Typed keystore configuration is unchanged.

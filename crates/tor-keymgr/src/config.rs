@@ -1,6 +1,6 @@
 //! Configuration options for types implementing [`Keystore`](crate::Keystore)
 
-pub use tor_config::{ConfigBuildError, ConfigurationSource, Reconfigure};
+pub use tor_config::{ConfigBuildError, Reconfigure};
 pub use tor_config_path::{CfgPath, CfgPathError};
 
 use derive_deftly::Deftly;

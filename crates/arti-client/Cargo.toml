@@ -18,7 +18,7 @@ all-features = true
 # @@ test-all-crates conditional-option minimal --features=tokio,rustls
 
 [features]
-default = ["tokio", "rustls", "compression", "load-config"]
+default = ["tokio", "rustls", "compression"]
 full = [
     "anyhow",
     "keymgr",
@@ -70,7 +70,6 @@ full = [
 #   * Features which may introduce unnecessary licensing restrictions.
 
 # Read configuration files through the re-exported configuration sources.
-load-config = ["tor-config/load-config"]
 
 async-std = ["tor-rtcompat/async-std"]
 smol = ["tor-rtcompat/smol", "__is_experimental"]
