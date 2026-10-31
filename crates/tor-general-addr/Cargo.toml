@@ -1,6 +1,6 @@
 [package]
-name = "tor-general-addr"
-version = "0.47.0"
+name = "zakura-tor-general-addr"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Generalized socket address type used by Tor"
 keywords = ["tor", "arti", "async"]
 categories = ["asynchronous"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = []
@@ -26,3 +26,6 @@ assert_matches = "1.5.0"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_general_addr"

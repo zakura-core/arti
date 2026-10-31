@@ -1,6 +1,6 @@
 [package]
-name = "tor-linkspec"
-version = "0.47.0"
+name = "zakura-tor-linkspec"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Parts of the Tor protocol that indicate specific relays on the network"
 keywords = ["tor", "arti"]
 categories = ["network-programming"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = []
@@ -31,21 +31,21 @@ __is_experimental = []
 [dependencies]
 base64ct = "1.8.3"
 by_address = "1"
-caret = { path = "../caret", version = "0.11.0" }
+caret = { package = "zakura-caret", path = "../caret", version = "0.11.0-zakura.1" }
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_more = { version = "2.1.1", features = ["full"] }
 hex = "0.4"
 itertools = "0.15.0"
-safelog = { path = "../safelog", version = "0.10.0" }
+safelog = { package = "zakura-safelog", path = "../safelog", version = "0.10.0-zakura.1" }
 serde = { version = "1.0.229", features = ["derive"] }
 strum = { version = "0.28.0", features = ["derive"] }
 thiserror = "2"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-bytes = { path = "../tor-bytes", version = "0.47.0" }
-tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0", features = ["memquota-memcost"] }
-tor-memquota = { version = "0.47.0", path = "../tor-memquota", default-features = false }
-tor-protover = { path = "../tor-protover", version = "0.47.0" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-bytes = { package = "zakura-tor-bytes", path = "../tor-bytes", version = "0.47.0-zakura.1" }
+tor-config = { package = "zakura-tor-config", path = "../tor-config", version = "0.47.0-zakura.1", default-features = false }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["memquota-memcost"] }
+tor-memquota = { package = "zakura-tor-memquota", version = "0.47.0-zakura.1", path = "../tor-memquota", default-features = false }
+tor-protover = { package = "zakura-tor-protover", path = "../tor-protover", version = "0.47.0-zakura.1" }
 
 [dev-dependencies]
 hex-literal = "1.1"
@@ -54,3 +54,6 @@ serde_test = "1.0.177"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_linkspec"

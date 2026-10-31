@@ -1,6 +1,6 @@
 [package]
-name = "tor-keymgr"
-version = "0.47.0"
+name = "zakura-tor-keymgr"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Gabriela Moldovan <gabi@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Key management for the Arti Tor implementation"
 keywords = ["tor", "arti"]
 categories = ["cryptography"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 default = ["keymgr"]
@@ -58,41 +58,44 @@ derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_builder = { version = "0.11.2", package = "derive_builder_fork_arti" }
 derive_more = { version = "2.1.1", features = ["full"] }
 dyn-clone = "1.0.20"
-fs-mistrust = { path = "../fs-mistrust", version = "0.16.0", features = ["serde", "walkdir"] }
+fs-mistrust = { package = "zakura-fs-mistrust", path = "../fs-mistrust", version = "0.16.0-zakura.1", features = ["serde", "walkdir"] }
 getset = "0.1.7"
 glob-match = "0.2.1"
 humantime = "2"
 itertools = "0.15.0"
 rand = "0.10.3"
-safelog = { path = "../safelog", version = "0.10.0" }
+safelog = { package = "zakura-safelog", path = "../safelog", version = "0.10.0-zakura.1" }
 serde = { version = "1.0.229", features = ["derive"] }
 signature = "2"
 ssh-key = { optional = true, version = "0.6.7", package = "ssh-key-fork-arti", features = ["std"] }
 thiserror = "2"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-bytes = { path = "../tor-bytes", version = "0.47.0", default-features = false }
-tor-config = { path = "../tor-config", version = "0.47.0", default-features = false }
-tor-config-path = { path = "../tor-config-path", version = "0.47.0" }
-tor-error = { path = "../tor-error", version = "0.47.0", features = ["tracing"] }
-tor-hscrypto = { default-features = false, path = "../tor-hscrypto", version = "0.47.0" }
-tor-key-forge = { optional = true, path = "../tor-key-forge", version = "0.47.0" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0", features = ["keymgr"] }
-tor-persist = { path = "../tor-persist", version = "0.47.0" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-bytes = { package = "zakura-tor-bytes", path = "../tor-bytes", version = "0.47.0-zakura.1", default-features = false }
+tor-config = { package = "zakura-tor-config", path = "../tor-config", version = "0.47.0-zakura.1", default-features = false }
+tor-config-path = { package = "zakura-tor-config-path", path = "../tor-config-path", version = "0.47.0-zakura.1" }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1", features = ["tracing"] }
+tor-hscrypto = { package = "zakura-tor-hscrypto", default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1" }
+tor-key-forge = { package = "zakura-tor-key-forge", optional = true, path = "../tor-key-forge", version = "0.47.0-zakura.1" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1", features = ["keymgr"] }
+tor-persist = { package = "zakura-tor-persist", path = "../tor-persist", version = "0.47.0-zakura.1" }
 tracing = "0.1.44"
 visibility = { version = "0.1.1" }
 walkdir = { version = "2" }
-web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
+web-time-compat = { package = "zakura-web-time-compat", path = "../web-time-compat", version = "0.3.0-zakura.1" }
 zeroize = "1"
 
 [dev-dependencies]
 paste = "1.0.15"
 serde_json = "1.0.154"
 tempfile = "3"
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-cert = { path = "../tor-cert", version = "0.47.0" }
-tor-checkable = { path = "../tor-checkable", version = "0.47.0" }
-tor-config = { path = "../tor-config", version = "0.47.0", features = ["testing"], default-features = false }
-tor-llcrypto = { version = "0.47.0", path = "../tor-llcrypto", features = ["testing"] }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-cert = { package = "zakura-tor-cert", path = "../tor-cert", version = "0.47.0-zakura.1" }
+tor-checkable = { package = "zakura-tor-checkable", path = "../tor-checkable", version = "0.47.0-zakura.1" }
+tor-config = { package = "zakura-tor-config", path = "../tor-config", version = "0.47.0-zakura.1", features = ["testing"], default-features = false }
+tor-llcrypto = { package = "zakura-tor-llcrypto", version = "0.47.0-zakura.1", path = "../tor-llcrypto", features = ["testing"] }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_keymgr"

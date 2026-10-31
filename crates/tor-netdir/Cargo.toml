@@ -1,6 +1,6 @@
 [package]
-name = "tor-netdir"
-version = "0.47.0"
+name = "zakura-tor-netdir"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -68,20 +68,23 @@ serde = { version = "1.0.229", features = ["derive"] }
 strum = { version = "0.28.0", features = ["derive"] }
 thiserror = "2"
 time = { version = "0.3.55", features = ["macros"], optional = true }
-tor-basic-utils = { path = "../tor-basic-utils", version = "0.47.0" }
-tor-error = { path = "../tor-error", version = "0.47.0" }
-tor-hscrypto = { default-features = false, path = "../tor-hscrypto", version = "0.47.0", optional = true }
-tor-linkspec = { path = "../tor-linkspec", version = "0.47.0" }
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0" }
-tor-netdoc = { path = "../tor-netdoc", version = "0.47.0" }
-tor-protover = { path = "../tor-protover", version = "0.47.0" }
-tor-units = { path = "../tor-units", version = "0.47.0" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1" }
+tor-hscrypto = { package = "zakura-tor-hscrypto", default-features = false, path = "../tor-hscrypto", version = "0.47.0-zakura.1", optional = true }
+tor-linkspec = { package = "zakura-tor-linkspec", path = "../tor-linkspec", version = "0.47.0-zakura.1" }
+tor-llcrypto = { package = "zakura-tor-llcrypto", path = "../tor-llcrypto", version = "0.47.0-zakura.1" }
+tor-netdoc = { package = "zakura-tor-netdoc", path = "../tor-netdoc", version = "0.47.0-zakura.1" }
+tor-protover = { package = "zakura-tor-protover", path = "../tor-protover", version = "0.47.0-zakura.1" }
+tor-units = { package = "zakura-tor-units", path = "../tor-units", version = "0.47.0-zakura.1" }
 tracing = "0.1.44"
 visibility = { version = "0.1.1", optional = true }
-web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
+web-time-compat = { package = "zakura-web-time-compat", path = "../web-time-compat", version = "0.3.0-zakura.1" }
 
 [dev-dependencies]
 float_eq = "1.0.1"
 hex = "0.4"
 hex-literal = "1.1"
-tor-netdoc = { path = "../tor-netdoc", version = "0.47.0", features = ["build_docs"] }
+tor-netdoc = { package = "zakura-tor-netdoc", path = "../tor-netdoc", version = "0.47.0-zakura.1", features = ["build_docs"] }
+
+[lib]
+name = "tor_netdir"
