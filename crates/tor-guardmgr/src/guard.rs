@@ -17,7 +17,7 @@ use crate::{ExternalActivity, GuardSetSelector, GuardUsageKind, sample};
 use crate::{GuardParams, GuardRestriction, GuardUsage, ids::GuardId};
 
 use tor_basic_utils::onionperf_types::{OnionperfEvent, OnionperfGuardStatus};
-use tor_linkspec::{ChanTarget, ChannelMethod, HasAddrs, HasChanMethod, HasRelayIds, RelayIds};
+use tor_linkspec::{ChanTarget, ChannelMethod, HasAddrs, HasRelayIds, RelayIds};
 use tor_persist::{Futureproof, JsonValue};
 
 /// Tri-state to represent whether a guard is believed to be reachable or not.

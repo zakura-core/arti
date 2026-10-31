@@ -1054,8 +1054,6 @@ impl<R: Runtime> RunningInner<R> {
             .expect("Client somehow dropped while creating RunningInner");
         let memquota = &client.memquota;
         let statemgr = &client.statemgr;
-        let path_resolver = &client.path_resolver;
-        let (state_dir, _) = config.state_dir()?;
 
         let chanmgr = Arc::new(
             tor_chanmgr::ChanMgr::new(
