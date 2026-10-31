@@ -146,7 +146,7 @@ pub trait JoinSet<T>: Send + Sync + 'static {
 ///
 // Note: Tokio's `JoinSet` panics if you try to use it from the
 // context of a non-tokio runtime, so we've had to invent our our own
-// runtime-agnostic `JoinSet` type for testing, and for use with `async-std` and `smol`.
+// runtime-agnostic `JoinSet` type for testing with the mock executor.
 // The `JoinSetProvider` and `JoinSet` enable us to customize the `JoinSet` type
 // for each runtime.
 //
@@ -324,12 +324,9 @@ pub trait ToplevelBlockOn: Clone + Send + Sync + 'static {
 /// | `Blocking::blocking_io`      | `block_in_place`      | `subthread_spawn`              |
 /// | (not available)              | (not implemented)     | `progress_until_stalled` etc.  |
 ///
-/// Re `block_on`, see also the docs for the underlying implementations in
-/// [tokio][tokio-threadpool] and
-/// [async-std][async-std-threadpool].
+/// Re `block_on`, see the underlying [Tokio implementation][tokio-threadpool].
 ///
 /// [tokio-threadpool]: https://docs.rs/tokio/latest/tokio/task/fn.spawn_blocking.html
-/// [async-std-threadpool]: https://docs.rs/async-std/latest/async_std/task/fn.spawn_blocking.html
 pub trait Blocking: Clone + Send + Sync + 'static {
     /// Spawn a thread for blocking IO or CPU-bound work.
     ///
@@ -464,8 +461,8 @@ pub trait Blocking: Clone + Send + Sync + 'static {
     ///
     /// ### Fallback (provided) implementation
     ///
-    /// The fallback implementation is currently used with `async_std`.
-    /// It spawns a thread with `spawn_blocking`, once for each `blocking_io` call.
+    /// This spawns a thread with [`spawn_blocking`](Self::spawn_blocking),
+    /// once for each `blocking_io` call.
     fn blocking_io<F, T>(&self, f: F) -> impl Future<Output = T>
     where
         F: FnOnce() -> T + Send + 'static,

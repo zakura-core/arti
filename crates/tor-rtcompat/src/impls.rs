@@ -1,15 +1,9 @@
 //! Different implementations of a common async API for use in arti
 //!
-//! Currently only async_std, tokio and smol are provided.
-
-#[cfg(feature = "async-std")]
-pub(crate) mod async_std;
+//! The built-in runtime is Tokio.
 
 #[cfg(feature = "tokio")]
 pub(crate) mod tokio;
-
-#[cfg(feature = "smol")]
-pub(crate) mod smol;
 
 #[cfg(feature = "rustls")]
 pub(crate) mod rustls;
@@ -267,65 +261,6 @@ pub(crate) fn tcp_pre_connect(
     _addr: &std::net::SocketAddr,
     _options: &TcpConnectOptions,
 ) -> std::io::Result<socket2::Socket> {
-    Err(std::io::Error::from(std::io::ErrorKind::Unsupported))
-}
-
-/// Connect a TCP socket using the async-io crate.
-///
-/// This in theory should be runtime-independent as async-io spawns its own thread to poll the
-/// socket. But this is inefficient on some runtimes like tokio.
-///
-/// Runtimes that want to connect manually should use [`tcp_pre_connect()`] to set up the socket,
-/// and then connect it manually.
-#[cfg(any(feature = "async-std", feature = "smol"))]
-#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
-pub(crate) async fn tcp_async_io_connect(
-    addr: &std::net::SocketAddr,
-    options: &TcpConnectOptions,
-) -> std::io::Result<std::net::TcpStream> {
-    use async_io::Async;
-
-    // The socket before connect() has been called.
-    let socket = tcp_pre_connect(addr, options)?;
-
-    // Different platforms return different results from non-blocking `connect()`s.
-    // Here we've checked that we match mio (tokio's low-level I/O code) for unix and windows
-    // to ensure that we're handling the right error kind/errno.
-    match socket.connect(&(*addr).into()) {
-        Ok(()) => {}
-        // On unix, mio checks for `EINPROGRESS`:
-        // https://github.com/tokio-rs/mio/blob/0db25a7eae653f02e964a28d9aaf65b74c941208/src/sys/unix/tcp.rs#L35
-        #[cfg(unix)]
-        Err(e) if e.raw_os_error() == Some(libc::EINPROGRESS) => {}
-        // On windows, mio checks for `WouldBlock`:
-        // https://github.com/tokio-rs/mio/blob/0db25a7eae653f02e964a28d9aaf65b74c941208/src/sys/windows/tcp.rs#L44
-        #[cfg(windows)]
-        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
-        Err(e) => return Err(e),
-    }
-
-    // The socket is already non-blocking,
-    // so `Async` doesn't need to set as non-blocking again.
-    let socket = Async::new_nonblocking(socket)?;
-
-    // Wait for the socket to become writable, indicating that it's connected.
-    socket.writable().await?;
-
-    // Check `SO_ERROR`.
-    if let Some(e) = socket.get_ref().take_error()? {
-        return Err(e);
-    }
-
-    Ok(socket.into_inner()?.into())
-}
-
-/// Stub replacement for tcp_async_io_connect on wasm32-unknown
-#[cfg(any(feature = "async-std", feature = "smol"))]
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-pub(crate) async fn tcp_async_io_connect(
-    _addr: &std::net::SocketAddr,
-    _options: &TcpConnectOptions,
-) -> std::io::Result<std::net::TcpStream> {
     Err(std::io::Error::from(std::io::ErrorKind::Unsupported))
 }
 

@@ -259,7 +259,7 @@ impl<R: SleepProvider> Stream for TaskSchedule<R> {
 #[cfg(all(
     test,
     feature = "rustls",
-    any(feature = "tokio", feature = "async-std", feature = "smol"),
+    feature = "tokio",
     not(miri), // Several of these use real SystemTime
 ))]
 mod test {

@@ -86,7 +86,7 @@ pub(crate) mod net {
             #[doc = stringify!($kind)]
             /// Listener.
             ///
-            /// This is analogous to async_std::net::Incoming.
+            /// The listener yields a stream and its peer address.
             pub struct [<Incoming $kind Streams>] {
                 /// Reference to the underlying listener.
                 pub(super) lis: [<Tokio $kind Listener>],
