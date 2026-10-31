@@ -1,6 +1,6 @@
 [package]
-name = "tor-memquota-cost"
-version = "0.47.0"
+name = "zakura-tor-memquota-cost"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Ian Jackson <iwj@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Low-level memory tracking traits, for use by Arti"
 keywords = ["tor", "arti"]
 categories = ["memory-management"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 full = ["memquota"]
@@ -23,8 +23,11 @@ paste = "1.0.15"
 void = "1"
 
 [dev-dependencies]
-safelog = { path = "../safelog", version = "0.10.0" }
+safelog = { path = "../safelog", version = "0.10.0-zakura.1", package = "zakura-safelog" }
 serde_json = "1.0.154"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[lib]
+name = "tor_memquota_cost"

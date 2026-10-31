@@ -17,6 +17,7 @@ libfuzzer-sys = "0.4"
 path = ".."
 
 # Prevent this from interfering with workspaces
+package = "zakura-tor-bytes"
 [workspace]
 members = ["."]
 

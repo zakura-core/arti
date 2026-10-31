@@ -16,6 +16,7 @@ path = ".."
 features = [ "experimental-api" ]
 
 # Prevent this from interfering with workspaces
+package = "zakura-tor-ptmgr"
 [workspace]
 members = ["."]
 

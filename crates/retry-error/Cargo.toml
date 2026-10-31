@@ -1,6 +1,6 @@
 [package]
-name = "retry-error"
-version = "0.14.0"
+name = "zakura-retry-error"
+version = "0.14.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "An error type for an operation that can fail more than once"
 keywords = ["tor", "arti", "async", "retry"]
 categories = ["rust-patterns"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [dev-dependencies]
 
@@ -28,3 +28,6 @@ all-features = true
 
 [target.'cfg(all(target_arch="wasm32", target_os="unknown"))'.dependencies]
 web-time = "1.1.0"
+
+[lib]
+name = "retry_error"

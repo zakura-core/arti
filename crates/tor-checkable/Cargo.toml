@@ -1,6 +1,6 @@
 [package]
-name = "tor-checkable"
-version = "0.47.0"
+name = "zakura-tor-checkable"
+version = "0.47.0-zakura.1"
 authors = ["The Tor Project, Inc.", "Nick Mathewson <nickm@torproject.org>"]
 edition = "2024"
 rust-version = "1.92"
@@ -9,7 +9,7 @@ homepage = "https://gitlab.torproject.org/tpo/core/arti/-/wikis/home"
 description = "Types to ensure that signed or time-bound data is validated before use"
 keywords = ["tor", "arti", "typestate"]
 categories = ["cryptography", "rust-patterns"]
-repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
+repository = "https://github.com/zakura-core/arti"
 
 [features]
 experimental = ["experimental-api"]
@@ -22,12 +22,15 @@ humantime = "2"
 itertools = "0.15.0"
 signature = "2"
 thiserror = "2"
-tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0" }
-web-time-compat = { path = "../web-time-compat", version = "0.3.0" }
+tor-llcrypto = { path = "../tor-llcrypto", version = "0.47.0-zakura.1", package = "zakura-tor-llcrypto" }
+web-time-compat = { path = "../web-time-compat", version = "0.3.0-zakura.1", package = "zakura-web-time-compat" }
 
 [package.metadata.docs.rs]
 all-features = true
 
 [dev-dependencies]
 humantime = "2"
-tor-basic-utils = { version = "0.47.0", path = "../tor-basic-utils" }
+tor-basic-utils = { version = "0.47.0-zakura.1", path = "../tor-basic-utils", package = "zakura-tor-basic-utils" }
+
+[lib]
+name = "tor_checkable"
