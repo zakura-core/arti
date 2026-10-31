@@ -142,7 +142,7 @@ enum ErrorDetail {
     // TODO: should "vanguardmgr setup error" be its own type in tor-guardmgr?
     #[cfg(all(
         feature = "vanguards",
-        any(feature = "onion-service-client", feature = "onion-service-service")
+        feature = "onion-service-client"
     ))]
     #[error("Error setting up the vanguard manager")]
     VanguardMgrSetup(#[source] tor_guardmgr::VanguardMgrError),
@@ -170,11 +170,6 @@ enum ErrorDetail {
     #[error("Error setting up the hidden service client connector")]
     #[cfg(feature = "onion-service-client")]
     HsClientConnectorSetup(#[from] tor_hsclient::StartupError),
-
-    /// Error setting up onion service.
-    #[cfg(feature= "onion-service-service")]
-    #[error("Error setting up onion service")]
-    OnionServiceSetup(#[source] tor_hsservice::StartupError),
 
     /// Failed to obtain exit circuit
     #[error("Failed to obtain exit circuit for ports {exit_ports}")]
@@ -332,12 +327,6 @@ enum ErrorDetail {
     #[error("Invalid onion address")]
     BadOnionAddress(#[from] tor_hscrypto::pk::HsIdParseError),
 
-    /// We were unable to launch an onion service, even though we
-    /// we are configured to be able to do so.
-    #[cfg(feature= "onion-service-service")]
-    #[error("Unable to launch onion service")]
-    LaunchOnionService(#[source] tor_hsservice::StartupError),
-
     /// We found that at least one required protocol was missing.
     #[error("Arti is missing a required protocol feature")]
     MissingProtocol(#[source] tor_netdoc::doc::netstatus::ProtocolSupportError),
@@ -413,10 +402,7 @@ impl tor_error::HasKind for ErrorDetail {
             E::MemquotaSetup(e) => e.kind(),
             E::MemquotaDuringStartup(e) => e.kind(),
             E::GuardMgrSetup(e) => e.kind(),
-            #[cfg(all(
-                feature = "vanguards",
-                any(feature = "onion-service-client", feature = "onion-service-service")
-            ))]
+            #[cfg(all(feature = "vanguards", feature = "onion-service-client"))]
             E::VanguardMgrSetup(e) => e.kind(),
             #[cfg(feature = "bridge-client")]
             E::BridgeDescMgrSetup(e) => e.kind(),
@@ -425,8 +411,6 @@ impl tor_error::HasKind for ErrorDetail {
             E::StateMgrSetup(e) => e.kind(),
             #[cfg(feature = "onion-service-client")]
             E::HsClientConnectorSetup(e) => e.kind(),
-            #[cfg(feature = "onion-service-service")]
-            E::OnionServiceSetup(e) => e.kind(),
             E::DirMgrBootstrap(e) => e.kind(),
             #[cfg(feature = "pt-client")]
             E::PluggableTransport(e) => e.kind(),
@@ -441,8 +425,6 @@ impl tor_error::HasKind for ErrorDetail {
             E::OnionAddressDisabled => EK::ForbiddenStreamTarget,
             #[cfg(feature = "onion-service-client")]
             E::BadOnionAddress(_) => EK::InvalidStreamTarget,
-            #[cfg(feature = "onion-service-service")]
-            E::LaunchOnionService(e) => e.kind(),
             E::Address(e) => e.kind(),
             E::InvalidHostname => EK::InvalidStreamTarget,
             E::LocalAddress => EK::ForbiddenStreamTarget,

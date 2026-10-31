@@ -246,10 +246,8 @@ match tor_client.connect(("example.com", 80)).await {
 * `bridge-client` -- Build with support for bridges.
 * `onion-service-client` -- Build with support for connecting to onion
   services.
-* `onion-service-service` -- Build with support for running onion services.
 * `vanguards` -- Build with support for vanguards.
-  Requires that either `onion-service-client` or `onion-service-service`
-  is also enabled.
+  Requires that `onion-service-client` is also enabled.
 * `pt-client` -- Build with support for pluggable transports.
 * `anyhow` -- Build with support for extracting `ErrorHint`s from
   anyhow::Error.

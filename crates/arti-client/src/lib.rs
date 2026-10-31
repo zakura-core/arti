@@ -104,14 +104,12 @@ pub(crate) fn supported_protocols() -> tor_protover::Protocols {
         .union(&tor_dirmgr::supported_client_protocols());
 
     // TODO: the behavior for here seems most questionable!
-    // We will warn if any hs protocol happens to be recommended and we do not support onion
-    // services.
-    // We will also fail to warn if any hs protocol is required, and we support it only as a client
-    // or only as a service.
+    // We will warn if any HS protocol happens to be recommended and we do not
+    // support onion services.
+    // We will also fail to warn if any hs protocol is required, and we support it
+    // only as a client.
     // We ought to determine the right behavior here.
     // See torspec#319 at https://gitlab.torproject.org/tpo/core/torspec/-/issues/319.
-    #[cfg(feature = "onion-service-service")]
-    let protocols = protocols.union(&tor_hsservice::supported_hsservice_protocols());
     #[cfg(feature = "onion-service-client")]
     let protocols = protocols.union(&tor_hsclient::supported_hsclient_protocols());
 

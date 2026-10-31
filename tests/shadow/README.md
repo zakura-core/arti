@@ -32,21 +32,6 @@ in job `rust-latest` with the invocation:
   $ cargo build --locked --verbose --profile quicktest --target x86_64-unknown-linux-gnu -p arti
   ```
 
-* Build an `arti` client with some extra features enabled, and again using the
-  `quicktest` profile, such that the binary ends up at
-  `../../target/x86_64-unknown-linux-gnu/quicktest/arti-extra`. In the CI this
-  done in job `rust-latest-arti-extra-features` with the invocation:
-
-  ```shell
-  $ cargo build --locked --verbose \
-      --profile quicktest \
-      --target x86_64-unknown-linux-gnu \
-      -p arti -p tor-circmgr \
-      --bin arti \
-      --features full,restricted-discovery,arti-client/keymgr,onion-service-service,vanguards
-  $ mv target/x86_64-unknown-linux-gnu/quicktest/arti target/x86_64-unknown-linux-gnu/quicktest/arti-extra
-  ```
-
 Once those are installed, you can invoke the [`run`](./run) script from
 this directory. 
 
