@@ -1389,7 +1389,7 @@ impl FirstHop {
         netdir.by_ids(self)
     }
 
-    /// Return a view of this as an OwnedChanTarget.
+    /// Return a view of this as an [`OwnedChanTarget`].
     fn chan_target_mut(&mut self) -> &mut OwnedChanTarget {
         &mut self.inner
     }

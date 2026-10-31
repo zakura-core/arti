@@ -27,7 +27,6 @@ keeping a cache of it on disk.
 * `compression` (default) -- Build support for downloading compressed
   documents. Requires a C compiler.
 
-
 * `full` -- Enable all features above.
 
 ### Non-additive features
