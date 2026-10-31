@@ -60,7 +60,6 @@ asynchronous-codec = "0.7.0"
 blocking = { version = "1.7.0", optional = true }
 cfg-if = "1.0.5"
 coarsetime = "0.1.38"
-derive_builder = { version = "0.11", package = "derive_builder_fork_arti" }
 derive_more = { version = "2.1.1", features = ["full"] }
 dyn-clone = "1.0.20"
 educe = "0.4.23"
