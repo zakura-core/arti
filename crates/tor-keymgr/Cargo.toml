@@ -55,7 +55,6 @@ arrayvec = "0.7.8"
 cfg-if = "1.0.5"
 data-encoding = { version = "2.11.1", optional = true }
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
-derive_builder = { version = "0.11.2", package = "derive_builder_fork_arti" }
 derive_more = { version = "2.1.1", features = ["full"] }
 dyn-clone = "1.0.20"
 fs-mistrust = { path = "../fs-mistrust", version = "0.16.0", features = ["serde", "walkdir"] }

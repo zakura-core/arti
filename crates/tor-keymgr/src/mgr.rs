@@ -42,14 +42,55 @@ use crate::KeyCertificateSpecifier;
 /// their outcome depends on whether the selected key store
 /// [`contains`][crate::Keystore::contains]
 /// the specified key (and thus suffers from a TOCTOU race).
-#[derive(derive_builder::Builder)]
-#[builder(pattern = "owned", build_fn(private, name = "build_unvalidated"))]
 pub struct KeyMgr {
     /// The primary key store.
     primary_store: BoxedKeystore,
     /// The secondary key stores.
-    #[builder(default, setter(custom))]
     secondary_stores: Vec<BoxedKeystore>,
+}
+
+/// Builder for [`KeyMgr`].
+#[derive(Default)]
+pub struct KeyMgrBuilder {
+    /// The configured primary store.
+    primary_store: Option<BoxedKeystore>,
+    /// The configured secondary stores, before resolving their empty default.
+    secondary_stores: Option<Vec<BoxedKeystore>>,
+}
+
+/// An error from constructing a [`KeyMgr`].
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum KeyMgrBuilderError {
+    /// A required field was not initialized.
+    UninitializedField(&'static str),
+    /// The configured stores failed validation.
+    ValidationError(String),
+}
+
+impl std::fmt::Display for KeyMgrBuilderError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UninitializedField(field) => write!(f, "`{field}` must be initialized"),
+            Self::ValidationError(error) => error.fmt(f),
+        }
+    }
+}
+
+impl std::error::Error for KeyMgrBuilderError {}
+
+impl From<String> for KeyMgrBuilderError {
+    fn from(error: String) -> Self {
+        Self::ValidationError(error)
+    }
+}
+
+impl KeyMgrBuilder {
+    /// Set the primary key store.
+    pub fn primary_store(mut self, value: BoxedKeystore) -> Self {
+        self.primary_store = Some(value);
+        self
+    }
 }
 
 /// A keystore entry descriptor.
@@ -97,7 +138,12 @@ impl KeyMgrBuilder {
     pub fn build(self) -> StdResult<KeyMgr, KeyMgrBuilderError> {
         use itertools::Itertools as _;
 
-        let keymgr = self.build_unvalidated()?;
+        let keymgr = KeyMgr {
+            primary_store: self
+                .primary_store
+                .ok_or(KeyMgrBuilderError::UninitializedField("primary_store"))?,
+            secondary_stores: self.secondary_stores.unwrap_or_default(),
+        };
 
         if !keymgr.all_stores().map(|s| s.id()).all_unique() {
             return Err(KeyMgrBuilderError::ValidationError(
@@ -1210,6 +1256,70 @@ mod tests {
             keystore_id,
             raw_id,
         }
+    }
+
+    #[test]
+    fn builder_preserves_required_primary_and_secondary_order() {
+        let mut missing = KeyMgrBuilder::default();
+        assert!(missing.opt_secondary_stores().is_none());
+        missing.secondary_stores().extend([
+            Keystore::new_boxed("repeated"),
+            Keystore::new_boxed("repeated"),
+        ]);
+        let error = missing.build().err().unwrap();
+        assert!(matches!(
+            error,
+            KeyMgrBuilderError::UninitializedField("primary_store")
+        ));
+        assert_eq!(error.to_string(), "`primary_store` must be initialized");
+        assert!(std::error::Error::source(&error).is_none());
+
+        let mut builder = KeyMgrBuilder::default()
+            .primary_store(Keystore::new_boxed("replaced"))
+            .primary_store(Keystore::new_boxed("primary"));
+        assert!(builder.opt_secondary_stores().is_none());
+        assert!(builder.secondary_stores().is_empty());
+        assert!(builder.opt_secondary_stores().as_ref().unwrap().is_empty());
+        *builder.opt_secondary_stores_mut() = None;
+        assert!(builder.opt_secondary_stores().is_none());
+        let mgr = builder
+            .set_secondary_stores(vec![
+                Keystore::new_boxed("first"),
+                Keystore::new_boxed("second"),
+            ])
+            .build()
+            .unwrap();
+        assert_eq!(
+            mgr.all_stores()
+                .map(|store| store.id().to_string())
+                .collect::<Vec<_>>(),
+            ["primary", "first", "second"]
+        );
+
+        let mgr = KeyMgrBuilder::default()
+            .primary_store(Keystore::new_boxed("primary"))
+            .build()
+            .unwrap();
+        assert!(mgr.secondary_stores.is_empty());
+    }
+
+    #[test]
+    fn builder_still_rejects_every_duplicate_store_id() {
+        for secondary_ids in [["primary", "other"], ["other", "other"]] {
+            let builder = KeyMgrBuilder::default()
+                .primary_store(Keystore::new_boxed("primary"))
+                .set_secondary_stores(secondary_ids.into_iter().map(Keystore::new_boxed).collect());
+            let error = builder.build().err().unwrap();
+            assert!(matches!(error, KeyMgrBuilderError::ValidationError(_)));
+            assert_eq!(
+                error.to_string(),
+                "the keystore IDs are not pairwise unique"
+            );
+        }
+        let error = KeyMgrBuilderError::from(String::from("validation failed"));
+        assert!(matches!(error, KeyMgrBuilderError::ValidationError(_)));
+        assert_eq!(error.to_string(), "validation failed");
+        assert!(std::error::Error::source(&error).is_none());
     }
 
     #[test]

@@ -19,8 +19,6 @@ use std::path::Path;
 ///
 /// For operations that normally involve updating the state of the key manager and/or its
 /// underlying storage, such as `insert` or `remove`, this `KeyMgr` always returns an error.
-#[derive(derive_builder::Builder)]
-#[builder(pattern = "owned")]
 #[non_exhaustive]
 pub struct KeyMgr {
     /// The default key store.
@@ -28,8 +26,51 @@ pub struct KeyMgr {
     primary_store: BoxedKeystore,
     /// The secondary key stores.
     #[allow(unused)] // Unused, but needed because we want its setter present in the builder
-    #[builder(default, setter(custom))]
     secondary_stores: Vec<BoxedKeystore>,
+}
+
+/// Builder for [`KeyMgr`].
+#[derive(Default)]
+pub struct KeyMgrBuilder {
+    /// The configured primary store.
+    primary_store: Option<BoxedKeystore>,
+    /// The configured secondary stores, before resolving their empty default.
+    secondary_stores: Option<Vec<BoxedKeystore>>,
+}
+
+/// An error from constructing a [`KeyMgr`].
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum KeyMgrBuilderError {
+    /// A required field was not initialized.
+    UninitializedField(&'static str),
+    /// The configured stores failed validation.
+    ValidationError(String),
+}
+
+impl std::fmt::Display for KeyMgrBuilderError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UninitializedField(field) => write!(f, "`{field}` must be initialized"),
+            Self::ValidationError(error) => error.fmt(f),
+        }
+    }
+}
+
+impl std::error::Error for KeyMgrBuilderError {}
+
+impl From<String> for KeyMgrBuilderError {
+    fn from(error: String) -> Self {
+        Self::ValidationError(error)
+    }
+}
+
+impl KeyMgrBuilder {
+    /// Set the primary key store.
+    pub fn primary_store(mut self, value: BoxedKeystore) -> Self {
+        self.primary_store = Some(value);
+        self
+    }
 }
 
 // TODO: auto-generate using define_list_builder_accessors/define_list_builder_helper
@@ -37,6 +78,16 @@ pub struct KeyMgr {
 //
 // See https://gitlab.torproject.org/tpo/core/arti/-/merge_requests/1760#note_2969841
 impl KeyMgrBuilder {
+    /// Construct the dummy key manager, requiring a primary store.
+    pub fn build(self) -> std::result::Result<KeyMgr, KeyMgrBuilderError> {
+        Ok(KeyMgr {
+            primary_store: self
+                .primary_store
+                .ok_or(KeyMgrBuilderError::UninitializedField("primary_store"))?,
+            secondary_stores: self.secondary_stores.unwrap_or_default(),
+        })
+    }
+
     /// Access the being-built list of secondary stores (resolving default)
     ///
     /// If the field has not yet been set or accessed, the default list will be
@@ -136,4 +187,44 @@ impl KeyMgr {
     // but that would be strictly worse, because the user of this code
     // would only find out at *runtime* about what is essentially a *build* issue
     // (the build issue being that the application was built with an incoherent feature set).
+}
+
+#[cfg(test)]
+mod test {
+    //! Checks for the feature-disabled key manager builder.
+
+    #![allow(clippy::unwrap_used)]
+
+    use super::*;
+
+    #[test]
+    fn builder_keeps_owned_setters_lazy_lists_and_missing_primary_error() {
+        let error = KeyMgrBuilder::default().build().err().unwrap();
+        assert!(matches!(
+            error,
+            KeyMgrBuilderError::UninitializedField("primary_store")
+        ));
+        assert_eq!(error.to_string(), "`primary_store` must be initialized");
+        assert!(std::error::Error::source(&error).is_none());
+
+        let mut builder = KeyMgrBuilder::default()
+            .primary_store(Box::new(ArtiNativeKeystore))
+            .primary_store(Box::new(ArtiEphemeralKeystore));
+        assert!(builder.opt_secondary_stores().is_none());
+        assert!(builder.secondary_stores().is_empty());
+        assert!(builder.opt_secondary_stores().as_ref().unwrap().is_empty());
+        *builder.opt_secondary_stores_mut() = None;
+        assert!(builder.opt_secondary_stores().is_none());
+        let mgr = builder
+            .set_secondary_stores(vec![Box::new(ArtiNativeKeystore)])
+            .build()
+            .unwrap();
+        assert_eq!(mgr.secondary_stores.len(), 1);
+        assert!(mgr.get::<()>(&()).unwrap().is_none());
+
+        let error = KeyMgrBuilderError::from(String::from("validation failed"));
+        assert!(matches!(error, KeyMgrBuilderError::ValidationError(_)));
+        assert_eq!(error.to_string(), "validation failed");
+        assert!(std::error::Error::source(&error).is_none());
+    }
 }
