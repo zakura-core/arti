@@ -25,12 +25,9 @@
 /// or other aspects of the HSDir ring structure.)
 use std::time::{Duration, SystemTime};
 
-use crate::{Error, HsDirs, Result, params::NetParameters};
+use crate::{Error, Result, params::NetParameters};
 use tor_hscrypto::time::TimePeriod;
 use tor_netdoc::doc::netstatus::{MdConsensus, SharedRandVal};
-
-#[cfg(feature = "hs-service")]
-use tor_hscrypto::ope::SrvPeriodOffset;
 
 /// Parameters for generating and using an HsDir ring.
 ///
@@ -38,15 +35,15 @@ use tor_hscrypto::ope::SrvPeriodOffset;
 /// parameters in the consensus, and are used to determine the
 /// position of each HsDir within the ring.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct HsDirParams {
+pub(super) struct HsDirParams {
     /// The time period for this ring.  It's used to ensure that blinded onion
     /// keys rotate in a _predictable_ way over time.
-    pub(crate) time_period: TimePeriod,
+    pub(super) time_period: TimePeriod,
     /// The SharedRandVal for this ring.  It's used to ensure that the position
     /// of each HsDir within the ring rotates _unpredictably_ over time.
-    pub(crate) shared_rand: SharedRandVal,
+    pub(super) shared_rand: SharedRandVal,
     /// The range of times over which the srv is most current.
-    pub(crate) srv_lifespan: std::ops::Range<SystemTime>,
+    pub(super) srv_lifespan: std::ops::Range<SystemTime>,
 }
 
 /// By how many voting periods do we offset the beginning of our first time
@@ -63,63 +60,21 @@ const VOTING_PERIODS_IN_OFFSET: u32 = 12;
 const VOTING_PERIODS_IN_SRV_ROUND: u32 = 24;
 
 impl HsDirParams {
-    /// Return the time period for which these parameters are valid.
-    ///
-    /// The `hs_blind_id` for an onion service changes every time period: when
-    /// uploading, callers should use this time period to determine which
-    /// `hs_blind_id`'s descriptor should be sent to which directory.
-    pub fn time_period(&self) -> TimePeriod {
-        self.time_period
-    }
-
-    /// Return the starting time for the shared-random-value protocol that
-    /// produced the SRV for this time period.
-    pub fn start_of_shard_rand_period(&self) -> SystemTime {
-        self.srv_lifespan.start
-    }
-
-    /// Return an opaque offset for `when` from the start of the shared-random-value protocol
-    /// period corresponding to the SRV for this time period.
-    ///
-    /// When uploading, callers should this offset to determine
-    /// the revision counter for their descriptors.
-    ///
-    /// Returns `None` if when is after the start of the SRV period.
-    #[cfg(feature = "hs-service")]
-    pub fn offset_within_srv_period(&self, when: SystemTime) -> Option<SrvPeriodOffset> {
-        if when >= self.srv_lifespan.start {
-            let d = when
-                .duration_since(self.srv_lifespan.start)
-                .expect("Somehow, range comparison was not reliable!");
-            return Some(SrvPeriodOffset::from(d.as_secs() as u32));
-        }
-
-        None
-    }
-
     /// Compute the `HsDirParams` for the current time period, according to a given
     /// consensus.
     ///
     /// rend-spec-v3 section 2.2.1 et seq
     ///
-    /// Return the ring parameters for the current period (which clients use when
-    /// fetching onion service descriptors), along with a Vec of ring
-    /// parameters for any secondary periods that onion services should additionally
-    /// use when publishing their descriptors.
+    /// Return the ring parameters for the current period, which clients use
+    /// when fetching onion service descriptors.
     ///
     /// Note that "current" here is always relative to a given consensus, not the
     /// current wall-clock time.
     ///
-    /// (This function's return type is a bit cumbersome; these parameters are
-    /// bundled together because it is efficient to compute them all at once.)
-    ///
     /// Note that this function will only return an error if something is
     /// _extremely_ wrong with the provided consensus: for other error cases, it
     /// returns a "disaster fallback".
-    pub(crate) fn compute(
-        consensus: &MdConsensus,
-        params: &NetParameters,
-    ) -> Result<HsDirs<HsDirParams>> {
+    pub(super) fn compute(consensus: &MdConsensus, params: &NetParameters) -> Result<HsDirParams> {
         let srvs = extract_srvs(consensus)?;
         let tp_length: Duration = params.hsdir_timeperiod_length.try_into().map_err(|_| {
             // Note that this error should be impossible:
@@ -148,20 +103,7 @@ impl HsDirParams {
             disaster_params(cur_period)
         });
 
-        // When computing secondary rings, we don't try so many fallback operations:
-        // if they aren't available, they aren't available.
-        #[cfg(feature = "hs-service")]
-        let secondary = [cur_period.prev(), cur_period.next()]
-            .iter()
-            .flatten()
-            .flat_map(|period| find_params_for_time(&srvs[..], *period).ok().flatten())
-            .collect();
-
-        Ok(HsDirs {
-            current,
-            #[cfg(feature = "hs-service")]
-            secondary,
-        })
+        Ok(current)
     }
 }
 
@@ -522,14 +464,13 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "hs-service")]
     fn ring_params_simple() {
         // Compute ring parameters in a legacy environment, where the time
         // period and the SRV lifetime are one day long, and they are offset by
         // 12 hours.
         let consensus = example_consensus_builder().testing_consensus().unwrap();
         let netparams = NetParameters::from_map(consensus.params());
-        let HsDirs { current, secondary } = HsDirParams::compute(&consensus, &netparams).unwrap();
+        let current = HsDirParams::compute(&consensus, &netparams).unwrap();
 
         assert_eq!(
             current.time_period,
@@ -537,19 +478,13 @@ mod test {
         );
         // We use the "previous" SRV since the start of this time period was 12:00 on the 24th.
         assert_eq!(current.shared_rand.as_ref(), &SRV1);
-
-        // Our secondary SRV will be the one that starts when we move into the
-        // next time period.
-        assert_eq!(secondary.len(), 1);
         assert_eq!(
-            secondary[0].time_period,
-            TimePeriod::new(d("1 day"), t("1985-10-25T12:00:00Z"), d("12 hours")).unwrap(),
+            current.srv_lifespan,
+            t("1985-10-24T00:00:00Z")..t("1985-10-25T00:00:00Z")
         );
-        assert_eq!(secondary[0].shared_rand.as_ref(), &SRV2);
     }
 
     #[test]
-    #[cfg(feature = "hs-service")]
     fn ring_params_tricky() {
         // In this case we give the SRVs timestamps and we choose an odd hsdir_interval.
         let consensus = example_consensus_builder()
@@ -559,61 +494,16 @@ mod test {
             .testing_consensus()
             .unwrap();
         let netparams = NetParameters::from_map(consensus.params());
-        let HsDirs { current, secondary } = HsDirParams::compute(&consensus, &netparams).unwrap();
+        let current = HsDirParams::compute(&consensus, &netparams).unwrap();
 
         assert_eq!(
             current.time_period,
             TimePeriod::new(d("2 hours"), t("1985-10-25T07:00:00Z"), d("12 hours")).unwrap()
         );
         assert_eq!(current.shared_rand.as_ref(), &SRV2);
-
-        assert_eq!(secondary.len(), 2);
         assert_eq!(
-            secondary[0].time_period,
-            TimePeriod::new(d("2 hours"), t("1985-10-25T05:00:00Z"), d("12 hours")).unwrap()
-        );
-        assert_eq!(secondary[0].shared_rand.as_ref(), &SRV1);
-        assert_eq!(
-            secondary[1].time_period,
-            TimePeriod::new(d("2 hours"), t("1985-10-25T09:00:00Z"), d("12 hours")).unwrap()
-        );
-        assert_eq!(secondary[1].shared_rand.as_ref(), &SRV2);
-    }
-
-    #[test]
-    #[cfg(feature = "hs-service")]
-    fn offset_within_srv_period() {
-        // This test doesn't actually use the time_period or shared_rand values, so their value is
-        // arbitrary.
-        let time_period =
-            TimePeriod::new(d("2 hours"), t("1985-10-25T05:00:00Z"), d("12 hours")).unwrap();
-
-        let srv_start = t("1985-10-25T09:00:00Z");
-        let srv_end = t("1985-10-25T20:00:00Z");
-        let srv_lifespan = srv_start..srv_end;
-
-        let params = HsDirParams {
-            time_period,
-            shared_rand: SRV1.into(),
-            srv_lifespan,
-        };
-
-        let before_srv_period = t("1985-10-25T08:59:00Z");
-        let after_srv_period = t("1985-10-26T10:19:00Z");
-        assert!(params.offset_within_srv_period(before_srv_period).is_none());
-        assert_eq!(
-            params.offset_within_srv_period(srv_start).unwrap(),
-            SrvPeriodOffset::from(0)
-        );
-        // The period is 11h long
-        assert_eq!(
-            params.offset_within_srv_period(srv_end).unwrap(),
-            SrvPeriodOffset::from(11 * 60 * 60)
-        );
-        // This timestamp is 1 day 1h 19m from the start of the SRV period
-        assert_eq!(
-            params.offset_within_srv_period(after_srv_period).unwrap(),
-            SrvPeriodOffset::from((25 * 60 + 19) * 60)
+            current.srv_lifespan,
+            t("1985-10-25T05:00:00Z")..t("1985-10-25T10:00:00Z")
         );
     }
 

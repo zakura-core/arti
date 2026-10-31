@@ -64,8 +64,6 @@ pub mod testnet;
 pub mod testprovider;
 
 use async_trait::async_trait;
-#[cfg(feature = "hs-service")]
-use itertools::chain;
 use tor_error::warn_report;
 #[cfg(feature = "hs-common")]
 use tor_linkspec::OwnedCircTarget;
@@ -77,7 +75,7 @@ use tor_llcrypto::pk::{ed25519::Ed25519Identity, rsa::RsaIdentity};
 use tor_netdoc::doc::microdesc::{MdDigest, MicrodescAndHash};
 use tor_netdoc::doc::netstatus::{self, MdConsensus, MdRouterStatus};
 #[cfg(feature = "hs-common")]
-use {hsdir_ring::HsDirRing, std::iter};
+use {hsdir_params::HsDirParams, hsdir_ring::HsDirRing};
 
 use derive_more::{From, Into};
 use futures::{StreamExt, stream::BoxStream};
@@ -111,9 +109,6 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub use err::{OnionDirLookupError, VerbatimCircTargetDecodeError};
 
 use params::NetParameters;
-
-#[cfg(feature = "hs-common")]
-pub use hsdir_params::HsDirParams;
 
 /// Index into the consensus relays
 ///
@@ -439,18 +434,6 @@ impl From<u64> for RelayWeight {
     }
 }
 
-/// An operation for which we might be requesting a hidden service directory.
-#[derive(Copy, Clone, Debug, PartialEq)]
-// TODO: make this pub(crate) once NetDir::hs_dirs is removed
-#[non_exhaustive]
-pub enum HsDirOp {
-    /// Uploading an onion service descriptor.
-    #[cfg(feature = "hs-service")]
-    Upload,
-    /// Downloading an onion service descriptor.
-    Download,
-}
-
 /// A view of the Tor directory, suitable for use in building circuits.
 ///
 /// Abstractly, a [`NetDir`] is a set of usable public [`Relay`]s, each of which
@@ -512,110 +495,21 @@ pub struct NetDir {
     /// can be immutable.
     rsidx_by_rsa: Arc<HashMap<RsaIdentity, RouterStatusIdx>>,
 
-    /// Hash ring(s) describing the onion service directory.
+    /// Hash ring for downloading onion service descriptors.
     ///
     /// This is empty in a PartialNetDir, and is filled in before the NetDir is
     /// built.
     //
     // TODO hs: It is ugly to have this exist in a partially constructed state
     // in a PartialNetDir.
-    // Ideally, a PartialNetDir would contain only an HsDirs<HsDirParams>,
+    // Ideally, a PartialNetDir would contain only an HsDirParams,
     // or perhaps nothing at all, here.
     #[cfg(feature = "hs-common")]
-    hsdir_rings: Arc<HsDirs<HsDirRing>>,
+    hsdir_ring: Arc<HsDirRing>,
 
     /// Weight values to apply to a given relay when deciding how frequently
     /// to choose it for a given role.
     weights: weight::WeightSet,
-}
-
-/// Collection of hidden service directories (or parameters for them)
-///
-/// In [`NetDir`] this is used to store the actual hash rings.
-/// (But, in a NetDir in a [`PartialNetDir`], it contains [`HsDirRing`]s
-/// where only the `params` are populated, and the `ring` is empty.)
-///
-/// This same generic type is used as the return type from
-/// [`HsDirParams::compute`](HsDirParams::compute),
-/// where it contains the *parameters* for the primary and secondary rings.
-#[derive(Debug, Clone)]
-#[cfg(feature = "hs-common")]
-pub(crate) struct HsDirs<D> {
-    /// The current ring
-    ///
-    /// It corresponds to the time period containing the `valid-after` time in
-    /// the consensus. Its SRV is whatever SRV was most current at the time when
-    /// that time period began.
-    ///
-    /// This is the hash ring that we should use whenever we are fetching an
-    /// onion service descriptor.
-    current: D,
-
-    /// Secondary rings (based on the parameters for the previous and next time periods)
-    ///
-    /// Onion services upload to positions on these ring as well, based on how
-    /// far into the current time period this directory is, so that
-    /// not-synchronized clients can still find their descriptor.
-    ///
-    /// Note that with the current (2023) network parameters, with
-    /// `hsdir_interval = SRV lifetime = 24 hours` at most one of these
-    /// secondary rings will be active at a time.  We have two here in order
-    /// to conform with a more flexible regime in proposal 342.
-    //
-    // TODO: hs clients never need this; so I've made it not-present for them.
-    // But does that risk too much with respect to side channels?
-    //
-    // TODO: Perhaps we should refactor this so that it is clear that these
-    // are immutable?  On the other hand, the documentation for this type
-    // declares that it is immutable, so we are likely okay.
-    //
-    // TODO: this `Vec` is only ever 0,1,2 elements.
-    // Maybe it should be an ArrayVec or something.
-    #[cfg(feature = "hs-service")]
-    secondary: Vec<D>,
-}
-
-#[cfg(feature = "hs-common")]
-impl<D> HsDirs<D> {
-    /// Convert an `HsDirs<D>` to `HsDirs<D2>` by mapping each contained `D`
-    pub(crate) fn map<D2>(self, mut f: impl FnMut(D) -> D2) -> HsDirs<D2> {
-        HsDirs {
-            current: f(self.current),
-            #[cfg(feature = "hs-service")]
-            secondary: self.secondary.into_iter().map(f).collect(),
-        }
-    }
-
-    /// Iterate over some of the contained hsdirs, according to `secondary`
-    ///
-    /// The current ring is always included.
-    /// Secondary rings are included iff `secondary` and the `hs-service` feature is enabled.
-    fn iter_filter_secondary(&self, secondary: bool) -> impl Iterator<Item = &D> {
-        let i = iter::once(&self.current);
-
-        // With "hs-service" disabled, there are no secondary rings,
-        // so we don't care.
-        let _ = secondary;
-
-        #[cfg(feature = "hs-service")]
-        let i = chain!(i, self.secondary.iter().filter(move |_| secondary));
-
-        i
-    }
-
-    /// Iterate over all the contained hsdirs
-    pub(crate) fn iter(&self) -> impl Iterator<Item = &D> {
-        self.iter_filter_secondary(true)
-    }
-
-    /// Iterate over the hsdirs relevant for `op`
-    pub(crate) fn iter_for_op(&self, op: HsDirOp) -> impl Iterator<Item = &D> {
-        self.iter_filter_secondary(match op {
-            #[cfg(feature = "hs-service")]
-            HsDirOp::Upload => true,
-            HsDirOp::Download => false,
-        })
-    }
 }
 
 /// An event that a [`NetDirProvider`] can broadcast to indicate that a change in
@@ -976,7 +870,7 @@ impl PartialNetDir {
             .collect();
 
         #[cfg(feature = "hs-common")]
-        let hsdir_rings = Arc::new({
+        let hsdir_ring = Arc::new({
             let params = HsDirParams::compute(&consensus, &params).expect("Invalid consensus!");
             // TODO: It's a bit ugly to use expect above, but this function does
             // not return a Result. On the other hand, the error conditions under which
@@ -984,7 +878,7 @@ impl PartialNetDir {
             // hit; see documentation in that function.  As such, we probably
             // don't need to have this return a Result.
 
-            params.map(HsDirRing::empty_from_params)
+            HsDirRing::empty_from_params(params)
         });
 
         let netdir = NetDir {
@@ -995,7 +889,7 @@ impl PartialNetDir {
             rsidx_by_rsa: Arc::new(rsidx_by_rsa),
             rsidx_by_ed: HashMap::with_capacity(n_relays),
             #[cfg(feature = "hs-common")]
-            hsdir_rings,
+            hsdir_ring,
             weights,
         };
 
@@ -1029,17 +923,18 @@ impl PartialNetDir {
         }
     }
 
-    /// Compute the hash ring(s) for this NetDir
+    /// Compute the descriptor download hash ring for this NetDir
     #[cfg(feature = "hs-common")]
     fn compute_rings(&mut self) {
         let params = HsDirParams::compute(&self.netdir.consensus, &self.netdir.params)
             .expect("Invalid consensus");
         // TODO: see TODO by similar expect in new()
 
-        self.netdir.hsdir_rings =
-            Arc::new(params.map(|params| {
-                HsDirRing::compute(params, &self.netdir, self.prev_netdir.as_deref())
-            }));
+        self.netdir.hsdir_ring = Arc::new(HsDirRing::compute(
+            params,
+            &self.netdir,
+            self.prev_netdir.as_deref(),
+        ));
     }
 
     /// Return true if this are enough information in this directory
@@ -1133,21 +1028,6 @@ impl NetDir {
             .expect("BoundedInt did not enforce bounds")
     }
 
-    /// Return the spread parameter for the specified `op`.
-    #[cfg(feature = "hs-common")]
-    fn spread(&self, op: HsDirOp) -> usize {
-        let spread = match op {
-            HsDirOp::Download => self.params.hsdir_spread_fetch,
-            #[cfg(feature = "hs-service")]
-            HsDirOp::Upload => self.params.hsdir_spread_store,
-        };
-
-        spread
-            .get()
-            .try_into()
-            .expect("BoundedInt did not enforce bounds!")
-    }
-
     /// Select `spread` hsdir relays for the specified `hsid` from a given `ring`.
     ///
     /// Algorithm:
@@ -1180,7 +1060,7 @@ impl NetDir {
                         //                                                  ... If any of those
                         // nodes have already been selected for a lower-numbered replica of the
                         // service, any nodes already chosen are disregarded (i.e. skipped over)
-                        // when choosing a replica's hsdir_spread_store nodes.
+                        // when choosing a replica's nodes.
                         selected_nodes.insert(*hsdir_idx)
                     })
                     .collect::<Vec<_>>()
@@ -1897,21 +1777,7 @@ impl NetDir {
     /// is the one we use when acting as an hidden service client.
     #[cfg(feature = "hs-common")]
     pub fn hs_time_period(&self) -> TimePeriod {
-        self.hsdir_rings.current.time_period()
-    }
-
-    /// Return the [`HsDirParams`] of all the relevant hidden service directory "time periods"
-    ///
-    /// This includes the current time period (as from
-    /// [`.hs_time_period`](NetDir::hs_time_period))
-    /// plus additional time periods that we publish descriptors for when we are
-    /// acting as a hidden service.
-    #[cfg(feature = "hs-service")]
-    pub fn hs_all_time_periods(&self) -> Vec<HsDirParams> {
-        self.hsdir_rings
-            .iter()
-            .map(|r| r.params().clone())
-            .collect()
+        self.hsdir_ring.time_period()
     }
 
     /// Return the relays in this network directory that will be used as hidden service directories
@@ -1944,10 +1810,15 @@ impl NetDir {
         // 7. Shuffle Dirs
         // 8. return Dirs.
 
-        let spread = self.spread(HsDirOp::Download);
+        let spread = self
+            .params
+            .hsdir_spread_fetch
+            .get()
+            .try_into()
+            .expect("BoundedInt did not enforce bounds!");
 
         // When downloading, only look at relays on current ring.
-        let ring = &self.hsdir_rings.current;
+        let ring = &self.hsdir_ring;
 
         if ring.params().time_period != period {
             return Err(internal!(
@@ -1961,163 +1832,6 @@ impl NetDir {
         hs_dirs.shuffle(rng);
 
         Ok(hs_dirs)
-    }
-
-    /// Return the relays in this network directory that will be used as hidden service directories
-    ///
-    /// Returns the relays that are suitable for storing a given onion service's descriptors at the
-    /// given time period.
-    #[cfg(feature = "hs-service")]
-    pub fn hs_dirs_upload(
-        &self,
-        hsid: HsBlindId,
-        period: TimePeriod,
-    ) -> std::result::Result<impl Iterator<Item = Relay<'_>>, Bug> {
-        // Algorithm:
-        //
-        // 1. Choose spread = the parameter `hsdir_spread_store`
-        // 2. Determine which HsDirRing to use, based on the time period.
-        // 3. Find the shared random value that's associated with that HsDirRing.
-        // 4. Let n_replicas = the parameter `hsdir_n_replicas`.
-        // 5. Initialize Dirs = []
-        // 6. for idx in 1..=n_replicas:
-        //       - let H = hsdir_ring::onion_service_index(id, replica, rand,
-        //         period).
-        //       - Find the position of H within hsdir_ring.
-        //       - Take elements from hsdir_ring starting at that position,
-        //         adding them to Dirs until we have added `spread` new elements
-        //         that were not there before.
-        // 3. return Dirs.
-        let spread = self.spread(HsDirOp::Upload);
-
-        // For each HsBlindId, determine which HsDirRing to use.
-        let rings = self
-            .hsdir_rings
-            .iter()
-            .filter_map(move |ring| {
-                // Make sure the ring matches the TP of the hsid it's matched with.
-                (ring.params().time_period == period).then_some((ring, hsid, period))
-            })
-            .collect::<Vec<_>>();
-
-        // The specified period should have an associated ring.
-        if !rings.iter().any(|(_, _, tp)| *tp == period) {
-            return Err(internal!(
-                "the specified time period does not have an associated ring"
-            ));
-        };
-
-        // Now that we've matched each `hsid` with the ring associated with its TP, we can start
-        // selecting replicas from each ring.
-        Ok(rings.into_iter().flat_map(move |(ring, hsid, period)| {
-            assert_eq!(period, ring.params().time_period());
-            self.select_hsdirs(hsid, ring, spread)
-        }))
-    }
-
-    /// Return the relays in this network directory that will be used as hidden service directories
-    ///
-    /// Depending on `op`,
-    /// these are suitable to either store, or retrieve, a
-    /// given onion service's descriptor at a given time period.
-    ///
-    /// When `op` is `Download`, the order is random.
-    /// When `op` is `Upload`, the order is not specified.
-    ///
-    /// Return an error if the time period is not one returned by
-    /// `onion_service_time_period` or `onion_service_secondary_time_periods`.
-    //
-    // TODO: make HsDirOp pub(crate) once this is removed
-    #[cfg(feature = "hs-common")]
-    #[deprecated(note = "Use hs_dirs_upload or hs_dirs_download instead")]
-    pub fn hs_dirs<'r, R>(&'r self, hsid: &HsBlindId, op: HsDirOp, rng: &mut R) -> Vec<Relay<'r>>
-    where
-        R: rand::Rng,
-    {
-        // Algorithm:
-        //
-        // 1. Determine which HsDirRing to use, based on the time period.
-        // 2. Find the shared random value that's associated with that HsDirRing.
-        // 3. Choose spread = the parameter `hsdir_spread_store` or
-        //    `hsdir_spread_fetch` based on `op`.
-        // 4. Let n_replicas = the parameter `hsdir_n_replicas`.
-        // 5. Initialize Dirs = []
-        // 6. for idx in 1..=n_replicas:
-        //       - let H = hsdir_ring::onion_service_index(id, replica, rand,
-        //         period).
-        //       - Find the position of H within hsdir_ring.
-        //       - Take elements from hsdir_ring starting at that position,
-        //         adding them to Dirs until we have added `spread` new elements
-        //         that were not there before.
-        // 7. return Dirs.
-        let n_replicas = self
-            .params
-            .hsdir_n_replicas
-            .get()
-            .try_into()
-            .expect("BoundedInt did not enforce bounds");
-
-        let spread = match op {
-            HsDirOp::Download => self.params.hsdir_spread_fetch,
-            #[cfg(feature = "hs-service")]
-            HsDirOp::Upload => self.params.hsdir_spread_store,
-        };
-
-        let spread = spread
-            .get()
-            .try_into()
-            .expect("BoundedInt did not enforce bounds!");
-
-        // TODO: I may be wrong here but I suspect that this function may
-        // need refactoring so that it does not look at _all_ of the HsDirRings,
-        // but only at the ones that corresponds to time periods for which
-        // HsBlindId is valid.  Or I could be mistaken, in which case we should
-        // have a comment to explain why I am, since the logic is subtle.
-        // (For clients, there is only one ring.) -nickm
-        //
-        // (Actually, there is no need to follow through with the above TODO,
-        // since this function is deprecated, and not used anywhere but the
-        // tests.)
-
-        let mut hs_dirs = self
-            .hsdir_rings
-            .iter_for_op(op)
-            .cartesian_product(1..=n_replicas) // 1-indexed !
-            .flat_map({
-                let mut selected_nodes = HashSet::new();
-
-                move |(ring, replica): (&HsDirRing, u8)| {
-                    let hsdir_idx = hsdir_ring::service_hsdir_index(hsid, replica, ring.params());
-
-                    ring.ring_items_at(hsdir_idx, spread, |(hsdir_idx, _)| {
-                        // According to rend-spec 2.2.3:
-                        //                                                  ... If any of those
-                        // nodes have already been selected for a lower-numbered replica of the
-                        // service, any nodes already chosen are disregarded (i.e. skipped over)
-                        // when choosing a replica's hsdir_spread_store nodes.
-                        selected_nodes.insert(*hsdir_idx)
-                    })
-                    .collect::<Vec<_>>()
-                }
-            })
-            .filter_map(|(_hsdir_idx, rs_idx)| {
-                // This ought not to be None but let's not panic or bail if it is
-                self.relay_by_rs_idx(*rs_idx)
-            })
-            .collect_vec();
-
-        match op {
-            HsDirOp::Download => {
-                // When `op` is `Download`, the order is random.
-                hs_dirs.shuffle(rng);
-            }
-            #[cfg(feature = "hs-service")]
-            HsDirOp::Upload => {
-                // When `op` is `Upload`, the order is not specified.
-            }
-        }
-
-        hs_dirs
     }
 }
 
@@ -2994,47 +2708,42 @@ mod test {
 
     #[test]
     #[cfg(feature = "hs-common")]
-    #[allow(deprecated)]
     fn hs_dirs_selection() {
         use tor_basic_utils::test_rng::testing_rng;
 
-        const HSDIR_SPREAD_STORE: i32 = 6;
-        const HSDIR_SPREAD_FETCH: i32 = 2;
-        const PARAMS: [(&str, i32); 2] = [
-            ("hsdir_spread_store", HSDIR_SPREAD_STORE),
-            ("hsdir_spread_fetch", HSDIR_SPREAD_FETCH),
-        ];
+        // Two replicas select four relays with a spread of two. A larger
+        // spread selects all ten HSDirs without duplicating any relay.
+        for (spread, relay_count) in [(2, 4), (6, 10)] {
+            let netdir = crate::testnet::construct_custom_netdir_with_params(
+                |_, _, _| {},
+                [("hsdir_spread_fetch", spread)],
+                None,
+            )
+            .unwrap()
+            .unwrap_if_sufficient()
+            .unwrap();
+            let hsid = dummy_hs_blind_id();
+            let period = netdir.hs_time_period();
+            let relays = netdir
+                .hs_dirs_download(hsid, period, &mut testing_rng())
+                .unwrap();
 
-        let netdir: Arc<NetDir> =
-            crate::testnet::construct_custom_netdir_with_params(|_, _, _| {}, PARAMS, None)
-                .unwrap()
-                .unwrap_if_sufficient()
-                .unwrap()
-                .into();
-        let hsid = dummy_hs_blind_id();
+            assert_eq!(relays.len(), relay_count);
 
-        const OP_RELAY_COUNT: &[(HsDirOp, usize)] = &[
-            // We can't upload to (hsdir_n_replicas * hsdir_spread_store) = 12, relays because there
-            // are only 10 relays with the HsDir flag in the consensus.
-            #[cfg(feature = "hs-service")]
-            (HsDirOp::Upload, 10),
-            (HsDirOp::Download, 4),
-        ];
-
-        for (op, relay_count) in OP_RELAY_COUNT {
-            let relays = netdir.hs_dirs(&hsid, *op, &mut testing_rng());
-
-            assert_eq!(relays.len(), *relay_count);
-
-            // There should be no duplicates (the filtering function passed to
-            // HsDirRing::ring_items_at() ensures the relays that are already in use for
-            // lower-numbered replicas aren't considered a second time for a higher-numbered
-            // replica).
+            // A relay selected for one replica cannot be selected again for
+            // another replica.
             let unique = relays
                 .iter()
                 .map(|relay| relay.ed_identity())
                 .collect::<HashSet<_>>();
             assert_eq!(unique.len(), relays.len());
+
+            // Client downloads must use the current consensus time period.
+            assert!(
+                netdir
+                    .hs_dirs_download(hsid, period.next().unwrap(), &mut testing_rng())
+                    .is_err()
+            );
         }
     }
 
