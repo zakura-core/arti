@@ -328,14 +328,12 @@ mod test {
         let keys1 = RelayIdsBuilder::default()
             .rsa_identity(rsa1)
             .ed_identity(ed1)
-            .build()
-            .unwrap();
+            .build();
 
         let keys2 = RelayIdsBuilder::default()
             .rsa_identity(rsa2)
             .ed_identity(ed2)
-            .build()
-            .unwrap();
+            .build();
 
         // `ByRelayIds` and `ListByRelayIds` work similarly in the case where we only add a single
         // value per key, so we can test them both here with the same test cases.
@@ -370,10 +368,7 @@ mod test {
         assert_eq!(sort(list.by_all_ids(&keys2)), [&keys2]);
         assert!(sort(list.by_all_ids(&RelayIds::empty())).is_empty());
         {
-            let search = RelayIdsBuilder::default()
-                .rsa_identity(rsa1)
-                .build()
-                .unwrap();
+            let search = RelayIdsBuilder::default().rsa_identity(rsa1).build();
             assert_eq!(set.by_all_ids(&search), Some(&keys1));
             assert_eq!(sort(list.by_all_ids(&search)), [&keys1]);
         }
@@ -381,8 +376,7 @@ mod test {
             let search = RelayIdsBuilder::default()
                 .rsa_identity(rsa1)
                 .ed_identity(ed2)
-                .build()
-                .unwrap();
+                .build();
             assert_eq!(set.by_all_ids(&search), None);
             assert!(sort(list.by_all_ids(&search)).is_empty());
         }
@@ -396,8 +390,7 @@ mod test {
             let search = RelayIdsBuilder::default()
                 .rsa_identity(rsa1)
                 .ed_identity(ed2)
-                .build()
-                .unwrap();
+                .build();
             let answer = set.all_overlapping(&search);
             assert_eq!(answer.len(), 2);
             assert!(answer.contains(&&keys1));
@@ -408,18 +401,12 @@ mod test {
             assert!(answer.contains(&&keys2));
         }
         {
-            let search = RelayIdsBuilder::default()
-                .rsa_identity(rsa2)
-                .build()
-                .unwrap();
+            let search = RelayIdsBuilder::default().rsa_identity(rsa2).build();
             assert_eq!(set.all_overlapping(&search), vec![&keys2]);
             assert_eq!(list.all_overlapping(&search), vec![&keys2]);
         }
         {
-            let search = RelayIdsBuilder::default()
-                .rsa_identity(rsa3)
-                .build()
-                .unwrap();
+            let search = RelayIdsBuilder::default().rsa_identity(rsa3).build();
             assert!(set.all_overlapping(&search).is_empty());
             assert!(list.all_overlapping(&search).is_empty());
         }
@@ -435,14 +422,12 @@ mod test {
         let keys1 = RelayIdsBuilder::default()
             .rsa_identity(rsa1)
             .ed_identity(ed1)
-            .build()
-            .unwrap();
+            .build();
 
         let keys2 = RelayIdsBuilder::default()
             .rsa_identity(rsa2)
             .ed_identity(ed2)
-            .build()
-            .unwrap();
+            .build();
 
         // `ByRelayIds` and `ListByRelayIds` work similarly in the case where we only add a single
         // value per key, so we can test them both here with the same test cases.
@@ -463,7 +448,7 @@ mod test {
         assert_eq!(list.len(), 1);
 
         {
-            let search = RelayIdsBuilder::default().ed_identity(ed2).build().unwrap();
+            let search = RelayIdsBuilder::default().ed_identity(ed2).build();
 
             // We're calling remove_exact, but we did not list _all_ the keys in keys2.
             assert_eq!(set.remove_exact(&search), None);
@@ -476,8 +461,7 @@ mod test {
             let no_match = RelayIdsBuilder::default()
                 .ed_identity(ed2)
                 .rsa_identity(rsa1)
-                .build()
-                .unwrap();
+                .build();
             assert_eq!(set.remove_by_all_ids(&no_match), None);
             assert_eq!(set.len(), 1);
             assert_eq!(list.remove_by_all_ids(&no_match), vec![]);
@@ -502,14 +486,10 @@ mod test {
         let keys1 = RelayIdsBuilder::default()
             .rsa_identity(rsa1)
             .ed_identity(ed1)
-            .build()
-            .unwrap();
+            .build();
 
         // one rsa id
-        let keys2 = RelayIdsBuilder::default()
-            .rsa_identity(rsa2)
-            .build()
-            .unwrap();
+        let keys2 = RelayIdsBuilder::default().rsa_identity(rsa2).build();
 
         let mut list = ListByRelayIds::new();
         list.insert(keys1.clone());
@@ -519,23 +499,17 @@ mod test {
         assert_eq!(list.all_subset(&keys2), vec![&keys2]);
 
         {
-            let search = RelayIdsBuilder::default()
-                .rsa_identity(rsa1)
-                .build()
-                .unwrap();
+            let search = RelayIdsBuilder::default().rsa_identity(rsa1).build();
             assert!(list.all_subset(&search).is_empty());
         }
 
         {
-            let search = RelayIdsBuilder::default().ed_identity(ed1).build().unwrap();
+            let search = RelayIdsBuilder::default().ed_identity(ed1).build();
             assert!(list.all_subset(&search).is_empty());
         }
 
         {
-            let search = RelayIdsBuilder::default()
-                .rsa_identity(rsa2)
-                .build()
-                .unwrap();
+            let search = RelayIdsBuilder::default().rsa_identity(rsa2).build();
             assert_eq!(list.all_subset(&search), vec![&keys2]);
         }
 
@@ -543,8 +517,7 @@ mod test {
             let search = RelayIdsBuilder::default()
                 .ed_identity(ed1)
                 .rsa_identity(rsa2)
-                .build()
-                .unwrap();
+                .build();
             assert_eq!(list.all_subset(&search), vec![&keys2]);
         }
     }
@@ -581,7 +554,7 @@ mod test {
             if let Some(ed) = ed.into() {
                 ids.ed_identity(ed);
             }
-            ids.build().unwrap()
+            ids.build()
         }
 
         // ids for relay A

@@ -235,8 +235,7 @@ where
         // is fine as we are a responder.
         let target_no_ids = OwnedChanTargetBuilder::default()
             .addrs(vec![peer.into_inner()])
-            .build()
-            .map_err(|e| internal!("Unable to build chan target from peer sockaddr: {e}"))?;
+            .build();
         // Convert into a PeerAddr but keep it sensitive, this can be a client/bridge.
         let peer_addr: MaybeSensitive<PeerAddr> =
             MaybeSensitive::sensitive(peer.into_inner().into());
@@ -763,8 +762,7 @@ mod test {
             .method(ChannelMethod::Direct(vec![orport]))
             .ed_identity(ed)
             .rsa_identity(rsa)
-            .build()
-            .unwrap();
+            .build();
         let now = SystemTime::UNIX_EPOCH + Duration::new(msgs::NOW, 0);
 
         test_with_one_runtime!(|rt| async move {

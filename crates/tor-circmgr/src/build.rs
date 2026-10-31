@@ -1063,7 +1063,6 @@ mod test {
             .ed_identity(id)
             .rsa_identity([0x20; 20].into())
             .build()
-            .unwrap()
     }
 
     async fn run_builder_test(

@@ -153,8 +153,7 @@ mod test {
             ])
             .ed_identity([42; 32].into())
             .rsa_identity([45; 20].into())
-            .build()
-            .unwrap();
+            .build();
 
         let ls = vec![
             LinkSpec::OrPort("::1".parse().unwrap(), 99),
@@ -164,8 +163,7 @@ mod test {
         ];
         let ct2 = OwnedChanTargetBuilder::from_linkspecs(Strictness::Standard, &ls)
             .unwrap()
-            .build()
-            .unwrap();
+            .build();
         assert_eq!(format!("{:?}", ct), format!("{:?}", ct2));
     }
 

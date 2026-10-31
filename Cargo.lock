@@ -4646,7 +4646,6 @@ dependencies = [
  "by_address",
  "caret",
  "derive-deftly",
- "derive_builder_fork_arti",
  "derive_more",
  "hex",
  "hex-literal",

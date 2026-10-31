@@ -649,7 +649,6 @@ mod test {
             .rsa_identity([0x00; 20].into())
             .method(ChannelMethod::Direct(vec!["0.0.0.3:9001".parse().unwrap()]))
             .build()
-            .unwrap()
     }
 
     // Prevents TROVE-2024-006 (arti#1425).
@@ -775,8 +774,7 @@ mod test {
             // We target one of the relays known to be the network.
             let target = OwnedChanTarget::builder()
                 .rsa_identity([0x00; 20].into())
-                .build()
-                .unwrap();
+                .build();
             let netdir = same_family_test_network(10);
             let mode = VanguardMode::Lite;
 
@@ -808,8 +806,7 @@ mod test {
             // We target one of the relays known to be the network.
             let target = OwnedChanTarget::builder()
                 .rsa_identity([0x00; 20].into())
-                .build()
-                .unwrap();
+                .build();
 
             for target in [None, Some(target)] {
                 for stem_kind in [HsCircStemKind::Naive, HsCircStemKind::Guarded] {

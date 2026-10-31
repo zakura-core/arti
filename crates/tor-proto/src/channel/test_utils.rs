@@ -47,7 +47,7 @@ pub(crate) fn new_channel<R: Runtime>(
 ) -> (Arc<Channel>, Reactor<R>) {
     let mut peer_id = OwnedChanTarget::builder();
     *peer_id.ids() = RelayIdsBuilder::from_relay_ids(&peer_info);
-    let peer_id = peer_id.build().unwrap();
+    let peer_id = peer_id.build();
 
     // The only link protocol that Arti currently supports.
     // This is hardcoded to '4' throughout the rest of tor-proto.
@@ -214,8 +214,7 @@ pub(crate) fn new_channel_pair_with_keys<R: Runtime>(
     let relay_ids = RelayIds::builder()
         .ed_identity([6_u8; 32].into())
         .rsa_identity([10_u8; 20].into())
-        .build()
-        .unwrap();
+        .build();
 
     let relay_ntor_keys = tor_llcrypto::pk::curve25519::StaticKeypair::generate(&mut rng).unwrap();
     let relay_ntor_keys = RelayNtorKeys::new(Arc::new(relay_ntor_keys.into()));

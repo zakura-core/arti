@@ -51,8 +51,7 @@ impl GuardId {
             RelayIds::builder()
                 .ed_identity(ed25519)
                 .rsa_identity(rsa)
-                .build()
-                .expect("Couldn't build RelayIds"),
+                .build(),
         )
     }
     /// Extract a `GuardId` from a ChanTarget object.

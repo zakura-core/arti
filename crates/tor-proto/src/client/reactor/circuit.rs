@@ -1150,8 +1150,7 @@ impl Circuit {
         let target = RelayIds::builder()
             .ed_identity(ed_identity)
             .rsa_identity(pubkey.id)
-            .build()
-            .expect("Unable to build RelayIds");
+            .build();
         self.channel.check_match(&target)?;
 
         let wrap = Create2Wrap {
@@ -1172,10 +1171,7 @@ impl Circuit {
         settings: HopSettings,
     ) -> Result<()> {
         // Exit now if we have a mismatched key.
-        let target = RelayIds::builder()
-            .ed_identity(pubkey.id)
-            .build()
-            .expect("Unable to build RelayIds");
+        let target = RelayIds::builder().ed_identity(pubkey.id).build();
         self.channel.check_match(&target)?;
 
         // Set the client extensions.

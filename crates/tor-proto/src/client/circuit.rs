@@ -1411,8 +1411,7 @@ pub(crate) mod test {
             let peer_id = tor_linkspec::OwnedChanTarget::builder()
                 .ed_identity([4; 32].into())
                 .rsa_identity([5; 20].into())
-                .build()
-                .expect("Could not construct fake hop");
+                .build();
 
             path::HopDetail::Relay(peer_id)
         })
@@ -1441,8 +1440,7 @@ pub(crate) mod test {
                 let peer_id = tor_linkspec::OwnedChanTarget::builder()
                     .ed_identity([idx + start_idx; 32].into())
                     .rsa_identity([idx + start_idx + 1; 20].into())
-                    .build()
-                    .expect("Could not construct fake hop");
+                    .build();
 
                 path::HopDetail::Relay(peer_id)
             })
@@ -1590,8 +1588,7 @@ pub(crate) mod test {
             let peer_id = tor_linkspec::OwnedChanTarget::builder()
                 .ed_identity([4; 32].into())
                 .rsa_identity([5; 20].into())
-                .build()
-                .expect("Could not construct fake hop");
+                .build();
 
             path::HopDetail::Relay(peer_id)
         })

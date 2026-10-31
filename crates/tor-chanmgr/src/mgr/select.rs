@@ -369,7 +369,7 @@ mod test {
         if let Some(ed) = ed.into() {
             ids.ed_identity(ed);
         }
-        ids.build().unwrap()
+        ids.build()
     }
 
     /// Create an open channel entry.

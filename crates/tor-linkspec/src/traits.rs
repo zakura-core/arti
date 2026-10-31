@@ -567,7 +567,7 @@ mod test {
             if let Some(rsa) = rsa {
                 b.rsa_identity(rsa);
             }
-            b.build().unwrap()
+            b.build()
         }
         // Assert that v is strictly ascending.
         fn assert_sorted(v: &[RelayIds]) {
@@ -624,16 +624,14 @@ mod test {
         let both1 = RelayIds::builder()
             .ed_identity(ed1)
             .rsa_identity(rsa1)
-            .build()
-            .unwrap();
+            .build();
         let mixed = RelayIds::builder()
             .ed_identity(ed1)
             .rsa_identity(rsa2)
-            .build()
-            .unwrap();
-        let ed1 = RelayIds::builder().ed_identity(ed1).build().unwrap();
-        let rsa1 = RelayIds::builder().rsa_identity(rsa1).build().unwrap();
-        let rsa2 = RelayIds::builder().rsa_identity(rsa2).build().unwrap();
+            .build();
+        let ed1 = RelayIds::builder().ed_identity(ed1).build();
+        let rsa1 = RelayIds::builder().rsa_identity(rsa1).build();
+        let rsa2 = RelayIds::builder().rsa_identity(rsa2).build();
 
         fn chk_equal(v: &impl HasRelayIds) {
             assert!(v.same_relay_ids(v));
@@ -690,10 +688,7 @@ mod test {
     #[test]
     fn allowed_for_outgoing_channels() {
         fn build_target(addrs: &[SocketAddr]) -> OwnedChanTarget {
-            OwnedChanTarget::builder()
-                .addrs(addrs.to_vec())
-                .build()
-                .unwrap()
+            OwnedChanTarget::builder().addrs(addrs.to_vec()).build()
         }
 
         /// Convert an IPv4 socket address to an IPv4-mapped IPv6 socket address.

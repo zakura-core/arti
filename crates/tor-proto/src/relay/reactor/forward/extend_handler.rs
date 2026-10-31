@@ -112,11 +112,7 @@ impl ExtendRequestHandler {
             object: "EXTEND2",
             err,
         })?
-        .build()
-        .map_err(|_| {
-            // TODO: should we include the error in the circ proto error context?
-            Error::CircProto("Invalid channel target".into())
-        })?;
+        .build();
 
         if chan_target.has_any_relay_id_from(&*self.inbound_peer) {
             return Err(Error::CircProto("Cannot extend circuit to previous hop".into()).into());
