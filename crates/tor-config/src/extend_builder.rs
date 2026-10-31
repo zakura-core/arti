@@ -86,7 +86,12 @@ impl<K: std::hash::Hash + Eq, T: ExtendBuilder> ExtendBuilder for HashMap<K, T> 
 define_derive_deftly! {
     /// Provide an [`ExtendBuilder`] implementation for a struct's builder.
     ///
-    /// This template is only sensible when used alongside `#[derive(Builder)]`.
+    /// The target struct must have a separately defined `TargetBuilder` type.
+    /// Ordinary fields in that builder must be stored as `Option<T>`; nested
+    /// builders must use their own builder type directly.
+    /// [`TorConfig`](crate::derive) normally generates this implementation itself.
+    /// When using this template
+    /// with it, select `tor_config(no_extendbuilder_trait)` to avoid duplication.
     ///
     /// The provided `extend_from` function will behave as:
     ///  * For every non-`sub_builder` field,
@@ -99,16 +104,15 @@ define_derive_deftly! {
     ///
     /// # Interaction with `sub_builder`.
     ///
-    /// When a field in the struct is tagged with `#[builder(sub_builder)]`,
-    /// you must also tag the same field with `#[deftly(extend_builder(sub_builder))]`;
-    /// otherwise, compilation will fail.
+    /// Tag a nested-builder field in the target struct with
+    /// `#[deftly(extend_builder(sub_builder))]` so that it is extended recursively.
     ///
     /// # Interaction with `strip_option` and `default`.
     ///
     /// **The flags have no special effect on the `ExtendBuilder`, and will work fine.**
     ///
     /// (See comments in the code for details about why, and what this means.
-    /// Remember, `builder(default)` is applied when `build()` is called,
+    /// Remember, a field default is applied when `build()` is called,
     /// and does not automatically cause an un-set option to count as set.)
     export ExtendBuilder for struct, expect items:
 
@@ -170,25 +174,31 @@ mod test {
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
 
     use super::*;
+    use crate::{ConfigBuildError, derive::prelude::*};
     use derive_deftly::Deftly;
 
-    #[derive(Clone, Debug, derive_builder::Builder, Eq, PartialEq, Deftly)]
-    #[derive_deftly(ExtendBuilder)]
+    #[derive(Clone, Debug, Eq, PartialEq, Deftly)]
+    #[derive_deftly(TorConfig, ExtendBuilder)]
+    #[deftly(tor_config(no_default_trait, no_extendbuilder_trait))]
     struct Album {
+        #[deftly(tor_config(no_default, no_magic))]
         title: String,
+        #[deftly(tor_config(no_default))]
         year: u32,
-        #[builder(setter(strip_option), default)]
+        #[deftly(tor_config(default, no_magic, setter(strip_option)))]
         n_volumes: Option<u8>,
-        #[builder(sub_builder)]
+        #[deftly(tor_config(sub_builder))]
         #[deftly(extend_builder(sub_builder))]
         artist: Artist,
     }
 
-    #[derive(Clone, Debug, derive_builder::Builder, Eq, PartialEq, Deftly)]
-    #[derive_deftly(ExtendBuilder)]
+    #[derive(Clone, Debug, Eq, PartialEq, Deftly)]
+    #[derive_deftly(TorConfig, ExtendBuilder)]
+    #[deftly(tor_config(no_default_trait, no_extendbuilder_trait))]
     struct Artist {
+        #[deftly(tor_config(no_default, no_magic))]
         name: String,
-        #[builder(setter(strip_option), default)]
+        #[deftly(tor_config(default, no_magic, setter(strip_option)))]
         year_formed: Option<u32>,
     }
 
@@ -238,60 +248,26 @@ mod test {
         );
     }
 
-    #[derive(Clone, Debug, derive_builder::Builder, Eq, PartialEq, Deftly)]
-    #[builder(derive(Debug, Eq, PartialEq))]
-    #[derive_deftly(ExtendBuilder)]
+    #[derive(Clone, Debug, Eq, PartialEq, Deftly)]
+    #[derive_deftly(TorConfig, ExtendBuilder)]
+    #[deftly(tor_config(
+        no_default_trait,
+        no_extendbuilder_trait,
+        attr = #[derive(Eq, PartialEq)]
+    ))]
     struct DAndS {
+        #[deftly(tor_config(no_default, no_magic))]
         simple: Option<u32>,
-        #[builder(default = "Some(123)")]
+        #[deftly(tor_config(default = Some(123), no_magic))]
         dflt: Option<u32>,
-        #[builder(setter(strip_option))]
+        #[deftly(tor_config(no_default, no_magic, setter(strip_option)))]
         strip: Option<u32>,
-        #[builder(setter(strip_option), default = "Some(456)")]
+        #[deftly(tor_config(default = Some(456), no_magic, setter(strip_option)))]
         strip_dflt: Option<u32>,
     }
-    // For reference, the above will crate code something like the example below.
-    // (This may help the tests make more sense)
-    /*
-    #[derive(Default)]
-    struct DAndSBuilder {
-        simple: Option<Option<u32>>,
-        dflt: Option<Option<u32>>,
-        strip: Option<Option<u32>>,
-        strip_dflt: Option<Option<u32>>,
-    }
-    #[allow(unused)]
-    impl DAndSBuilder {
-        fn simple(&mut self, val: Option<u32>) -> &mut Self {
-            self.simple = Some(val);
-            self
-        }
-        fn dflt(&mut self, val: Option<u32>) -> &mut Self {
-            self.dflt = Some(val);
-            self
-        }
-        fn strip(&mut self, val: u32) -> &mut Self {
-            self.strip = Some(Some(val));
-            self
-        }
-        fn strip_dflt(&mut self, val: u32) -> &mut Self {
-            self.strip = Some(Some(val));
-            self
-        }
-        fn build(&self) -> Result<DAndS, DAndSBuilderError> {
-            Ok(DAndS {
-                simple: self
-                    .simple
-                    .ok_or(DAndSBuilderError::UninitializedField("simple"))?,
-                dflt: self.simple.unwrap_or(Some(123)),
-                strip: self
-                    .strip
-                    .ok_or(DAndSBuilderError::UninitializedField("strip"))?,
-                strip_dflt: self.simple.unwrap_or(Some(456)),
-            })
-        }
-    }
-    */
+    // Every field in DAndSBuilder is Option<Option<u32>>. Setter stripping
+    // changes the method argument, and defaults are resolved while building;
+    // neither changes the representation of an unset field.
 
     #[test]
     // Demonstrate "default" and "strip_option" behavior without Extend.
@@ -371,7 +347,7 @@ mod test {
         fn combine_and_build(
             b1: &DAndSBuilder,
             b2: &DAndSBuilder,
-        ) -> Result<DAndS, DAndSBuilderError> {
+        ) -> Result<DAndS, ConfigBuildError> {
             let mut b = b1.clone();
             b.extend_from(b2.clone(), ExtendStrategy::ReplaceLists);
             b.build()

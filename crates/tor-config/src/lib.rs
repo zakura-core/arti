@@ -162,19 +162,13 @@ impl Reconfigure {
 ///
 /// See <https://gitlab.torproject.org/tpo/core/arti/-/issues/488>
 ///
-/// For consistency with other APIs in Arti, when using this,
-/// do not pass `setter(strip_option)` to derive_builder.
+/// When using this with [`TorConfig`](crate::derive), retain the optional
+/// setter argument so that callers can explicitly clear the value.
 ///
 /// # ⚠ Stability Warning ⚠
 ///
 /// We may significantly change this so that it is an method in an extension trait.
 //
-// This is an annoying AOI right now because you have to write things like
-//     #[builder(field(build = r#"tor_config::resolve_option(&self.dns_port, || None)"#))]
-//     pub(crate) dns_port: Option<u16>,
-// which recapitulates the field name.  That is very much a bug hazard (indeed, in an
-// early version of some of this code I perpetrated precisely that bug).
-// Fixing this involves a derive_builder feature.
 pub fn resolve_option<T, DF>(input: &Option<Option<T>>, def: DF) -> Option<T>
 where
     T: Clone + Default + PartialEq,
@@ -263,27 +257,40 @@ where
     }
 }
 
-/// Defines standard impls for a struct with a `Builder`, incl `Default`
+/// Define standard implementations for an existing builder, including `Default`.
 ///
-/// **Use this.**  Do not `#[derive(Builder, Default)]`.  That latter approach would produce
-/// wrong answers if builder attributes are used to specify non-`Default` default values.
+/// For new configuration types, [`TorConfig`](crate::derive) generates these
+/// implementations itself. This macro also supports handwritten builders.
+/// Deriving `Default` directly on the built configuration would ignore defaults
+/// selected by its builder.
 ///
 /// # Input syntax
 ///
 /// ```
-/// use derive_builder::Builder;
-/// use serde::{Deserialize, Serialize};
-/// use tor_config::impl_standard_builder;
-/// use tor_config::ConfigBuildError;
+/// use serde::Deserialize;
+/// use tor_config::{ConfigBuildError, impl_standard_builder};
 ///
-/// #[derive(Debug, Builder, Clone, Eq, PartialEq)]
-/// #[builder(derive(Serialize, Deserialize, Debug))]
-/// #[builder(build_fn(error = "ConfigBuildError"))]
-/// struct SomeConfigStruct { }
+/// #[derive(Debug, Clone, Eq, PartialEq)]
+/// struct SomeConfigStruct { value: u32 }
+/// #[derive(Default, Deserialize)]
+/// struct SomeConfigStructBuilder { value: Option<u32> }
+/// impl SomeConfigStructBuilder {
+///     fn build(&self) -> Result<SomeConfigStruct, ConfigBuildError> {
+///         Ok(SomeConfigStruct { value: self.value.unwrap_or(7) })
+///     }
+/// }
 /// impl_standard_builder! { SomeConfigStruct }
+/// assert_eq!(SomeConfigStruct::default().value, 7);
 ///
-/// #[derive(Debug, Builder, Clone, Eq, PartialEq)]
-/// struct UnusualStruct { }
+/// #[derive(Debug, Clone, Eq, PartialEq)]
+/// struct UnusualStruct;
+/// #[derive(Default)]
+/// struct UnusualStructBuilder;
+/// impl UnusualStructBuilder {
+///     fn build(&self) -> Result<UnusualStruct, &'static str> {
+///         Ok(UnusualStruct)
+///     }
+/// }
 /// impl_standard_builder! { UnusualStruct: !Deserialize + !Builder }
 /// ```
 ///
@@ -303,7 +310,7 @@ where
 ///
 ///  * `!Deserialize` suppresses the test case involving `Builder: Deserialize`.
 ///    This should not be done for structs which are part of Arti's configuration,
-///    but can be appropriate for other types that use [`derive_builder`].
+///    but can be appropriate for builders of non-configuration types.
 ///
 ///  * `!Builder` suppresses the impl of the [`tor_config::load::Builder`](load::Builder) trait
 ///    This will be necessary if the error from the builder is not [`ConfigBuildError`].
@@ -447,8 +454,7 @@ mod test {
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
     use super::*;
     use crate as tor_config;
-    use derive_builder::Builder;
-    use serde::{Deserialize, Serialize};
+    use derive_deftly::Deftly;
     use serde_json::json;
     use tracing_test::traced_test;
 
@@ -471,14 +477,22 @@ mod test {
     #[test]
     #[rustfmt::skip] // autoformatting obscures the regular structure
     fn resolve_option_test() {
-        #[derive(Debug, Clone, Builder, Eq, PartialEq)]
-        #[builder(build_fn(error = "ConfigBuildError"))]
-        #[builder(derive(Debug, Serialize, Deserialize, Eq, PartialEq))]
+        #[derive(Debug, Clone, Deftly, Eq, PartialEq)]
+        #[derive_deftly(TorConfig)]
+        #[deftly(tor_config(
+            no_test_default,
+            no_flattenable_trait,
+            attr = #[derive(Eq, PartialEq)]
+        ))]
         struct TestConfig {
-            #[builder(field(build = r#"tor_config::resolve_option(&self.none, || None)"#))]
+            #[deftly(tor_config(no_magic, build = {
+                |builder: &Self| tor_config::resolve_option(&builder.none, || None)
+            }))]
             none: Option<u32>,
 
-            #[builder(field(build = r#"tor_config::resolve_option(&self.four, || Some(4))"#))]
+            #[deftly(tor_config(no_magic, build = {
+                |builder: &Self| tor_config::resolve_option(&builder.four, || Some(4))
+            }))]
             four: Option<u32>,
         }
 
