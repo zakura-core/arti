@@ -25,13 +25,10 @@ but its error payload is the original Tokio builder `io::Error` rather than
 `async_executors::TokioTpErr`. Owned runtimes still shut down on their last
 owner's drop, including Tokio's existing panic when dropped in an async context.
 
-The runtime-handle refactor above retains its Cargo feature names.
-`async_executors` is needed only with
-`async-std`; Tokio-only builds no longer enable its unused process support.
-Its Tokio features are no longer incidentally enabled in mixed-runtime builds
-either. Callers using that provider's `TokioTp` or `BlockingHandle::tokio`
-directly must enable its Tokio features explicitly. Async-std's runtime
-implementations and associated handle type are unchanged.
+The runtime-handle refactor above originally retained its Cargo feature names
+and the async-std implementation, while removing Tokio's `async_executors`
+feature activation. The later Tokio-only cleanup below removes the remaining
+`async_executors` dependency together with async-std and Smol.
 
 BREAKING: Remove the native-TLS backend and its runtime/provider APIs. The
 `native-tls`, `static`, `async-native-tls` and `native-tls-crate` Cargo features
@@ -103,3 +100,66 @@ constructors, variants, constants, or Cargo feature names change. The private
 that respects an existing provider. Remove the development self-dependency
 that existed to supply AWS-LC to tests: unit tests use `cfg(test)`, and tests of
 the explicit `testing` feature still request it normally.
+
+BREAKING: Retain only the built-in Tokio/Rustls runtime for this wallet fork.
+Remove `async-std` and `smol` from `tor-rtcompat` and `arti-client`, and remove
+`tor-rtcompat`'s implicit `async-std-crate`, `async-io`, and `blocking` Cargo
+features. `async_executors` already used `dep:` and had no implicit feature.
+`full` no longer selects async-std, and `experimental` no longer selects Smol.
+Default Tokio features and runtime behavior are unchanged.
+
+Removed public modules and Rust items:
+- `async_std` and `smol`, their `PreferredRuntime` aliases and
+  `create_runtime_impl` reexports.
+- `async_std::AsyncStdRustlsRuntime::{create, current, run_test}` and
+  `smol::SmolRustlsRuntime::{create, run_test}`, including the opaque runtime
+  types themselves, `Clone`, `Debug`, and runtime trait implementations.
+- The hidden public `cond` module and its reexports, and exported macros
+  `if_tokio_rustls_present!`, `if_async_std_rustls_present!`, and
+  `if_smol_rustls_present!`. The retained `test_with_all_runtimes!` now runs
+  the closure once on Tokio, retaining its existing outcome/error check.
+  `test_with_one_runtime!` retains the preferred wrapper and return behavior.
+
+Removed crate-visible or associated-type-exposed implementation items:
+- `impls::{async_std, smol}`, `impls::smol::net`, each backend's
+  `create_runtime`, `impls::smol::SmolRuntime` and its `Clone` implementation.
+- Both backends' generated `IncomingTcpStreams` and Unix-only
+  `IncomingUnixStreams`, their `from_listener` constructors and
+  `Stream::{Item, poll_next}` implementations, and `UdpSocket` wrappers.
+- `NetStreamListener::{Stream, Incoming, incoming, local_addr}` for the
+  backends' TCP/Unix listeners; `UdpSocket::{recv, send, local_addr}` for
+  their UDP wrappers; `StreamOps::{set_tcp_notsent_lowat, new_handle}` on
+  their TCP streams and Unix-stream `set_tcp_notsent_lowat` implementations.
+- `NetStreamProvider::{Stream, Listener, ConnectOptions, ListenOptions,
+  connect, listen}` for IP and Unix addresses, `UdpProvider::{UdpSocket,
+  bind}`, `SleepProvider::{SleepFuture, sleep}`,
+  `ToplevelBlockOn::block_on`, `Blocking::{ThreadHandle, spawn_blocking,
+  reenter_block_on}`, and `JoinSetProvider::{JoinSet, new_join_set}` on
+  `async_executors::AsyncStd` and `SmolRuntime`; also Smol's
+  `futures::task::Spawn::spawn_obj` implementation.
+- Both platform-gated definitions of the crate-visible async function
+  `tcp_async_io_connect(&SocketAddr, &TcpConnectOptions) ->
+  io::Result<std::net::TcpStream>`.
+
+The removed opaque runtime wrappers also supplied `Spawn::spawn_obj`,
+`CoarseTimeProvider::now_coarse`, TLS associated types
+`{Connector, TlsStream, Acceptor, TlsServerStream}` and methods
+`{tls_connector, tls_acceptor, supports_keying_material_export}`, and all
+runtime-trait methods/associated types listed above. Their associated blanket
+`Runtime` and `ToplevelRuntime` implementations disappear with the types.
+Tokio's opaque types, preferred wrapper identity, constructors, associated
+types, and trait implementations remain unchanged.
+
+No new public or `pub(crate)` Rust items are introduced. Keep all generic
+runtime/transport traits, `CompoundRuntime`, `RuntimeSubstExt`,
+`FuturesJoinSet`, and the mock-runtime-facing interfaces unchanged. Only
+stale trait documentation is adjusted; the trait definitions and default
+implementations retain their behavior.
+
+The existing `PreferredRuntime::{current, create, run_test}` wrapper and
+`tls::{RustlsProvider, RustlsAcceptor, RustlsServerStream, UnimplementedTls}`
+exports now require the retained `tokio` runtime feature (and their existing
+Rustls/server feature gates), rather than accepting a removed backend feature.
+The public test macros likewise require Tokio/Rustls. Provided methods of the
+removed trait implementations disappear with those types; their generic trait
+definitions and default bodies remain unchanged.

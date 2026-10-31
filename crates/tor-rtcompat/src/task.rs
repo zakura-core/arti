@@ -9,9 +9,8 @@ use std::task::{Context, Poll};
 /// tasks can run.
 #[must_use = "yield_now returns a future that must be .awaited on."]
 pub fn yield_now() -> YieldFuture {
-    // TODO: There are functions similar to this in tokio and
-    // async_std and futures_lite.  It would be lovely if futures had
-    // one too.  If it does, we should probably use it.
+    // TODO: Tokio has a similar function. Use a runtime-independent futures
+    // implementation instead if one becomes available.
     YieldFuture { first_time: true }
 }
 
@@ -41,7 +40,7 @@ impl Future for YieldFuture {
 #[cfg(all(
     test,
     feature = "rustls",
-    any(feature = "tokio", feature = "async-std", feature = "smol"),
+    feature = "tokio",
     not(miri), // this typically results in use of a yield syscall
 ))]
 mod test {

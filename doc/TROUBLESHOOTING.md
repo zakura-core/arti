@@ -19,15 +19,12 @@ library.
 ## Selecting a runtime
 
 The `arti-client` defaults select Tokio and Rustls. When disabling defaults,
-select `rustls` and an asynchronous runtime such as `tokio` or `async-std`.
-The experimental `smol` feature is also retained.
+select both `tokio` and `rustls` to use the built-in runtime.
 
-Cargo unifies features across dependencies. If both `tokio` and `async-std`
-are enabled, `tor_rtcompat::PreferredRuntime` prefers Tokio. To choose a
-runtime explicitly, use `tor_rtcompat::tokio::TokioRustlsRuntime`,
-`tor_rtcompat::async_std::AsyncStdRustlsRuntime`, or
-`tor_rtcompat::smol::SmolRustlsRuntime` with the corresponding features.
-Applications may also supply a custom implementation of the runtime traits.
+Use `tor_rtcompat::tokio::TokioRustlsRuntime` to name it explicitly, or
+`tor_rtcompat::PreferredRuntime` for the preferred wrapper. Applications may
+also supply custom implementations of the runtime traits. The generic traits
+and mock runtime remain available for deterministic tests.
 
 Rustls enables its Ring cryptographic provider. Applications that install a
 custom Rustls provider must do so before constructing a runtime.
