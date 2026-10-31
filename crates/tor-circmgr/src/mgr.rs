@@ -1992,7 +1992,7 @@ mod test {
             let dnsport = TargetTunnelUsage::new_from_ipv4_ports(&[53]);
             let dnsport_restrict = TargetTunnelUsage::Exit {
                 ports: vec![TargetPort::ipv4(53)],
-                isolation: StreamIsolation::builder().build().unwrap(),
+                isolation: StreamIsolation::builder().build(),
                 require_stability: false,
             };
 
@@ -2222,16 +2222,14 @@ mod test {
                 ports: vec![TargetPort::ipv4(443)],
                 isolation: StreamIsolation::builder()
                     .owner_token(IsolationToken::new())
-                    .build()
-                    .unwrap(),
+                    .build(),
                 require_stability: false,
             };
             let iso2 = TargetTunnelUsage::Exit {
                 ports: vec![TargetPort::ipv4(443)],
                 isolation: StreamIsolation::builder()
                     .owner_token(IsolationToken::new())
-                    .build()
-                    .unwrap(),
+                    .build(),
                 require_stability: false,
             };
             let no_iso1 = TargetTunnelUsage::new_from_ipv4_ports(&[443]);

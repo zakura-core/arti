@@ -375,23 +375,30 @@ tuple_impls! {
 ///
 /// If two streams are isolated from one another, they may not share
 /// a circuit.
-#[derive(Clone, Debug, derive_builder::Builder)]
+#[derive(Clone, Debug)]
 pub struct StreamIsolation {
     /// Any isolation set on the stream.
-    #[builder(default = "Box::new(IsolationToken::no_isolation())")]
     stream_isolation: Box<dyn Isolation>,
     /// Any additional isolation token set on an object that "owns" this
     /// stream.  This is typically owned by a `TorClient`.
-    #[builder(default = "IsolationToken::no_isolation()")]
     owner_token: IsolationToken,
+}
+
+/// Builder for [`StreamIsolation`].
+///
+/// Unset fields use [`IsolationToken::no_isolation`], so building cannot fail.
+#[derive(Clone, Default)]
+pub struct StreamIsolationBuilder {
+    /// Isolation explicitly selected for this stream.
+    stream_isolation: Option<Box<dyn Isolation>>,
+    /// Isolation explicitly selected for the stream's owner.
+    owner_token: Option<IsolationToken>,
 }
 
 impl StreamIsolation {
     /// Construct a new StreamIsolation with no isolation enabled.
     pub fn no_isolation() -> Self {
-        StreamIsolationBuilder::new()
-            .build()
-            .expect("Bug constructing StreamIsolation")
+        StreamIsolationBuilder::new().build()
     }
 
     /// Return a new StreamIsolationBuilder for constructing
@@ -427,6 +434,31 @@ impl IsolationHelper for StreamIsolation {
 }
 
 impl StreamIsolationBuilder {
+    /// Set this stream's isolation.
+    pub fn stream_isolation(&mut self, isolation: Box<dyn Isolation>) -> &mut Self {
+        self.stream_isolation = Some(isolation);
+        self
+    }
+
+    /// Set the isolation token of the stream's owner.
+    pub fn owner_token(&mut self, token: IsolationToken) -> &mut Self {
+        self.owner_token = Some(token);
+        self
+    }
+
+    /// Build the stream isolation, using no isolation for unset fields.
+    pub fn build(&self) -> StreamIsolation {
+        StreamIsolation {
+            stream_isolation: self
+                .stream_isolation
+                .clone()
+                .unwrap_or_else(|| Box::new(IsolationToken::no_isolation())),
+            owner_token: self
+                .owner_token
+                .unwrap_or_else(IsolationToken::no_isolation),
+        }
+    }
+
     /// Construct a builder with no items set.
     pub fn new() -> Self {
         StreamIsolationBuilder::default()
@@ -585,13 +617,42 @@ pub(crate) mod test {
     }
 
     #[test]
+    fn repeated_builds_and_clones_keep_isolation_boundaries() {
+        let mut builder = StreamIsolationBuilder::default();
+        let first = builder.build();
+        let second = builder.build();
+        assert_isoleq!(first, StreamIsolation::no_isolation());
+        assert_isoleq!(first, second);
+        assert!(!std::ptr::addr_eq(
+            first.stream_isolation.as_ref(),
+            second.stream_isolation.as_ref()
+        ));
+
+        let owner = IsolationToken::new();
+        let stream = IsolationToken::new();
+        builder
+            .owner_token(owner)
+            .stream_isolation(Box::new(stream));
+        let cloned = builder.clone();
+        let original = builder.build();
+        assert_isoleq!(original, builder.build());
+        assert_isoleq!(original, cloned.build());
+        assert_eq!(original.owner_token, owner);
+        assert!(original.stream_isolation.isol_eq(&stream));
+
+        builder.owner_token(IsolationToken::new());
+        assert!(!original.compatible(&builder.build()));
+        assert!(original.compatible(&cloned.build()));
+        assert_isoleq!(original, cloned.build());
+    }
+
+    #[test]
     fn build_isolation() {
         let no_isolation = StreamIsolation::no_isolation();
         let no_isolation2 = StreamIsolation::builder()
             .owner_token(IsolationToken::no_isolation())
             .stream_isolation(Box::new(IsolationToken::no_isolation()))
-            .build()
-            .unwrap();
+            .build();
         assert_eq!(no_isolation.owner_token, no_isolation2.owner_token);
         let first: &dyn Any = no_isolation.stream_isolation.as_ref();
         let second: &dyn Any = no_isolation2.stream_isolation.as_ref();
@@ -602,11 +663,10 @@ pub(crate) mod test {
         assert!(no_isolation.compatible(&no_isolation2));
 
         let tok = IsolationToken::new();
-        let some_isolation = StreamIsolation::builder().owner_token(tok).build().unwrap();
+        let some_isolation = StreamIsolation::builder().owner_token(tok).build();
         let some_isolation2 = StreamIsolation::builder()
             .stream_isolation(Box::new(tok))
-            .build()
-            .unwrap();
+            .build();
         assert!(!no_isolation.compatible(&some_isolation));
         assert!(!no_isolation.compatible(&some_isolation2));
         assert!(!some_isolation.compatible(&some_isolation2));
