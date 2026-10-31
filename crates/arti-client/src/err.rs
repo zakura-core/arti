@@ -152,10 +152,6 @@ enum ErrorDetail {
     #[error("Error setting up the circuit manager")]
     CircMgrSetup(#[source] tor_circmgr::Error),
 
-    /// Error setting up the bridge descriptor manager
-    #[error("Error setting up the bridge descriptor manager")]
-    #[cfg(feature = "bridge-client")]
-    BridgeDescMgrSetup(#[from] tor_dirmgr::bridgedesc::StartupError),
 
     /// Error setting up the directory manager
     // TODO: should "dirmgr setup error" be its own type in tor-dirmgr?
@@ -266,10 +262,6 @@ enum ErrorDetail {
     #[error("Unable to change configuration")]
     Reconfigure(#[from] tor_config::ReconfigureError),
 
-    /// Problem creating or launching a pluggable transport.
-    #[cfg(feature="pt-client")]
-    #[error("Problem with a pluggable transport")]
-    PluggableTransport(#[from] tor_ptmgr::err::PtError),
 
     /// We encountered a problem while inspecting or creating a directory.
     #[error("Problem accessing filesystem")]
@@ -404,16 +396,12 @@ impl tor_error::HasKind for ErrorDetail {
             E::GuardMgrSetup(e) => e.kind(),
             #[cfg(all(feature = "vanguards", feature = "onion-service-client"))]
             E::VanguardMgrSetup(e) => e.kind(),
-            #[cfg(feature = "bridge-client")]
-            E::BridgeDescMgrSetup(e) => e.kind(),
             E::CircMgrSetup(e) => e.kind(),
             E::DirMgrSetup(e) => e.kind(),
             E::StateMgrSetup(e) => e.kind(),
             #[cfg(feature = "onion-service-client")]
             E::HsClientConnectorSetup(e) => e.kind(),
             E::DirMgrBootstrap(e) => e.kind(),
-            #[cfg(feature = "pt-client")]
-            E::PluggableTransport(e) => e.kind(),
             E::StreamFailed { cause, .. } => cause.kind(),
             E::StateAccess(e) => e.kind(),
             E::Configuration(e) => e.kind(),

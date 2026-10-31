@@ -174,7 +174,6 @@ dependencies = [
  "tor-persist",
  "tor-proto",
  "tor-protover",
- "tor-ptmgr",
  "tor-relay-selection",
  "tor-rtcompat",
  "tracing",
@@ -4518,7 +4517,6 @@ dependencies = [
  "tor-netdoc",
  "tor-persist",
  "tor-proto",
- "tor-protover",
  "tor-relay-selection",
  "tor-rtcompat",
  "tor-rtmock",
@@ -5018,35 +5016,6 @@ dependencies = [
  "thiserror 2.0.21",
  "tor-basic-utils",
  "tor-bytes",
-]
-
-[[package]]
-name = "tor-ptmgr"
-version = "0.47.0"
-dependencies = [
- "async-trait",
- "cfg-if",
- "derive-deftly",
- "derive_builder_fork_arti",
- "fs-mistrust",
- "futures",
- "itertools 0.15.0",
- "oneshot-fused-workaround",
- "serde",
- "thiserror 2.0.21",
- "tor-async-utils",
- "tor-basic-utils",
- "tor-chanmgr",
- "tor-config",
- "tor-config-path",
- "tor-error",
- "tor-linkspec",
- "tor-proto",
- "tor-rtcompat",
- "tor-socksproto",
- "tracing",
- "visibility",
- "web-time-compat",
 ]
 
 [[package]]

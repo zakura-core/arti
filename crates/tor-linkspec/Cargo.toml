@@ -14,7 +14,6 @@ repository = "https://gitlab.torproject.org/tpo/core/arti.git/"
 [features]
 default = []
 full = [
-    "pt-client",
     "caret/full",
     "safelog/full",
     "tor-basic-utils/full",
@@ -25,7 +24,6 @@ full = [
     "tor-memquota/full",
 ]
 experimental = ["decode", "verbatim"]
-pt-client = []
 decode = ["__is_experimental"]
 verbatim = ["__is_experimental"]
 __is_experimental = []

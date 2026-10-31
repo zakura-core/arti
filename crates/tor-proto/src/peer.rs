@@ -5,10 +5,7 @@
 
 use std::net::{IpAddr, SocketAddr};
 
-use tor_linkspec::{BridgeAddr, ChannelMethod, HasRelayIds, RelayIdRef, RelayIdType, RelayIds};
-
-#[cfg(feature = "pt-client")]
-use tor_linkspec::{PtTarget, PtTargetAddr};
+use tor_linkspec::{ChannelMethod, HasRelayIds, RelayIdRef, RelayIdType, RelayIds};
 
 /// Represents the address of a connected peer used for a tor channel.
 ///
@@ -20,13 +17,6 @@ use tor_linkspec::{PtTarget, PtTargetAddr};
 pub enum PeerAddr {
     /// The socket address we are directly connected to.
     Direct(SocketAddr),
-    /// The pluggable transport target used to connect.
-    ///
-    /// Note that this is not a specific address but the PT transport details. We keep those
-    /// because if the [`PtTargetAddr`] happens to be None, we need to compare the transport name
-    /// and settings to match a channel.
-    #[cfg(feature = "pt-client")]
-    Pt(PtTarget),
 }
 
 impl PeerAddr {
@@ -39,25 +29,17 @@ impl PeerAddr {
 
     /// Return the IP address that should be used in the NETINFO cell.
     ///
-    /// A None value implies we didn't use an IP address to connect (see [`PtTarget`]). The
-    /// [`tor_cell::chancell::msg::Netinfo`] interface will treat a None as an IPv4 unspecified
-    /// address (0.0.0.0).
+    /// This is the IP address of the direct connection to the relay.
     pub fn netinfo_addr(&self) -> Option<IpAddr> {
         self.socket_addr().map(|sa| sa.ip())
     }
 
     /// Return the socket address of this peer.
     ///
-    /// None means that this is a PT and doesn't use an internet address. One example is it uses a
-    /// hostname.
+    /// Direct connections always have a socket address.
     pub fn socket_addr(&self) -> Option<SocketAddr> {
         match self {
             PeerAddr::Direct(sa) => Some(*sa),
-            #[cfg(feature = "pt-client")]
-            PeerAddr::Pt(t) => match t.addr() {
-                PtTargetAddr::IpPort(sa) => Some(*sa),
-                _ => None,
-            },
         }
     }
 }
@@ -65,24 +47,6 @@ impl PeerAddr {
 impl From<SocketAddr> for PeerAddr {
     fn from(sa: SocketAddr) -> Self {
         Self::Direct(sa)
-    }
-}
-
-#[cfg(feature = "pt-client")]
-impl From<PtTarget> for PeerAddr {
-    fn from(t: PtTarget) -> Self {
-        Self::Pt(t)
-    }
-}
-
-/// Useful because [`BridgeAddr`] are used in some Error struct.
-impl From<&PeerAddr> for Option<BridgeAddr> {
-    fn from(t: &PeerAddr) -> Self {
-        match t {
-            PeerAddr::Direct(sa) => Some(BridgeAddr::new_addr_from_sockaddr(*sa)),
-            #[cfg(feature = "pt-client")]
-            PeerAddr::Pt(target) => target.addr().clone().into(),
-        }
     }
 }
 
@@ -139,12 +103,9 @@ impl PeerInfo {
     ///
     /// A match is true if:
     ///     * Direct: Our address is contained in the method set of addresses.
-    ///     * Pluggable: Our address is equal to the method's target.
     pub fn matches_chan_method(&self, method: &ChannelMethod) -> bool {
         match (method, self.addr()) {
             (ChannelMethod::Direct(addrs), PeerAddr::Direct(our_addr)) => addrs.contains(our_addr),
-            #[cfg(feature = "pt-client")]
-            (ChannelMethod::Pluggable(target), PeerAddr::Pt(our_target)) => our_target == target,
             _ => false,
         }
     }

@@ -6,7 +6,8 @@
 Summary:
 
 Arti runs as a client, and supports running onion services and connecting to
-them.  It supports using bridges and pluggable transports.
+them. This wallet-focused fork uses public Tor relays; bridge and external
+pluggable-transport support is not retained.
 
 There is no support in Arti yet for running as a relay, a bridge, or a
 directory authority.  We are currently building those.

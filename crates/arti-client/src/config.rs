@@ -23,14 +23,8 @@ pub use tor_config::mistrust::BuilderExt as _;
 pub use tor_config::{ConfigBuildError, Reconfigure};
 pub use tor_config::{define_list_builder_accessors, define_list_builder_helper};
 pub use tor_config_path::{CfgPath, CfgPathError, CfgPathResolver};
-pub use tor_linkspec::{ChannelMethod, HasChanMethod, PtTransportName, TransportId};
+pub use tor_linkspec::{ChannelMethod, HasChanMethod};
 
-pub use tor_guardmgr::bridge::BridgeConfigBuilder;
-
-#[cfg(feature = "bridge-client")]
-pub use tor_guardmgr::bridge::BridgeParseError;
-
-use tor_guardmgr::bridge::BridgeConfig;
 use tor_keymgr::config::{ArtiKeystoreConfig, ArtiKeystoreConfigBuilder};
 
 /// Types for configuring how Tor circuits are built.
@@ -50,12 +44,6 @@ pub mod dir {
     };
     pub use tor_dircommon::retry::{DownloadSchedule, DownloadScheduleBuilder};
     pub use tor_dirmgr::{DirMgrConfig, FallbackDir, FallbackDirBuilder};
-}
-
-/// Types for configuring pluggable transports.
-#[cfg(feature = "pt-client")]
-pub mod pt {
-    pub use tor_ptmgr::config::{TransportConfig, TransportConfigBuilder};
 }
 
 /// Types for configuring vanguards.
@@ -272,254 +260,6 @@ impl StorageConfig {
     }
 }
 
-/// Configuration for anti-censorship features: bridges and pluggable transports.
-///
-/// A "bridge" is a relay that is not listed in the regular Tor network directory;
-/// clients use them to reach the network when a censor is blocking their
-/// connection to all the regular Tor relays.
-///
-/// A "pluggable transport" is a tool that transforms and conceals a user's connection
-/// to a bridge; clients use them to reach the network when a censor is blocking
-/// all traffic that "looks like Tor".
-///
-/// A [`BridgesConfig`] configuration has the following pieces:
-///    * A [`BridgeList`] of [`BridgeConfig`]s, which describes one or more bridges.
-///    * An `enabled` boolean to say whether or not to use the listed bridges.
-///    * A list of [`pt::TransportConfig`]s.
-///
-/// # Example
-///
-/// Here's an example of building a bridge configuration, and using it in a
-/// TorClientConfig.
-///
-/// The bridges here are fictitious; you'll need to use real bridges
-/// if you want a working configuration.
-///
-/// ```
-/// ##[cfg(feature = "pt-client")]
-/// # fn demo() -> anyhow::Result<()> {
-/// use arti_client::config::{TorClientConfig, BridgeConfigBuilder, CfgPath};
-/// // Requires that the pt-client feature is enabled.
-/// use arti_client::config::pt::TransportConfigBuilder;
-///
-/// let mut builder = TorClientConfig::builder();
-///
-/// // Add a single bridge to the list of bridges, from a bridge line.
-/// // This bridge line is made up for demonstration, and won't work.
-/// const BRIDGE1_LINE : &str = "Bridge obfs4 192.0.2.55:38114 316E643333645F6D79216558614D3931657A5F5F cert=YXJlIGZyZXF1ZW50bHkgZnVsbCBvZiBsaXR0bGUgbWVzc2FnZXMgeW91IGNhbiBmaW5kLg iat-mode=0";
-/// let bridge_1: BridgeConfigBuilder = BRIDGE1_LINE.parse()?;
-/// // This is where we pass `BRIDGE1_LINE` into the BridgeConfigBuilder.
-/// builder.bridges().bridges().push(bridge_1);
-///
-/// // Add a second bridge, built by hand.  This way is harder.
-/// // This bridge is made up for demonstration, and won't work.
-/// let mut bridge2_builder = BridgeConfigBuilder::default();
-/// bridge2_builder
-///     .transport("obfs4")
-///     .push_setting("iat-mode", "1")
-///     .push_setting(
-///         "cert",
-///         "YnV0IHNvbWV0aW1lcyB0aGV5IGFyZSByYW5kb20u8x9aQG/0cIIcx0ItBcTqiSXotQne+Q"
-///     );
-/// bridge2_builder.set_addrs(vec!["198.51.100.25:443".parse()?]);
-/// bridge2_builder.set_ids(vec!["7DD62766BF2052432051D7B7E08A22F7E34A4543".parse()?]);
-/// // Now insert the second bridge into our config builder.
-/// builder.bridges().bridges().push(bridge2_builder);
-///
-/// // Now configure an obfs4 transport. (Requires the "pt-client" feature)
-/// let mut transport = TransportConfigBuilder::default();
-/// transport
-///     .protocols(vec!["obfs4".parse()?])
-///     // Specify either the name or the absolute path of pluggable transport client binary, this
-///     // may differ from system to system.
-///     .path(CfgPath::new("/usr/bin/obfs4proxy".into()))
-///     .run_on_startup(true);
-/// builder.bridges().transports().push(transport);
-///
-/// let config = builder.build()?;
-/// // Now you can pass `config` to TorClient::create!
-/// # Ok(())}
-/// ```
-/// You can also find an example based on snowflake in arti-client example folder.
-//
-// We leave this as an empty struct even when bridge support is disabled,
-// as otherwise the default config file would generate an unknown section warning.
-#[derive(Debug, Clone, Deftly, Eq, PartialEq)]
-#[derive_deftly(TorConfig)]
-#[deftly(tor_config(pre_build = "validate_bridges_config"))]
-#[non_exhaustive]
-pub struct BridgesConfig {
-    /// Should we use configured bridges?
-    ///
-    /// The default (`Auto`) is to use bridges if they are configured.
-    /// `false` means to not use even configured bridges.
-    /// `true` means to insist on the use of bridges;
-    /// if none are configured, that's then an error.
-    #[deftly(tor_config(default))]
-    pub(crate) enabled: BoolOrAuto,
-
-    /// Configured list of bridges (possibly via pluggable transports)
-    //
-    // NOTE: This isn't using the automatic list_builder code, because it doesn't yet
-    // support MultilineListBuilder.
-    #[deftly(tor_config(no_magic, sub_builder, setter(skip)))]
-    bridges: BridgeList,
-
-    /// Configured list of pluggable transports.
-    #[cfg(feature = "pt-client")] // NOTE: Could use tor_config(cfg)
-    #[deftly(tor_config(
-        list(element(build), listtype = "TransportConfigList"),
-        default = "vec![]"
-    ))]
-    pub(crate) transports: Vec<pt::TransportConfig>,
-}
-
-#[cfg(feature = "pt-client")]
-/// Determine if we need any pluggable transports.
-///
-/// If we do and their transports don't exist, we have a problem
-fn validate_pt_config(bridges: &BridgesConfigBuilder) -> Result<(), ConfigBuildError> {
-    use std::collections::HashSet;
-    use std::str::FromStr;
-
-    // These are all the protocols that the user has defined
-    let mut protocols_defined: HashSet<PtTransportName> = HashSet::new();
-    if let Some(transportlist) = bridges.opt_transports() {
-        for protocols in transportlist.iter() {
-            for protocol in protocols.get_protocols() {
-                protocols_defined.insert(protocol.clone());
-            }
-        }
-    }
-
-    // Iterate over all the transports that bridges are going to use
-    // If any one is valid, we validate the entire config
-    for maybe_protocol in bridges
-        .bridges
-        .bridges
-        .as_deref()
-        .unwrap_or_default()
-        .iter()
-    {
-        match maybe_protocol.get_transport() {
-            Some(raw_protocol) => {
-                // We convert the raw protocol string representation
-                // into a more proper one using PtTransportName
-                let protocol = TransportId::from_str(raw_protocol)
-                    // If id can't be parsed, simply skip it here.
-                    // The rest of the config validation/processing will generate an error for it.
-                    .unwrap_or_default()
-                    .into_pluggable();
-                // The None case represents when we aren't using a PT at all
-                match protocol {
-                    Some(protocol_required) => {
-                        if protocols_defined.contains(&protocol_required) {
-                            return Ok(());
-                        }
-                    }
-                    None => return Ok(()),
-                }
-            }
-            None => {
-                return Ok(());
-            }
-        }
-    }
-
-    Err(ConfigBuildError::Inconsistent {
-        fields: ["bridges.bridges", "bridges.transports"].map(Into::into).into_iter().collect(),
-        problem: "Bridges configured, but all bridges unusable due to lack of corresponding pluggable transport in `[bridges.transports]`".into(),
-    })
-}
-
-/// Check that the bridge configuration is right
-#[allow(clippy::unnecessary_wraps)]
-fn validate_bridges_config(bridges: &BridgesConfigBuilder) -> Result<(), ConfigBuildError> {
-    let _ = bridges; // suppresses unused variable for just that argument
-
-    use BoolOrAuto as BoA;
-
-    // Ideally we would run this post-build, rather than pre-build;
-    // doing it here means we have to recapitulate the defaulting.
-    // Happily the defaulting is obvious, cheap, and not going to change.
-    //
-    // Alternatively we could have derive_builder provide `build_unvalidated`,
-    // but that involves re-setting the build fn name for every field.
-    match (
-        bridges.enabled.unwrap_or_default(),
-        bridges.bridges.bridges.as_deref().unwrap_or_default(),
-    ) {
-        (BoA::Auto, _) | (BoA::Explicit(false), _) | (BoA::Explicit(true), [_, ..]) => {}
-        (BoA::Explicit(true), []) => {
-            return Err(ConfigBuildError::Inconsistent {
-                fields: ["enabled", "bridges"].map(Into::into).into_iter().collect(),
-                problem: "bridges.enabled=true, but no bridges defined".into(),
-            });
-        }
-    }
-    #[cfg(feature = "pt-client")]
-    {
-        if bridges_enabled(
-            bridges.enabled.unwrap_or_default(),
-            bridges.bridges.bridges.as_deref().unwrap_or_default(),
-        ) {
-            validate_pt_config(bridges)?;
-        }
-    }
-
-    Ok(())
-}
-
-/// Generic logic to check if bridges should be used or not
-fn bridges_enabled(enabled: BoolOrAuto, bridges: &[impl Sized]) -> bool {
-    #[cfg(feature = "bridge-client")]
-    {
-        enabled.as_bool().unwrap_or(!bridges.is_empty())
-    }
-
-    #[cfg(not(feature = "bridge-client"))]
-    {
-        let _ = (enabled, bridges);
-        false
-    }
-}
-
-impl BridgesConfig {
-    /// Should the bridges be used?
-    fn bridges_enabled(&self) -> bool {
-        bridges_enabled(self.enabled, &self.bridges)
-    }
-}
-
-/// List of configured bridges, as found in the built configuration
-//
-// This type alias arranges that we can put `BridgeList` in `BridgesConfig`
-// and have derive_builder put a `BridgeListBuilder` in `BridgesConfigBuilder`.
-pub type BridgeList = Vec<BridgeConfig>;
-
-define_list_builder_helper! {
-    struct BridgeListBuilder {
-        bridges: [BridgeConfigBuilder],
-    }
-    built: BridgeList = bridges;
-    default = vec![];
-    #[serde(try_from="MultilineListBuilder<BridgeConfigBuilder>")]
-    #[serde(into="MultilineListBuilder<BridgeConfigBuilder>")]
-}
-
-convert_helper_via_multi_line_list_builder! {
-    struct BridgeListBuilder {
-        bridges: [BridgeConfigBuilder],
-    }
-}
-
-#[cfg(feature = "bridge-client")]
-define_list_builder_accessors! {
-    struct BridgesConfigBuilder {
-        pub bridges: [BridgeConfigBuilder],
-    }
-}
-
 /// A configuration used to bootstrap a [`TorClient`](crate::TorClient).
 ///
 /// In order to connect to the Tor network, Arti needs to know a few
@@ -572,10 +312,6 @@ pub struct TorClientConfig {
         extend_with = "extend_with_replace"
     ))]
     pub(crate) override_net_params: tor_netdoc::doc::netstatus::NetParams<i32>,
-
-    /// Information about bridges, pluggable transports, and so on
-    #[deftly(tor_config(sub_builder))]
-    pub(crate) bridges: BridgesConfig,
 
     /// Information about how to build paths through the network.
     #[deftly(tor_config(sub_builder))]
@@ -669,6 +405,8 @@ impl AsRef<tor_guardmgr::VanguardConfig> for TorClientConfig {
     }
 }
 
+impl tor_guardmgr::GuardMgrConfig for TorClientConfig {}
+
 impl tor_circmgr::CircMgrConfig for TorClientConfig {}
 
 #[cfg(feature = "onion-service-client")]
@@ -685,29 +423,6 @@ impl tor_circmgr::hspool::HsCircPoolConfig for TorClientConfig {
 impl AsRef<tor_dircommon::fallback::FallbackList> for TorClientConfig {
     fn as_ref(&self) -> &tor_dircommon::fallback::FallbackList {
         self.tor_network.fallback_caches()
-    }
-}
-impl AsRef<[BridgeConfig]> for TorClientConfig {
-    fn as_ref(&self) -> &[BridgeConfig] {
-        #[cfg(feature = "bridge-client")]
-        {
-            &self.bridges.bridges
-        }
-
-        #[cfg(not(feature = "bridge-client"))]
-        {
-            &[]
-        }
-    }
-}
-impl AsRef<BridgesConfig> for TorClientConfig {
-    fn as_ref(&self) -> &BridgesConfig {
-        &self.bridges
-    }
-}
-impl tor_guardmgr::GuardMgrConfig for TorClientConfig {
-    fn bridges_enabled(&self) -> bool {
-        self.bridges.bridges_enabled()
     }
 }
 
@@ -897,218 +612,10 @@ mod test {
     }
 
     #[test]
-    fn bridges_supported() {
-        /// checks that when s is processed as TOML for a client config,
-        /// the resulting number of bridges is according to `exp`
-        fn chk(exp: Result<usize, ()>, s: &str) {
-            eprintln!("----------\n{s}\n----------\n");
-            let got = (|| {
-                let cfg: toml::Value = toml::from_str(s).unwrap();
-                let cfg: TorClientConfigBuilder = cfg.try_into()?;
-                let cfg = cfg.build()?;
-                let n_bridges = cfg.bridges.bridges.len();
-                Ok::<_, anyhow::Error>(n_bridges) // anyhow is just something we can use for ?
-            })()
-            .map_err(|_| ());
-            assert_eq!(got, exp);
-        }
-
-        let chk_enabled_or_auto = |exp, bridges_toml| {
-            for enabled in [r#""#, r#"enabled = true"#, r#"enabled = "auto""#] {
-                chk(exp, &format!("[bridges]\n{}\n{}", enabled, bridges_toml));
-            }
-        };
-
-        let ok_1_if = |b: bool| b.then_some(1).ok_or(());
-
-        chk(
-            Err(()),
-            r#"
-                [bridges]
-                enabled = true
-            "#,
-        );
-
-        chk_enabled_or_auto(
-            ok_1_if(cfg!(feature = "bridge-client")),
-            r#"
-                bridges = ["192.0.2.83:80 $0bac39417268b96b9f514ef763fa6fba1a788956"]
-            "#,
-        );
-
-        chk_enabled_or_auto(
-            ok_1_if(cfg!(feature = "pt-client")),
-            r#"
-                bridges = ["obfs4 bridge.example.net:80 $0bac39417268b69b9f514e7f63fa6fba1a788958 ed25519:dGhpcyBpcyBbpmNyZWRpYmx5IHNpbGx5ISEhISEhISA iat-mode=1"]
-                [[bridges.transports]]
-                protocols = ["obfs4"]
-                path = "obfs4proxy"
-            "#,
-        );
-    }
-
-    #[test]
     #[cfg(not(all(feature = "vanguards", feature = "onion-service-client")))]
     fn check_disabled_vanguards_static() {
         // Force us to evaluate the closure to ensure that it builds correctly.
         #[allow(clippy::borrowed_box)]
         let _: &Box<VanguardConfig> = LazyLock::force(&DISABLED_VANGUARDS);
-    }
-
-    #[test]
-    #[cfg(feature = "pt-client")]
-    fn check_bridge_pt() {
-        let from_toml = |s: &str| -> TorClientConfigBuilder {
-            let cfg: toml::Value = toml::from_str(dbg!(s)).unwrap();
-            let cfg: TorClientConfigBuilder = cfg.try_into().unwrap();
-            cfg
-        };
-
-        let chk = |cfg: &TorClientConfigBuilder, expected: Result<(), &str>| match (
-            cfg.build(),
-            expected,
-        ) {
-            (Ok(_), Ok(())) => {}
-            (Err(e), Err(ex)) => {
-                if !e.to_string().contains(ex) {
-                    panic!("\"{e}\" did not contain {ex}");
-                }
-            }
-            (Ok(_), Err(ex)) => {
-                panic!("Expected {ex} but cfg succeeded");
-            }
-            (Err(e), Ok(())) => {
-                panic!("Expected success but got error {e}")
-            }
-        };
-
-        let test_cases = [
-            ("# No bridges", Ok(())),
-            (
-                r#"
-                    # No bridges but we still enabled bridges
-                    [bridges]
-                    enabled = true
-                    bridges = []
-                "#,
-                Err("bridges.enabled=true, but no bridges defined"),
-            ),
-            (
-                r#"
-                    # One non-PT bridge
-                    [bridges]
-                    enabled = true
-                    bridges = [
-                        "192.0.2.83:80 $0bac39417268b96b9f514ef763fa6fba1a788956",
-                    ]
-                "#,
-                Ok(()),
-            ),
-            (
-                r#"
-                    # One obfs4 bridge
-                    [bridges]
-                    enabled = true
-                    bridges = [
-                        "obfs4 bridge.example.net:80 $0bac39417268b69b9f514e7f63fa6fba1a788958 ed25519:dGhpcyBpcyBbpmNyZWRpYmx5IHNpbGx5ISEhISEhISA iat-mode=1",
-                    ]
-                    [[bridges.transports]]
-                    protocols = ["obfs4"]
-                    path = "obfs4proxy"
-                "#,
-                Ok(()),
-            ),
-            (
-                r#"
-                    # One obfs4 bridge with unmanaged transport.
-                    [bridges]
-                    enabled = true
-                    bridges = [
-                        "obfs4 bridge.example.net:80 $0bac39417268b69b9f514e7f63fa6fba1a788958 ed25519:dGhpcyBpcyBbpmNyZWRpYmx5IHNpbGx5ISEhISEhISA iat-mode=1",
-                    ]
-                    [[bridges.transports]]
-                    protocols = ["obfs4"]
-                    proxy_addr = "127.0.0.1:31337"
-                "#,
-                Ok(()),
-            ),
-            (
-                r#"
-                    # Transport is both managed and unmanaged.
-                    [[bridges.transports]]
-                    protocols = ["obfs4"]
-                    path = "obfsproxy"
-                    proxy_addr = "127.0.0.1:9999"
-                "#,
-                Err("Cannot provide both path and proxy_addr"),
-            ),
-            (
-                r#"
-                    # One obfs4 bridge and non-PT bridge
-                    [bridges]
-                    enabled = false
-                    bridges = [
-                        "192.0.2.83:80 $0bac39417268b96b9f514ef763fa6fba1a788956",
-                        "obfs4 bridge.example.net:80 $0bac39417268b69b9f514e7f63fa6fba1a788958 ed25519:dGhpcyBpcyBbpmNyZWRpYmx5IHNpbGx5ISEhISEhISA iat-mode=1",
-                    ]
-                    [[bridges.transports]]
-                    protocols = ["obfs4"]
-                    path = "obfs4proxy"
-                "#,
-                Ok(()),
-            ),
-            (
-                r#"
-                    # One obfs4 and non-PT bridge with no transport
-                    [bridges]
-                    enabled = true
-                    bridges = [
-                        "192.0.2.83:80 $0bac39417268b96b9f514ef763fa6fba1a788956",
-                        "obfs4 bridge.example.net:80 $0bac39417268b69b9f514e7f63fa6fba1a788958 ed25519:dGhpcyBpcyBbpmNyZWRpYmx5IHNpbGx5ISEhISEhISA iat-mode=1",
-                    ]
-                "#,
-                Ok(()),
-            ),
-            (
-                r#"
-                    # One obfs4 bridge with no transport
-                    [bridges]
-                    enabled = true
-                    bridges = [
-                        "obfs4 bridge.example.net:80 $0bac39417268b69b9f514e7f63fa6fba1a788958 ed25519:dGhpcyBpcyBbpmNyZWRpYmx5IHNpbGx5ISEhISEhISA iat-mode=1",
-                    ]
-                "#,
-                Err("all bridges unusable due to lack of corresponding pluggable transport"),
-            ),
-            (
-                r#"
-                    # One obfs4 bridge with no transport but bridges are disabled
-                    [bridges]
-                    enabled = false
-                    bridges = [
-                        "obfs4 bridge.example.net:80 $0bac39417268b69b9f514e7f63fa6fba1a788958 ed25519:dGhpcyBpcyBbpmNyZWRpYmx5IHNpbGx5ISEhISEhISA iat-mode=1",
-                    ]
-                "#,
-                Ok(()),
-            ),
-            (
-                r#"
-                        # One non-PT bridge with a redundant transports section
-                        [bridges]
-                        enabled = false
-                        bridges = [
-                            "192.0.2.83:80 $0bac39417268b96b9f514ef763fa6fba1a788956",
-                        ]
-                        [[bridges.transports]]
-                        protocols = ["obfs4"]
-                        path = "obfs4proxy"
-                "#,
-                Ok(()),
-            ),
-        ];
-
-        for (test_case, expected) in test_cases.iter() {
-            chk(&from_toml(test_case), *expected);
-        }
     }
 }

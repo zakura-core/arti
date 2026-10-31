@@ -9,9 +9,6 @@ pub mod proxied;
 
 pub(crate) use default::DefaultTransport;
 
-#[cfg(feature = "pt-client")]
-#[cfg_attr(docsrs, doc(cfg(feature = "experimental-api")))]
-pub use proxied::ExternalProxyPlugin;
 pub use proxied::ProxyError;
 use tor_proto::peer::PeerAddr;
 use tor_rtcompat::StreamOps;
@@ -30,9 +27,6 @@ use tor_rtcompat::StreamOps;
 /// To convert a [`TransportImplHelper`] into a
 /// [`ChannelFactory`](crate::factory::ChannelFactory), wrap it in a
 /// `ChanBuilder`.
-//
-// TODO: Maybe move this to a separate crate so that tor-ptmgr can be
-// used without having to depend on chanmgr.
 #[async_trait]
 pub trait TransportImplHelper {
     /// The type of the resulting stream.
@@ -44,9 +38,5 @@ pub trait TransportImplHelper {
     /// This method does does not necessarily handle retries or timeouts,
     /// although some of its implementations may.
     ///
-    /// This method does not necessarily handle every kind of transport. If the
-    /// caller provides a target with the wrong
-    /// [`TransportId`](tor_linkspec::TransportId), this method should return
-    /// [`Error::NoSuchTransport`](crate::Error::NoSuchTransport).
     async fn connect(&self, target: &OwnedChanTarget) -> crate::Result<(PeerAddr, Self::Stream)>;
 }

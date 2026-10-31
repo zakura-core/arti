@@ -16,7 +16,6 @@ default = []
 experimental = ["experimental-api", "relay", "metrics", "testing"]
 experimental-api = ["__is_experimental"]
 full = [
-    "pt-client",
     "safelog/full",
     "tor-basic-utils/full",
     "tor-cell/full",
@@ -37,7 +36,6 @@ full = [
     "web-time-compat/full",
 ]
 
-pt-client = ["tor-linkspec/pt-client", "tor-proto/pt-client"]
 
 relay = ["__is_experimental", "tor-proto/relay", "tor-rtcompat/tls-server"]
 testing = ["__is_experimental"]

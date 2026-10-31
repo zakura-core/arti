@@ -19,7 +19,6 @@ default = []
 full = [
     "hs-client",
     "hs-service",
-    "pt-client",
     "tokio",
     "send-control-msg",
     "stream-ctrl",
@@ -59,7 +58,6 @@ experimental = [
     "circ-padding-manual",
 ]
 conflux = ["tor-cell/conflux", "__is_experimental"]
-pt-client = ["tor-linkspec/pt-client"]
 
 hs-client = ["hs-common"]
 hs-service = ["hs-common"]
