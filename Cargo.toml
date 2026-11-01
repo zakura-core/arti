@@ -45,6 +45,7 @@ __is_nonadditive = []
 async-std = [
     "async-std-crate",
     "async-io",
+    "dep:async_executors",
     "async_executors/async_std",
 ]
 default = []
@@ -80,9 +81,9 @@ static = [
 tokio = [
     "tokio-crate",
     "tokio-util",
-    "async_executors/tokio_tp",
-    "async_executors/tokio_timer",
-    "async_executors/tokio_io",
+    "async_executors?/tokio_tp",
+    "async_executors?/tokio_timer",
+    "async_executors?/tokio_io",
 ]
 
 [lib]
@@ -113,6 +114,7 @@ version = "0.1.54"
 [dependencies.async_executors]
 version = "0.7.0"
 default-features = false
+optional = true
 
 [dependencies.asynchronous-codec]
 version = "0.7.0"
