@@ -259,6 +259,45 @@ mod tests {
         }};
     }
 
+    fn reject_ecdsa_key(input: &str, key_types: &[KeyType]) {
+        use tor_error::{ErrorKind, HasKind};
+
+        for key_type in key_types {
+            let error =
+                UnparsedOpenSshKey::new(input.to_owned(), PathBuf::from("unsupported-ecdsa-key"))
+                    .parse_ssh_format_erased(key_type)
+                    .err()
+                    .expect("an ECDSA key must not be accepted");
+            assert_eq!(error.kind(), ErrorKind::KeystoreCorrupted);
+        }
+    }
+
+    // Fixed OpenSSH samples from ssh-key-fork-arti 0.6.7.
+    #[test]
+    fn rejects_ecdsa_private_key() {
+        reject_ecdsa_key(
+            include_str!("../../../testdata/feature-regression/id_ecdsa_p256"),
+            &[
+                KeyType::Ed25519Keypair,
+                KeyType::X25519StaticKeypair,
+                KeyType::Ed25519ExpandedKeypair,
+                KeyType::RsaKeypair,
+            ],
+        );
+    }
+
+    #[test]
+    fn rejects_ecdsa_public_key() {
+        reject_ecdsa_key(
+            include_str!("../../../testdata/feature-regression/id_ecdsa_p256.pub"),
+            &[
+                KeyType::Ed25519PublicKey,
+                KeyType::X25519PublicKey,
+                KeyType::RsaPublicKey,
+            ],
+        );
+    }
+
     #[test]
     fn wrong_key_type() {
         let key_type = KeyType::Ed25519Keypair;
