@@ -88,7 +88,6 @@ pub(crate) struct Ref<K: slotmap_careful::Key> {
     /// Drop bomb
     ///
     /// Also forces `Ref` not to be Clone
-
     #[allow(dead_code)]
     bomb: DropBombCondition,
 }

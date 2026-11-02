@@ -7,7 +7,6 @@ use crate::traits::*;
 use crate::unix;
 use crate::{CoarseInstant, CoarseTimeProvider};
 use async_trait::async_trait;
-
 use futures::{future::FutureObj, task::Spawn};
 use std::future::Future;
 use std::io::Result as IoResult;
@@ -27,7 +26,6 @@ use web_time_compat::{Instant, SystemTime};
 /// You can use this structure to create new runtimes in two ways: either by
 /// overriding a single part of an existing runtime, or by building an entirely
 /// new runtime from pieces.
-
 // #[derive(Clone)] wrongly infers Clone bounds on the generic parameters
 pub struct CompoundRuntime<TaskR, SleepR, CoarseTimeR, TcpR, UnixR, TlsR, UdpR> {
     /// The actual collection of Runtime objects.

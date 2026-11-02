@@ -24,7 +24,6 @@ use tor_async_utils::watch;
 /// A [`NotifySender`] which can notify [`NotifyReceiver`]s.
 ///
 /// See the [module documentation](self) for details.
-
 pub(crate) struct NotifySender<T = ()> {
     /// The "sender" we use to implement the async behaviour.
     sender: watch::Sender<()>,

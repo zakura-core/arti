@@ -30,8 +30,7 @@ use super::padding;
 /// the body of `struct ChannelPaddingInstructions`, with the following differences:
 ///
 ///  * field visibility specifiers are not specified; they are provided by the macro
-///  * non-doc attributes that ought to be applied to fields in `ChannelPaddingInstructions`
-///    are copied to the corresponding fields in the generated types.
+///  * field documentation is copied to the corresponding generated fields.
 ///
 /// Generates, fairly straightforwardly:
 ///

@@ -364,7 +364,6 @@ impl CircParameters {
 ///
 /// This instructs a circuit reactor to send a RELAY cell to a given target
 /// (a hop, if we are a client, or the client, if we are a relay).
-
 pub(crate) struct SendRelayCell {
     /// The hop number, or `None` if we are a relay.
     pub(crate) hop: Option<HopNum>,

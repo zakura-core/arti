@@ -54,7 +54,6 @@ use crate::parse2;
 ///
 /// This is distinct from `parse2::MultiplicitySelector`,
 /// principally because it has the opposite variance.
-
 pub struct MultiplicitySelector<Field>(PhantomData<fn(Field)>);
 
 impl<Field> Clone for MultiplicitySelector<Field> {
@@ -74,18 +73,12 @@ impl<Field> Default for MultiplicitySelector<Field> {
 /// Helper type implementing `MultiplicityMethods`, after the multiplicity is determined
 ///
 /// **For use by macros**.
-
 pub struct DeterminedMultiplicitySelector<Field>(PhantomData<fn(Field)>);
 
 impl<Field> core::clone::Clone for DeterminedMultiplicitySelector<Field> {
     #[inline]
     fn clone(&self) -> Self {
         *self
-    }
-    #[allow(clippy::incorrect_clone_impl_on_copy_type)]
-    #[inline]
-    fn clone_from(&mut self, _source: &Self) {
-        core::clone::Clone::clone_from(&mut self.0, &_source.0);
     }
 }
 
@@ -101,18 +94,12 @@ impl<Field> core::default::Default for DeterminedMultiplicitySelector<Field> {
 /// Helper type implementing `MultiplicityMethods`, when a field is statically a singleton
 ///
 /// **For use by macros**.
-
 pub struct SingletonMultiplicitySelector<Field>(PhantomData<fn(Field)>);
 
 impl<Field> core::clone::Clone for SingletonMultiplicitySelector<Field> {
     #[inline]
     fn clone(&self) -> Self {
         *self
-    }
-    #[allow(clippy::incorrect_clone_impl_on_copy_type)]
-    #[inline]
-    fn clone_from(&mut self, _source: &Self) {
-        core::clone::Clone::clone_from(&mut self.0, &_source.0);
     }
 }
 

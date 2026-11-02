@@ -100,7 +100,6 @@ use state::{Config, MockableConnectorData, Services};
 ///
 /// This object is handle-like: it is fairly cheap to clone,
 ///  and contains `Arc`s internally.
-
 pub struct HsClientConnector<R: Runtime, D: state::MockableConnectorData = connect::Data> {
     /// The runtime
     runtime: R,

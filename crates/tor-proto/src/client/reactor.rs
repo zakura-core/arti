@@ -295,7 +295,7 @@ impl core::fmt::Debug for RunOnceCmdInner {
                 builder.field("leg", leg);
                 builder.field("cell", cell);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "send-control-msg")]
             RunOnceCmdInner::SendMsgAndInstallHandler {
@@ -306,14 +306,14 @@ impl core::fmt::Debug for RunOnceCmdInner {
                 let mut builder = formatter.debug_struct("SendMsgAndInstallHandler");
                 builder.field("msg", msg);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             RunOnceCmdInner::HandleSendMe { leg, hop, sendme } => {
                 let mut builder = formatter.debug_struct("HandleSendMe");
                 builder.field("leg", leg);
                 builder.field("hop", hop);
                 builder.field("sendme", sendme);
-                return builder.finish();
+                builder.finish()
             }
             RunOnceCmdInner::BeginStream {
                 cell,
@@ -330,7 +330,7 @@ impl core::fmt::Debug for RunOnceCmdInner {
                 builder.field("leg", leg);
                 builder.field("stream_components", stream_components);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             RunOnceCmdInner::MaybeSendXon {
                 rate,
@@ -341,7 +341,7 @@ impl core::fmt::Debug for RunOnceCmdInner {
                 builder.field("rate", rate);
                 builder.field("stream_id", stream_id);
                 builder.field("hop", hop);
-                return builder.finish();
+                builder.finish()
             }
             RunOnceCmdInner::CloseStream {
                 hop,
@@ -356,25 +356,25 @@ impl core::fmt::Debug for RunOnceCmdInner {
                 builder.field("behav", behav);
                 builder.field("reason", reason);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             RunOnceCmdInner::FirstHopClockSkew { answer } => {
                 let mut builder = formatter.debug_struct("FirstHopClockSkew");
                 builder.field("answer", answer);
-                return builder.finish();
+                builder.finish()
             }
             RunOnceCmdInner::RemoveLeg { leg, reason } => {
                 let mut builder = formatter.debug_struct("RemoveLeg");
                 builder.field("leg", leg);
                 builder.field("reason", reason);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "conflux")]
             RunOnceCmdInner::ConfluxHandshakeComplete { leg, cell } => {
                 let mut builder = formatter.debug_struct("ConfluxHandshakeComplete");
                 builder.field("leg", leg);
                 builder.field("cell", cell);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "conflux")]
             RunOnceCmdInner::Link {
@@ -383,21 +383,21 @@ impl core::fmt::Debug for RunOnceCmdInner {
             } => {
                 let mut builder = formatter.debug_struct("Link");
                 builder.field("answer", answer);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "conflux")]
             RunOnceCmdInner::Enqueue { leg, msg } => {
                 let mut builder = formatter.debug_struct("Enqueue");
                 builder.field("leg", leg);
                 builder.field("msg", msg);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "circ-padding")]
             RunOnceCmdInner::PaddingAction { leg, padding_event } => {
                 let mut builder = formatter.debug_struct("PaddingAction");
                 builder.field("leg", leg);
                 builder.field("padding_event", padding_event);
-                return builder.finish();
+                builder.finish()
             }
             RunOnceCmdInner::CleanShutdown => formatter.write_str("CleanShutdown"),
         }

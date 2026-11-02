@@ -220,7 +220,7 @@ impl<D: MockableConnectorData> core::fmt::Debug for ServiceState<D> {
                 let mut builder = formatter.debug_struct("Closed");
                 builder.field("data", data);
                 builder.field("last_used", last_used);
-                return builder.finish();
+                builder.finish()
             }
             ServiceState::Open {
                 data,
@@ -232,7 +232,7 @@ impl<D: MockableConnectorData> core::fmt::Debug for ServiceState<D> {
                 builder.field("data", data);
                 builder.field("last_used", last_used);
                 builder.field("circuit_expiry_task", circuit_expiry_task);
-                return builder.finish();
+                builder.finish()
             }
             ServiceState::Working {
                 barrier_recv,
@@ -241,7 +241,7 @@ impl<D: MockableConnectorData> core::fmt::Debug for ServiceState<D> {
                 let mut builder = formatter.debug_struct("Working");
                 builder.field("barrier_recv", barrier_recv);
                 builder.field("error", error);
-                return builder.finish();
+                builder.finish()
             }
             ServiceState::Dummy => formatter.write_str("Dummy"),
         }

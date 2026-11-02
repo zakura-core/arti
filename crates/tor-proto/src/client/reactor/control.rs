@@ -55,7 +55,6 @@ use std::result::Result as StdResult;
 /// The difference between this and [`CtrlCmd`] is that `CtrlMsg`s
 /// cause the reactor to send cells on the reactor's `chan_sender`,
 /// whereas `CtrlCmd` do not.
-
 pub(crate) enum CtrlMsg {
     /// Create the first hop of this circuit.
     Create {
@@ -212,7 +211,7 @@ impl core::fmt::Debug for CtrlMsg {
                 builder.field("handshake", handshake);
                 builder.field("settings", settings);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             CtrlMsg::ExtendNtor {
                 peer_id,
@@ -227,7 +226,7 @@ impl core::fmt::Debug for CtrlMsg {
                 builder.field("linkspecs", linkspecs);
                 builder.field("settings", settings);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             CtrlMsg::ExtendNtorV3 {
                 peer_id,
@@ -242,7 +241,7 @@ impl core::fmt::Debug for CtrlMsg {
                 builder.field("linkspecs", linkspecs);
                 builder.field("settings", settings);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             CtrlMsg::BeginStream {
                 hop,
@@ -257,7 +256,7 @@ impl core::fmt::Debug for CtrlMsg {
                 builder.field("memquota", memquota);
                 builder.field("done", done);
                 builder.field("cmd_checker", cmd_checker);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "hs-service")]
             CtrlMsg::ClosePendingStream {
@@ -271,7 +270,7 @@ impl core::fmt::Debug for CtrlMsg {
                 builder.field("stream_id", stream_id);
                 builder.field("message", message);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "send-control-msg")]
             CtrlMsg::SendMsg { hop, msg, sender } => {
@@ -279,7 +278,7 @@ impl core::fmt::Debug for CtrlMsg {
                 builder.field("hop", hop);
                 builder.field("msg", msg);
                 builder.field("sender", sender);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "send-control-msg")]
             CtrlMsg::SendMsgAndInstallHandler {
@@ -290,7 +289,7 @@ impl core::fmt::Debug for CtrlMsg {
                 let mut builder = formatter.debug_struct("SendMsgAndInstallHandler");
                 builder.field("msg", msg);
                 builder.field("sender", sender);
-                return builder.finish();
+                builder.finish()
             }
             CtrlMsg::FlowCtrlUpdate {
                 msg,
@@ -301,12 +300,12 @@ impl core::fmt::Debug for CtrlMsg {
                 builder.field("msg", msg);
                 builder.field("stream_id", stream_id);
                 builder.field("hop", hop);
-                return builder.finish();
+                builder.finish()
             }
             CtrlMsg::FirstHopClockSkew { answer } => {
                 let mut builder = formatter.debug_struct("FirstHopClockSkew");
                 builder.field("answer", answer);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "conflux")]
             CtrlMsg::LinkCircuits {
@@ -315,7 +314,7 @@ impl core::fmt::Debug for CtrlMsg {
             } => {
                 let mut builder = formatter.debug_struct("LinkCircuits");
                 builder.field("answer", answer);
-                return builder.finish();
+                builder.finish()
             }
         }
     }
@@ -327,7 +326,6 @@ impl core::fmt::Debug for CtrlMsg {
 /// never cause cells to sent on the channel,
 /// while `CtrlMsg`s potentially do: `CtrlMsg`s are mapped to [`RunOnceCmdInner`] commands,
 /// some of which instruct the reactor to send cells down the channel.
-
 pub(crate) enum CtrlCmd {
     /// Shut down the reactor.
     Shutdown,
@@ -368,7 +366,6 @@ pub(crate) enum CtrlCmd {
         /// The hop that is allowed to create streams.
         hop: TargetHop,
         /// A filter used to check requests before passing them on.
-
         #[cfg(feature = "hs-service")]
         filter: Box<dyn IncomingStreamRequestFilter>,
     },
@@ -445,13 +442,13 @@ impl core::fmt::Debug for CtrlCmd {
                 let mut builder = formatter.debug_struct("ExtendVirtual");
                 builder.field("settings", settings);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             CtrlCmd::ResolveTargetHop { hop, done } => {
                 let mut builder = formatter.debug_struct("ResolveTargetHop");
                 builder.field("hop", hop);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "hs-service")]
             CtrlCmd::AwaitStreamRequest {
@@ -466,14 +463,14 @@ impl core::fmt::Debug for CtrlCmd {
                 builder.field("cmd_checker", cmd_checker);
                 builder.field("done", done);
                 builder.field("hop", hop);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "hs-service")]
             CtrlCmd::GetBindingKey { hop, done } => {
                 let mut builder = formatter.debug_struct("GetBindingKey");
                 builder.field("hop", hop);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(test)]
             CtrlCmd::AddFakeHop {
@@ -491,7 +488,7 @@ impl core::fmt::Debug for CtrlCmd {
                 builder.field("peer_id", peer_id);
                 builder.field("params", params);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(test)]
             CtrlCmd::QuerySendWindow { hop, leg, done } => {
@@ -499,13 +496,13 @@ impl core::fmt::Debug for CtrlCmd {
                 builder.field("hop", hop);
                 builder.field("leg", leg);
                 builder.field("done", done);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "conflux")]
             CtrlCmd::ShutdownAndReturnCircuit { answer } => {
                 let mut builder = formatter.debug_struct("ShutdownAndReturnCircuit");
                 builder.field("answer", answer);
-                return builder.finish();
+                builder.finish()
             }
             #[cfg(feature = "circ-padding-manual")]
             CtrlCmd::SetPadder {
@@ -517,12 +514,12 @@ impl core::fmt::Debug for CtrlCmd {
                 builder.field("hop", hop);
                 builder.field("padder", padder);
                 builder.field("sender", sender);
-                return builder.finish();
+                builder.finish()
             }
             CtrlCmd::GetTunnelActivity { sender } => {
                 let mut builder = formatter.debug_struct("GetTunnelActivity");
                 builder.field("sender", sender);
-                return builder.finish();
+                builder.finish()
             }
         }
     }

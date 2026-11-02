@@ -119,7 +119,6 @@ pub struct MemoryQuotaTracker {
 ///
 /// In Arti, we usually use a newtype around `Account`, rather than a bare `Account`.
 /// See `tor_proto::memquota`.
-
 pub struct Account(IfEnabled<AccountInner>);
 
 impl core::fmt::Debug for Account {
@@ -132,7 +131,6 @@ impl core::fmt::Debug for Account {
 }
 
 /// Contents of an enabled [`Account`]
-
 pub struct AccountInner {
     /// The account ID
     aid: refcount::Ref<AId>,

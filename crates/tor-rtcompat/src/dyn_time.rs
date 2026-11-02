@@ -95,14 +95,14 @@ impl core::fmt::Debug for Impl {
     #[allow(clippy::unneeded_field_pattern)]
     fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
-            Impl::Preferred(_0) => {
+            Impl::Preferred(runtime) => {
                 let mut builder = formatter.debug_tuple("Preferred");
-                builder.field(_0);
-                return builder.finish();
+                builder.field(runtime);
+                builder.finish()
             }
             Impl::Dyn(_) => {
                 let mut builder = formatter.debug_tuple("Dyn");
-                return builder.finish();
+                builder.finish()
             }
         }
     }

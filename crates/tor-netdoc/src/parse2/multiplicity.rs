@@ -50,7 +50,6 @@ use crate::encode;
 ///
 /// This is distinct from `encode::MultiplicitySelector`,
 /// principally because it has the opposite variance.
-
 pub struct MultiplicitySelector<Field>(PhantomData<fn() -> Field>);
 
 impl<Field> Clone for MultiplicitySelector<Field> {

@@ -112,7 +112,6 @@ pub trait Writer {
 /// Work in progress state for writing a nested (length-counted) item
 ///
 /// You must call `finish` !
-
 pub struct NestedWriter<'w, W, L>
 where
     W: ?Sized,

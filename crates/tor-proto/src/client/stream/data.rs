@@ -774,7 +774,6 @@ type BoxSyncFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + Sync + 'a>>;
 /// We have to use an enum here because, for as long as we're waiting
 /// for a flush operation to complete, the future returned by
 /// `flush_cell()` owns the DataWriterImpl.
-
 enum DataWriterState {
     /// The writer has closed or gotten an error: nothing more to do.
     Closed,
@@ -794,12 +793,12 @@ impl core::fmt::Debug for DataWriterState {
     fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             DataWriterState::Closed => formatter.write_str("Closed"),
-            DataWriterState::Ready(_0) => {
+            DataWriterState::Ready(writer) => {
                 let mut builder = formatter.debug_tuple("Ready");
-                builder.field(_0);
-                return builder.finish();
+                builder.field(writer);
+                builder.finish()
             }
-            DataWriterState::Flushing(_0) => {
+            DataWriterState::Flushing(future) => {
                 let mut builder = formatter.debug_tuple("Flushing");
                 let arg = {
                     struct FormattedField<'a>(
@@ -810,17 +809,16 @@ impl core::fmt::Debug for DataWriterState {
                             skip_fmt(self.0, formatter)
                         }
                     }
-                    FormattedField(_0)
+                    FormattedField(future)
                 };
                 builder.field(&arg);
-                return builder.finish();
+                builder.finish()
             }
         }
     }
 }
 
 /// Internal: the write part of a DataStream
-
 struct DataWriterImpl {
     /// The underlying StreamTarget object.
     s: StreamTarget,
@@ -853,7 +851,7 @@ impl core::fmt::Debug for DataWriterImpl {
         let mut builder = formatter.debug_struct("DataWriterImpl");
         builder.field("s", &self.s);
         let arg = {
-            struct FormattedField<'a>(&'a Box<[u8]>);
+            struct FormattedField<'a>(&'a [u8]);
             impl<'a> core::fmt::Debug for FormattedField<'a> {
                 fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
                     skip_fmt(self.0, formatter)
@@ -1101,21 +1099,19 @@ impl core::fmt::Debug for DataReaderState {
     fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             DataReaderState::Closed => formatter.write_str("Closed"),
-            DataReaderState::Open(_0) => {
+            DataReaderState::Open(reader) => {
                 let mut builder = formatter.debug_tuple("Open");
-                builder.field(_0);
-                return builder.finish();
+                builder.field(reader);
+                builder.finish()
             }
         }
     }
 }
 
 /// Wrapper for the read part of a [`DataStream`].
-
 #[pin_project]
 struct DataReaderImpl {
     /// The underlying StreamReceiver object.
-
     #[pin]
     s: StreamReceiver,
 

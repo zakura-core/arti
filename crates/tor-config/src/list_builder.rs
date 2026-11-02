@@ -652,7 +652,6 @@ impl<'de, EB: Deserialize<'de>> Deserialize<'de> for MultilineListBuilder<EB> {
 }
 
 /// Visitor for deserialize_any for [`MultilineListBuilder`]
-
 struct MllbVisitor<EB> {
     /// Variance: this visitor constructs `EB`s
     ret: PhantomData<fn() -> EB>,

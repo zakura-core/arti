@@ -82,7 +82,6 @@ use tor_async_utils::{ErasedSinkTrySendError, SinkCloseChannel, SinkTrySend};
 ///
 /// Returned by [`ChannelSpec::new_mq`], a method on `C`.
 /// See the [module-level docs](crate::mq_queue).
-
 pub struct Sender<T: Debug + Send + 'static, C: ChannelSpec> {
     /// The inner sink
     tx: C::Sender<Entry<T>>,
@@ -167,7 +166,6 @@ impl<T: Debug + Send + 'static, C: ChannelSpec> core::fmt::Debug for Receiver<T,
 ///
 /// This is a separate type because
 /// it's what we need to implement [`IsParticipant`] for.
-
 struct ReceiverInner<T: Debug + Send + 'static, C: ChannelSpec> {
     /// Mutable state
     ///
@@ -194,7 +192,6 @@ impl<T: Debug + Send + 'static, C: ChannelSpec> core::fmt::Debug for ReceiverInn
 /// which has a clone of the `Arc<ReceiverInner>`.
 ///
 /// Within `Arc<Mutex<Result<, >>>`.
-
 struct ReceiverState<T: Debug + Send + 'static, C: ChannelSpec> {
     /// The inner stream, but with an unobtrusive peek for getting the oldest data age
     rx: StreamUnobtrusivePeeker<C::Receiver<Entry<T>>>,

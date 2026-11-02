@@ -16,7 +16,6 @@ use tor_basic_utils::token_bucket::{NeverEnoughTokensError, TokenBucket, TokenBu
 /// A rate-limited async [writer](AsyncWrite).
 ///
 /// This can be used as a wrapper around an existing [`AsyncWrite`] writer.
-
 #[pin_project::pin_project]
 pub struct RateLimitedWriter<W: AsyncWrite, P: SleepProvider> {
     /// The token bucket.
@@ -32,11 +31,9 @@ pub struct RateLimitedWriter<W: AsyncWrite, P: SleepProvider> {
     /// See [`RateLimitedWriterConfig::wake_when_bytes_available`].
     wake_when_bytes_available: NonZero<u64>,
     /// The inner writer.
-
     #[pin]
     inner: W,
     /// We need to store the sleep future if [`AsyncWrite::poll_write()`] blocks.
-
     #[pin]
     sleep_fut: Option<SyncFuture<P::SleepFuture>>,
 }

@@ -69,12 +69,6 @@ impl<T> core::clone::Clone for TypedMemoryCost<T> {
     fn clone(&self) -> Self {
         *self
     }
-    #[allow(clippy::incorrect_clone_impl_on_copy_type)]
-    #[inline]
-    fn clone_from(&mut self, _source: &Self) {
-        core::clone::Clone::clone_from(&mut self.raw, &_source.raw);
-        core::clone::Clone::clone_from(&mut self.marker, &_source.marker);
-    }
 }
 
 impl<T> core::marker::Copy for TypedMemoryCost<T> {}

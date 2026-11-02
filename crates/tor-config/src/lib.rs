@@ -70,7 +70,6 @@ pub mod testing;
 
 #[doc(hidden)]
 pub mod deps {
-
     pub use itertools::Itertools;
     pub use paste::paste;
     pub use serde;

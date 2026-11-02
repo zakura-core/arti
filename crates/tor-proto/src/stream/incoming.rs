@@ -345,7 +345,6 @@ pub(crate) struct StreamReqInfo {
 pub(crate) type StreamReqSender = mq_queue::Sender<StreamReqInfo, MpscSpec>;
 
 /// Data required for handling an incoming stream request.
-
 #[cfg(any(feature = "hs-service", feature = "relay"))]
 pub(crate) struct IncomingStreamRequestHandler {
     /// A sender for sharing information about an incoming stream request.

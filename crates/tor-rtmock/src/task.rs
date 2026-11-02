@@ -236,7 +236,6 @@ struct Task {
 }
 
 /// A future as stored in our record of a [`Task`]
-
 enum TaskFutureInfo {
     /// The [`Future`].  All is normal.
     Normal(TaskFuture),
@@ -256,7 +255,7 @@ impl core::fmt::Debug for TaskFutureInfo {
         match self {
             TaskFutureInfo::Normal(_) => {
                 let mut builder = formatter.debug_tuple("Normal");
-                return builder.finish();
+                builder.finish()
             }
             TaskFutureInfo::Main => formatter.write_str("Main"),
             TaskFutureInfo::Subthread => formatter.write_str("Subthread"),
@@ -334,7 +333,6 @@ struct ProgressingUntilStalled {
 ///
 /// Existence of this struct implies `Data.progressing_until_stalled` is `Some`.
 /// There can only be one at a time.
-
 struct ProgressUntilStalledFuture {
     /// Executor's state; this future's state is in `.progressing_until_stalled`
     shared: Arc<Shared>,

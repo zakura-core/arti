@@ -14,14 +14,12 @@ use super::writer::{RateLimitedWriter, RateLimitedWriterConfig};
 ///
 /// This wraps a [`RateLimitedWriter`] and watches a stream for configuration changes (such as rate
 /// limit changes).
-
 #[pin_project::pin_project]
 pub struct DynamicRateLimitedWriter<W: AsyncWrite, S, P: SleepProvider> {
     /// The rate-limited writer.
     #[pin]
     writer: RateLimitedWriter<W, P>,
     /// A stream that provides configuration updates, including rate limit updates.
-
     #[pin]
     updates: S,
 }

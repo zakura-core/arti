@@ -220,7 +220,6 @@ struct PreparedParameters {
 }
 
 /// Return value from `prepare_to_sleep`: instructions for what caller ought to do
-
 enum SleepInstructions<'f, R: SleepProvider> {
     /// Caller should send padding immediately
     Immediate {
@@ -241,12 +240,12 @@ impl<'f, R: SleepProvider> core::fmt::Debug for SleepInstructions<'f, R> {
             SleepInstructions::Immediate { now } => {
                 let mut builder = formatter.debug_struct("Immediate");
                 builder.field("now", now);
-                return builder.finish();
+                builder.finish()
             }
             SleepInstructions::Forever => formatter.write_str("Forever"),
             SleepInstructions::Waker(_) => {
                 let mut builder = formatter.debug_tuple("Waker");
-                return builder.finish();
+                builder.finish()
             }
         }
     }
