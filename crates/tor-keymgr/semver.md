@@ -50,3 +50,29 @@ list accessors. Missing-primary errors still precede duplicate-ID validation;
 the real key manager still rejects duplicate store IDs. The feature-disabled
 key manager keeps its inert behavior. No public or crate-visible API is added,
 and no retained signature or feature changes.
+
+BREAKING: Disable the `ssh-key-fork-arti` dependency's default ECDSA format
+feature. Under `keymgr`, the public `ssh_key` re-export consequently loses
+conditional ECDSA API unless another consumer enables that dependency feature:
+
+- `public::{EcdsaPublicKey, SkEcdsaSha2NistP256}` and
+  `private::{EcdsaKeypair, EcdsaPrivateKey, SkEcdsaSha2NistP256}`, including
+  their constructors, methods and trait implementations;
+- `public::KeyData::{Ecdsa, SkEcdsaSha2NistP256}`,
+  `private::KeypairData::Ecdsa` and `Error::Ecdsa`;
+- the `ecdsa` and `is_ecdsa` accessors on both key-data enums, and
+  `sk_ecdsa_p256` and `is_sk_ecdsa_p256` on `public::KeyData`;
+- the corresponding `From` conversions into key-data enums, `PublicKey` and
+  `PrivateKey`, `From<sec1::Error> for Error`, and the `sec1` re-export.
+
+Arti's `SshKeyAlgorithm` variants and existing signatures remain unchanged.
+ECDSA was not a supported Arti typed key before this change. Without downstream
+ECDSA feature unification, valid ECDSA input in a matching public/private
+format now fails earlier with `SshKeyParse(AlgorithmUnknown)` instead of
+`UnexpectedSshKeyType`. Both remain fail-closed `KeystoreCorrupted` errors;
+the error variant, source and diagnostic text can change.
+
+Supported RSA, Ed25519, X25519 and expanded Ed25519 formats remain enabled.
+The dependency's explicit `std` selection is unchanged, and `key-encoding`
+still selects key-forge with its explicit `std` and `rsa` features. No Arti
+public or crate-visible item, signature, visibility or feature name is added.
