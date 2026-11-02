@@ -96,9 +96,6 @@ getrandom = { version = "0.4.3", features = ["wasm_js"] }
 # rand_core 0.6 needs this version of getrandom, and we need to tell it to use
 # the js feature.
 getrandom_02 = { package = "getrandom", version = "0.2.17", features = ["js"] }
-# rand_core 0.9 needs this version of getrandom, and we need to tell it to use
-# the wasm_js feature.
-getrandom_03 = { package = "getrandom", version = "0.3.4", features = ["wasm_js"] }
 
 [lib]
 name = "tor_llcrypto"

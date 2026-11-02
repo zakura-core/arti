@@ -2,7 +2,7 @@
 
 use std::convert::Infallible;
 
-/// Helper to implement rand_core_06 for an Rng providing RngCore from rand_core 0.9.
+/// Adapter between [`rand_core`] 0.10 and [`rand_core_06`] 0.6.
 ///
 /// We need this (for now) for compatibility with *-dalek and
 /// some other crypto libraries.
@@ -14,7 +14,7 @@ use std::convert::Infallible;
 pub struct RngCompat<R>(R);
 
 impl<R> RngCompat<R> {
-    /// Create a ne RngCompat to wrap `rng`
+    /// Create a new [`RngCompat`] wrapping `rng`.
     #[cfg_attr(feature = "rng-compat", visibility::make(pub))]
     pub(crate) fn new(rng: R) -> Self {
         Self(rng)
