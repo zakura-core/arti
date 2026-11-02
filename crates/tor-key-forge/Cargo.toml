@@ -26,7 +26,6 @@ __is_experimental = []
 
 [dependencies]
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
-derive_more = { version = "2.1.1", features = ["full"] }
 paste = "1.0.15"
 rand = "0.10.3"
 rsa = "0.9.10"

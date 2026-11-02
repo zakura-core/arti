@@ -121,7 +121,6 @@ use futures::channel::mpsc;
 use futures::io::{AsyncRead, AsyncWrite};
 use tor_basic_utils::oneshot;
 
-use educe::Educe;
 use futures::{FutureExt as _, Sink};
 use std::result::Result as StdResult;
 use std::sync::Arc;
@@ -143,7 +142,7 @@ use kist::KistParams;
 ///
 /// It is created when a channel is requested for creation which means the subsystem wanting to
 /// open a channel needs to know what type it wants.
-#[derive(Clone, Copy, Debug, derive_more::Display)]
+#[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub enum ChannelType {
     /// Client: Initiated from a client to a relay. Client is unauthenticated and relay is
@@ -162,6 +161,18 @@ pub enum ChannelType {
         /// meaning a relay.
         authenticated: bool,
     },
+}
+
+impl core::fmt::Display for ChannelType {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::ClientInitiator => formatter.write_str("ClientInitiator"),
+            Self::RelayInitiator => formatter.write_str("RelayInitiator"),
+            Self::RelayResponder { authenticated } => {
+                core::fmt::Display::fmt(authenticated, formatter)
+            }
+        }
+    }
 }
 
 impl ChannelType {
@@ -359,8 +370,7 @@ struct MutableDetails {
 ///  3. It doesn't want to be in the channel reactor since that's super hot.
 ///
 /// See also the overview at [`tor_proto::channel::padding`](padding)
-#[derive(Debug, Educe)]
-#[educe(Default)]
+#[derive(Debug)]
 enum PaddingControlState {
     /// No usage of this channel, so far, implies sending or negotiating channel padding.
     ///
@@ -372,7 +382,6 @@ enum PaddingControlState {
     ///    (which is fine since this timer is not enabled).
     ///  * We don't send any PADDING_NEGOTIATE cells.  The peer is supposed to come to the
     ///    same conclusions as us, based on channel usage: it should also not send padding.
-    #[educe(Default)]
     UsageDoesNotImplyPadding {
         /// The last padding parameters (from reparameterize)
         ///
@@ -389,6 +398,16 @@ enum PaddingControlState {
     /// Once we have set this variant, it remains this way forever for this channel,
     /// (the spec speaks of channels "only used for" certain purposes not getting padding).
     PaddingConfigured,
+}
+
+impl core::default::Default for PaddingControlState {
+    #[inline]
+    fn default() -> Self {
+        PaddingControlState::UsageDoesNotImplyPadding {
+            padding_params: <ChannelPaddingInstructionsUpdates as core::default::Default>::default(
+            ),
+        }
+    }
 }
 
 use PaddingControlState as PCS;

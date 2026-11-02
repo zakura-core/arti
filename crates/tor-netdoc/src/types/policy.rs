@@ -74,14 +74,20 @@ pub enum PolicyError {
 /// assert!(! r.contains(21));
 /// assert!(! r.contains(8001));
 /// ```
-#[derive(derive_more::Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[allow(clippy::exhaustive_structs)]
-#[debug("PortRange({})", &self)]
 pub struct PortRange {
     /// The first port in this range.
     lo: u16,
     /// The last port in this range.
     hi: u16,
+}
+
+impl core::fmt::Debug for PortRange {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        formatter.write_fmt(format_args!("PortRange({0})", self))
+    }
 }
 
 impl PortRange {
@@ -353,15 +359,35 @@ impl ItemArgumentParseable for PortRanges {
 
 /// A kind of policy rule: either accepts or rejects addresses
 /// matching a pattern.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, derive_more::Display, derive_more::FromStr)]
-#[display(rename_all = "lowercase")]
-#[from_str(rename_all = "lowercase")]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 #[allow(clippy::exhaustive_enums)]
 pub enum RuleKind {
     /// A rule that accepts matching address:port combinations.
     Accept,
     /// A rule that rejects matching address:port combinations.
     Reject,
+}
+
+impl core::fmt::Display for RuleKind {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Accept => formatter.write_str("accept"),
+            Self::Reject => formatter.write_str("reject"),
+        }
+    }
+}
+
+impl core::str::FromStr for RuleKind {
+    type Err = tor_error::FromStrError;
+    fn from_str(s: &str) -> core::result::Result<Self, <Self as core::str::FromStr>::Err> {
+        core::result::Result::Ok(match s {
+            "accept" => Self::Accept,
+            "reject" => Self::Reject,
+            _ => {
+                return core::result::Result::Err(tor_error::FromStrError::new("RuleKind"));
+            }
+        })
+    }
 }
 
 impl NormalItemArgument for RuleKind {}

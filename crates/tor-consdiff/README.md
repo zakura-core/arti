@@ -15,4 +15,7 @@ have.
 This crate provides a function to apply one of these diffs to an older
 consensus document, to get a newer one.
 
+The wallet fork's API is limited to applying and validating received diffs.
+See [semver.md](semver.md) for the removed generation API.
+
 License: MIT OR Apache-2.0

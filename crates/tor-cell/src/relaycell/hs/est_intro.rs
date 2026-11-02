@@ -175,9 +175,8 @@ pub struct EstablishIntroDetails {
 /// Onion services should not construct this message object; instead, they
 /// should construct an [`EstablishIntroDetails`], and then call its
 /// `sign_and_encode` method.
-#[derive(educe::Educe, Clone, Deftly)]
+#[derive(Clone, Deftly)]
 #[derive_deftly(HasMemoryCost)]
-#[educe(Debug)]
 pub struct EstablishIntro {
     /// The underlying body of this, wrapped in authentication.
     body: EstablishIntroDetails,
@@ -188,7 +187,6 @@ pub struct EstablishIntro {
     /// it from being replayed.
     handshake_auth: CtByteArray<HS_MAC_LEN>,
     /// A textual record of all the fields in the message that are covered by the MAC.
-    #[educe(Debug(ignore))]
     mac_plaintext: Vec<u8>,
     /// A signature using `auth_key` of all contents of the message.
     ///
@@ -196,8 +194,17 @@ pub struct EstablishIntro {
     /// the request really comes from that key's holder.
     ///
     /// (This field is boxed to manage variant size.)
-    #[educe(Debug(ignore))]
     sig: Box<ed25519::ValidatableEd25519Signature>,
+}
+
+impl core::fmt::Debug for EstablishIntro {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("EstablishIntro");
+        builder.field("body", &self.body);
+        builder.field("handshake_auth", &self.handshake_auth);
+        builder.finish()
+    }
 }
 
 impl Writeable for EstablishIntroDetails {

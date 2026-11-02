@@ -84,8 +84,15 @@ use crate::doc::netstatus::vote::NetworkStatusUnverifiedParsedBody as NetworkSta
 //
 // Details TBD.
 //
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, derive_more::AsRef)]
-pub struct EncodedAuthCert(#[as_ref(str)] String);
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct EncodedAuthCert(String);
+
+impl core::convert::AsRef<str> for EncodedAuthCert {
+    #[inline]
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
 
 /// State (machine) for checking item sequence
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

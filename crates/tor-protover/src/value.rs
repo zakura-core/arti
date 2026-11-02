@@ -11,16 +11,36 @@ pub(crate) const MAX_VER: usize = 63;
 //
 // Invariant: valid, ie in the range 1..=MAX_VER.
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Ord, PartialOrd)] //
-#[derive(derive_more::Into, derive_more::Display)]
-#[display("{_0}")]
+
 pub struct Value(u8);
 
+impl core::convert::From<Value> for u8 {
+    #[inline]
+    fn from(value: Value) -> Self {
+        value.0
+    }
+}
+
+impl core::fmt::Display for Value {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
+
 /// A `Value` was out of range (zero, or >63)
-#[derive(Error, Debug, PartialEq, Eq, Clone, derive_more::Into)]
+#[derive(Error, Debug, PartialEq, Eq, Clone)]
 #[error("Protocol version {v} out of range")]
 pub struct ValueOutOfRange {
     /// The value that was wrong
     v: u8,
+}
+
+impl core::convert::From<ValueOutOfRange> for u8 {
+    #[inline]
+    fn from(value: ValueOutOfRange) -> Self {
+        value.v
+    }
 }
 
 impl Value {

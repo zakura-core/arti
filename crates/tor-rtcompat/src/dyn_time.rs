@@ -6,7 +6,7 @@ use std::pin::Pin;
 use web_time_compat::{Duration, Instant, SystemTime};
 
 use dyn_clone::DynClone;
-use educe::Educe;
+
 use paste::paste;
 
 use crate::{CoarseInstant, CoarseTimeProvider, SleepProvider};
@@ -82,13 +82,30 @@ pub struct DynTimeProvider(Impl);
 ///  * This enum instead of a simple type
 ///  * The `unsafe` inside `downcast_value`.
 ///  * `match` statements in method shims
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 enum Impl {
     /// Just (a handle to) the preferred runtime
     Preferred(PreferredRuntime),
     /// Some other runtime
-    Dyn(#[educe(Debug(ignore))] Box<dyn DynProvider>),
+    Dyn(Box<dyn DynProvider>),
+}
+
+impl core::fmt::Debug for Impl {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            Impl::Preferred(runtime) => {
+                let mut builder = formatter.debug_tuple("Preferred");
+                builder.field(runtime);
+                builder.finish()
+            }
+            Impl::Dyn(_) => {
+                let mut builder = formatter.debug_tuple("Dyn");
+                builder.finish()
+            }
+        }
+    }
 }
 
 impl DynTimeProvider {
@@ -289,9 +306,14 @@ mod test {
 
     #[test]
     fn check_downcast_dropcount() {
-        #[derive(Debug, derive_more::Display)]
-        #[display("{self:?}")]
+        #[derive(Debug)]
         struct DropCounter(u32);
+
+        impl core::fmt::Display for DropCounter {
+            fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                core::fmt::Debug::fmt(&(self), formatter)
+            }
+        }
 
         fn try_downcast_dc(x: impl Debug + 'static) -> Result<DropCounter, impl Debug + 'static> {
             black_box(downcast_value(black_box(x)))

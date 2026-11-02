@@ -14,9 +14,7 @@ repository = "https://github.com/zakura-core/arti"
 [dependencies]
 cfg-if = "1.0.5"
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
-derive_more = { version = "2.1.1", features = ["full"] }
 dyn-clone = "1.0.20"
-educe = "0.4.23"
 extend = "1.2.0"
 futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }
 itertools = "0.15.0"

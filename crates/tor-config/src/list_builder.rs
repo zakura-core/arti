@@ -116,7 +116,6 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-use educe::Educe;
 use itertools::Itertools;
 use serde::{Deserialize, Deserializer, Serialize};
 use thiserror::Error;
@@ -653,11 +652,18 @@ impl<'de, EB: Deserialize<'de>> Deserialize<'de> for MultilineListBuilder<EB> {
 }
 
 /// Visitor for deserialize_any for [`MultilineListBuilder`]
-#[derive(Educe)]
-#[educe(Default)]
 struct MllbVisitor<EB> {
     /// Variance: this visitor constructs `EB`s
     ret: PhantomData<fn() -> EB>,
+}
+
+impl<EB> core::default::Default for MllbVisitor<EB> {
+    #[inline]
+    fn default() -> Self {
+        MllbVisitor {
+            ret: <PhantomData<fn() -> EB> as core::default::Default>::default(),
+        }
+    }
 }
 
 impl<'de, EB: Deserialize<'de>> serde::de::Visitor<'de> for MllbVisitor<EB> {

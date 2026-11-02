@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use educe::Educe;
+
 use futures::{AsyncRead, AsyncWrite};
 use itertools::Itertools;
 use rand::RngExt;
@@ -73,8 +73,8 @@ macro_rules! DataTunnel{ { $R:ty, $M:ty } => {
 } }
 
 /// Information about a hidden service, including our connection history
-#[derive(Default, Educe)]
-#[educe(Debug)]
+#[derive(Default)]
+
 // This type is actually crate-private, since it isn't re-exported, but it must
 // be `pub` because it appears as a default for a type parameter in HsClientConnector.
 pub struct Data {
@@ -91,6 +91,17 @@ pub struct Data {
     ///
     /// Any HsDir that does not have an entry in this map can be requeried.
     hsdirs: DataHsDirs,
+}
+
+impl core::fmt::Debug for Data {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("Data");
+        builder.field("desc", &self.desc);
+        builder.field("ipts", &self.ipts);
+        builder.field("hsdirs", &self.hsdirs);
+        builder.finish()
+    }
 }
 
 /// An onion service descriptor and its associated HsBlindId.
@@ -1939,13 +1950,36 @@ mod test {
     use tor_rtmock::simple_time::SimpleMockTimeProvider;
     use tracing_test::traced_test;
 
-    #[derive(derive_more::Debug, Default)]
+    #[derive(Default)]
     struct MocksGlobal {
         hsdirs_asked: Vec<OwnedCircTarget>,
         got_desc: Option<HsDesc>,
-        #[debug(skip)]
+
         rendezvous: Option<Box<dyn MsgHandler + Send + 'static>>,
         intro_acks: Vec<(IntroduceAck, MetaCellDisposition)>,
+    }
+
+    impl core::fmt::Debug for MocksGlobal {
+        #[inline]
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let hsdirs_asked = &self.hsdirs_asked;
+            let got_desc = &self.got_desc;
+            let rendezvous = &self.rendezvous;
+            let intro_acks = &self.intro_acks;
+            core::fmt::DebugStruct::finish_non_exhaustive(core::fmt::DebugStruct::field(
+                core::fmt::DebugStruct::field(
+                    core::fmt::DebugStruct::field(
+                        &mut core::fmt::Formatter::debug_struct(formatter, "MocksGlobal"),
+                        "hsdirs_asked",
+                        &hsdirs_asked,
+                    ),
+                    "got_desc",
+                    &got_desc,
+                ),
+                "intro_acks",
+                &intro_acks,
+            ))
+        }
     }
 
     #[derive(Clone, Debug)]

@@ -167,129 +167,148 @@ impl fmt::Display for Pos {
 }
 
 /// A variety of parsing error.
-#[derive(Copy, Clone, Debug, derive_more::Display, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum NetdocErrorKind {
     /// An internal error in the parser: these should never happen.
-    #[display("internal error")]
     Internal,
     /// Invoked an API in an incorrect manner.
-    #[display("bad API usage")]
     BadApiUsage,
     /// An entry was found with no keyword.
-    #[display("no keyword for entry")]
     MissingKeyword,
     /// An entry was found with no newline at the end.
-    #[display("line truncated before newline")]
     TruncatedLine,
     /// A bad string was found in the keyword position.
-    #[display("invalid keyword")]
     BadKeyword,
     /// We found an ill-formed "BEGIN FOO" tag.
-    #[display("invalid PEM BEGIN tag")]
     BadObjectBeginTag,
     /// We found an ill-formed "END FOO" tag.
-    #[display("invalid PEM END tag")]
     BadObjectEndTag,
     /// We found a "BEGIN FOO" tag with an "END FOO" tag that didn't match.
-    #[display("mismatched PEM tags")]
     BadObjectMismatchedTag,
     /// We found a base64 object with an invalid base64 encoding.
-    #[display("invalid base64 in object")]
     BadObjectBase64,
     /// The document is not supposed to contain more than one of some
     /// kind of entry, but we found one anyway.
-    #[display("duplicate entry")]
     DuplicateToken,
     /// The document is not supposed to contain any of some particular kind
     /// of entry, but we found one anyway.
-    #[display("unexpected entry")]
     UnexpectedToken,
     /// The document is supposed to contain any of some particular kind
     /// of entry, but we didn't find one one anyway.
-    #[display("didn't find required entry")]
     MissingToken,
     /// The document was supposed to have one of these, but not where we
     /// found it.
-    #[display("entry out of place")]
     MisplacedToken,
     /// We found more arguments on an entry than it is allowed to have.
-    #[display("too many arguments")]
     TooManyArguments,
     /// We didn't fine enough arguments for some entry.
-    #[display("too few arguments")]
     TooFewArguments,
     /// We found an object attached to an entry that isn't supposed to
     /// have one.
-    #[display("unexpected object")]
     UnexpectedObject,
     /// An entry was supposed to have an object, but it didn't.
-    #[display("missing object")]
     MissingObject,
     /// We found an object on an entry, but the type was wrong.
-    #[display("wrong object type")]
     WrongObject,
     /// We tried to find an argument that we were sure would be there,
     /// but it wasn't!
     ///
     /// This error should never occur in correct code; it should be
     /// caught earlier by TooFewArguments.
-    #[display("missing argument")]
     MissingArgument,
     /// We found an argument that couldn't be parsed.
-    #[display("bad argument for entry")]
     BadArgument,
     /// We found an object that couldn't be parsed after it was decoded.
-    #[display("bad object for entry")]
     BadObjectVal,
     /// There was some signature that we couldn't validate.
-    #[display("couldn't validate signature")]
     BadSignature, // TODO(nickm): say which kind of signature.
     /// The object is not valid at the required time.
-    #[display("couldn't validate time bound")]
     BadTimeBound,
     /// There was a tor version we couldn't parse.
-    #[display("couldn't parse Tor version")]
     BadTorVersion,
     /// There was an ipv4 or ipv6 policy entry that we couldn't parse.
-    #[display("invalid policy entry")]
     BadPolicy,
     /// An underlying byte sequence couldn't be decoded.
-    #[display("decoding error")]
     Undecodable,
     /// Versioned document with an unrecognized version.
-    #[display("unrecognized document version")]
     BadDocumentVersion,
     /// Unexpected document type
-    #[display("unexpected document type")]
     BadDocumentType,
     /// We expected a kind of entry that we didn't find
-    #[display("missing entry")]
     MissingEntry,
     /// Document or section started with wrong token
-    #[display("Wrong starting token")]
     WrongStartingToken,
     /// Document or section ended with wrong token
-    #[display("Wrong ending token")]
     WrongEndingToken,
     /// Items not sorted as expected
-    #[display("Incorrect sort order")]
     WrongSortOrder,
     /// A consensus lifetime was ill-formed.
-    #[display("Invalid consensus lifetime")]
     InvalidLifetime,
     /// Found an empty line in the middle of a document
-    #[display("Empty line")]
     EmptyLine,
     /// The document began with a deprecated unicode BOM marker.
-    #[display("unexpected byte-order marker")]
     BomMarkerFound,
     /// The document contained an internal NUL byte
-    #[display("unexpected NUL")]
     NulFound,
     /// An item contained extra spaces at a place where they are not allowed.
-    #[display("Extraneous spaces")]
     ExtraneousSpace,
+}
+
+impl core::fmt::Display for NetdocErrorKind {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Internal => formatter.write_fmt(format_args!("internal error")),
+            Self::BadApiUsage => formatter.write_fmt(format_args!("bad API usage")),
+            Self::MissingKeyword => formatter.write_fmt(format_args!("no keyword for entry")),
+            Self::TruncatedLine => {
+                formatter.write_fmt(format_args!("line truncated before newline"))
+            }
+            Self::BadKeyword => formatter.write_fmt(format_args!("invalid keyword")),
+            Self::BadObjectBeginTag => formatter.write_fmt(format_args!("invalid PEM BEGIN tag")),
+            Self::BadObjectEndTag => formatter.write_fmt(format_args!("invalid PEM END tag")),
+            Self::BadObjectMismatchedTag => {
+                formatter.write_fmt(format_args!("mismatched PEM tags"))
+            }
+            Self::BadObjectBase64 => formatter.write_fmt(format_args!("invalid base64 in object")),
+            Self::DuplicateToken => formatter.write_fmt(format_args!("duplicate entry")),
+            Self::UnexpectedToken => formatter.write_fmt(format_args!("unexpected entry")),
+            Self::MissingToken => formatter.write_fmt(format_args!("didn\'t find required entry")),
+            Self::MisplacedToken => formatter.write_fmt(format_args!("entry out of place")),
+            Self::TooManyArguments => formatter.write_fmt(format_args!("too many arguments")),
+            Self::TooFewArguments => formatter.write_fmt(format_args!("too few arguments")),
+            Self::UnexpectedObject => formatter.write_fmt(format_args!("unexpected object")),
+            Self::MissingObject => formatter.write_fmt(format_args!("missing object")),
+            Self::WrongObject => formatter.write_fmt(format_args!("wrong object type")),
+            Self::MissingArgument => formatter.write_fmt(format_args!("missing argument")),
+            Self::BadArgument => formatter.write_fmt(format_args!("bad argument for entry")),
+            Self::BadObjectVal => formatter.write_fmt(format_args!("bad object for entry")),
+            Self::BadSignature => formatter.write_fmt(format_args!("couldn\'t validate signature")),
+            Self::BadTimeBound => {
+                formatter.write_fmt(format_args!("couldn\'t validate time bound"))
+            }
+            Self::BadTorVersion => formatter.write_fmt(format_args!("couldn\'t parse Tor version")),
+            Self::BadPolicy => formatter.write_fmt(format_args!("invalid policy entry")),
+            Self::Undecodable => formatter.write_fmt(format_args!("decoding error")),
+            Self::BadDocumentVersion => {
+                formatter.write_fmt(format_args!("unrecognized document version"))
+            }
+            Self::BadDocumentType => formatter.write_fmt(format_args!("unexpected document type")),
+            Self::MissingEntry => formatter.write_fmt(format_args!("missing entry")),
+            Self::WrongStartingToken => formatter.write_fmt(format_args!("Wrong starting token")),
+            Self::WrongEndingToken => formatter.write_fmt(format_args!("Wrong ending token")),
+            Self::WrongSortOrder => formatter.write_fmt(format_args!("Incorrect sort order")),
+            Self::InvalidLifetime => {
+                formatter.write_fmt(format_args!("Invalid consensus lifetime"))
+            }
+            Self::EmptyLine => formatter.write_fmt(format_args!("Empty line")),
+            Self::BomMarkerFound => {
+                formatter.write_fmt(format_args!("unexpected byte-order marker"))
+            }
+            Self::NulFound => formatter.write_fmt(format_args!("unexpected NUL")),
+            Self::ExtraneousSpace => formatter.write_fmt(format_args!("Extraneous spaces")),
+        }
+    }
 }
 
 /// The underlying source for an [`Error`](struct@Error).

@@ -11,19 +11,16 @@ use tor_basic_utils::PathExt as _;
 use tor_error::{Bug, ErrorKind, into_bad_api_usage};
 
 /// A resource that we failed to access or where we found a problem.
-#[derive(Debug, Clone, derive_more::Display)]
+#[derive(Debug, Clone)]
 pub(crate) enum Resource {
     /// The manager as a whole.
-    #[display("persistent storage manager")]
     Manager,
     /// A checked directory.
-    #[display("directory {}", dir.anonymize_home())]
     Directory {
         /// The path to the directory.
         dir: std::path::PathBuf,
     },
     /// A file on disk within our checked directory.
-    #[display("{} in {}", file.display_lossy(), container.anonymize_home())]
     File {
         /// The path to the checked directory
         container: std::path::PathBuf,
@@ -32,18 +29,11 @@ pub(crate) enum Resource {
     },
     /// Testing-only: a scratch-item in a memory-backed store.
     #[cfg(feature = "testing")]
-    #[display("{} in memory-backed store", key)]
     Temporary {
         /// The key for the scratch item
         key: String,
     },
     /// An instance state directory
-    #[display(
-        "instance {:?}/{:?} in {}",
-        kind,
-        identity,
-        state_dir.anonymize_home()
-    )]
     InstanceState {
         /// The path to the top-level state directory.
         state_dir: std::path::PathBuf,
@@ -54,27 +44,64 @@ pub(crate) enum Resource {
     },
 }
 
+impl core::fmt::Display for Resource {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Manager => formatter.write_fmt(format_args!("persistent storage manager")),
+            Self::Directory { dir } => {
+                formatter.write_fmt(format_args!("directory {0}", dir.anonymize_home()))
+            }
+            Self::File { container, file } => formatter.write_fmt(format_args!(
+                "{0} in {1}",
+                file.display_lossy(),
+                container.anonymize_home(),
+            )),
+            #[cfg(feature = "testing")]
+            Self::Temporary { key } => {
+                formatter.write_fmt(format_args!("{0} in memory-backed store", key))
+            }
+            Self::InstanceState {
+                state_dir,
+                kind,
+                identity,
+            } => formatter.write_fmt(format_args!(
+                "instance {0:?}/{1:?} in {2}",
+                kind,
+                identity,
+                state_dir.anonymize_home(),
+            )),
+        }
+    }
+}
+
 /// An action that we were trying to perform when an error occurred.
-#[derive(Debug, Clone, derive_more::Display, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub(crate) enum Action {
     /// We were trying to load an element from the store.
-    #[display("loading persistent data")]
     Loading,
     /// We were trying to save an element into the store.
-    #[display("storing persistent data")]
     Storing,
     /// We were trying to remove an element from the store.
-    #[display("deleting persistent data")]
     Deleting,
     /// We were trying to acquire the lock for the store.
-    #[display("acquiring lock")]
     Locking,
     /// We were trying to validate the storage and initialize the manager.
-    #[display("constructing storage manager")]
     Initializing,
     /// We were trying to enumerate state objects
-    #[display("enumerating instances")]
     Enumerating,
+}
+
+impl core::fmt::Display for Action {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Loading => formatter.write_fmt(format_args!("loading persistent data")),
+            Self::Storing => formatter.write_fmt(format_args!("storing persistent data")),
+            Self::Deleting => formatter.write_fmt(format_args!("deleting persistent data")),
+            Self::Locking => formatter.write_fmt(format_args!("acquiring lock")),
+            Self::Initializing => formatter.write_fmt(format_args!("constructing storage manager")),
+            Self::Enumerating => formatter.write_fmt(format_args!("enumerating instances")),
+        }
+    }
 }
 
 /// An underlying error manipulating persistent state.
@@ -139,8 +166,7 @@ impl From<BadSlug> for Error {
 }
 
 /// An error that occurred while manipulating persistent state.
-#[derive(Clone, Debug, derive_more::Display)]
-#[display("{} while {} on {}", source, action, resource)]
+#[derive(Clone, Debug)]
 pub struct Error {
     /// The underlying error failure.
     source: ErrorSource,
@@ -148,6 +174,18 @@ pub struct Error {
     action: Action,
     /// The resource we were trying to perform it on.
     resource: Resource,
+}
+
+impl core::fmt::Display for Error {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let source = &self.source;
+        let action = &self.action;
+        let resource = &self.resource;
+        formatter.write_fmt(format_args!(
+            "{0} while {1} on {2}",
+            source, action, resource
+        ))
+    }
 }
 
 impl std::error::Error for Error {

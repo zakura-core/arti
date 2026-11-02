@@ -90,16 +90,28 @@ use sealed::Sealed;
 /// Function with the signature of `Debug::fmt` that just prints `".."`
 ///
 /// ```
-/// use educe::Educe;
+/// use std::fmt;
 /// use tor_basic_utils::skip_fmt;
 ///
-/// #[derive(Educe, Default)]
-/// #[educe(Debug)]
+/// #[derive(Default)]
 /// struct Wombat {
 ///     visible: usize,
-///
-///     #[educe(Debug(method = "skip_fmt"))]
 ///     invisible: [u8; 2],
+/// }
+///
+/// struct Hidden<'a>(&'a [u8; 2]);
+/// impl fmt::Debug for Hidden<'_> {
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+///         skip_fmt(self.0, f)
+///     }
+/// }
+/// impl fmt::Debug for Wombat {
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+///         f.debug_struct("Wombat")
+///             .field("visible", &self.visible)
+///             .field("invisible", &Hidden(&self.invisible))
+///             .finish()
+///     }
 /// }
 ///
 /// assert_eq!( format!("{:?}", &Wombat::default()),
@@ -344,12 +356,16 @@ impl Sealed for Path {}
 /// }
 ///
 /// // imagine this in the higher-level module
-/// use derive_more::AsRef;
-/// #[derive(AsRef)]
 /// struct Everything {
-///     #[as_ref] lorem: String,
-///     #[as_ref] ipsum: usize,
+///     lorem: String,
+///     ipsum: usize,
 ///     dolor: Vec<()>,
+/// }
+/// impl AsRef<String> for Everything {
+///     fn as_ref(&self) -> &String { &self.lorem }
+/// }
+/// impl AsRef<usize> for Everything {
+///     fn as_ref(&self) -> &usize { &self.ipsum }
 /// }
 /// impl Supertrait for Everything { }
 /// impl View for Everything {
@@ -710,7 +726,6 @@ macro_rules! assert_val_impl_trait {
 }
 
 // ----------------------------------------------------------------------
-
 #[cfg(test)]
 mod test {
     // @@ begin test lint list maintained by maint/add_warning @@

@@ -526,9 +526,17 @@ pub struct CrossCert {
 /// # Specifications
 ///
 /// <https://spec.torproject.org/dir-spec/creating-key-certificates.html#item:dir-key-crosscert>
-#[derive(Clone, PartialEq, Eq, derive_more::Deref)]
+#[derive(Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct CrossCertObject(pub Vec<u8>);
+
+impl core::ops::Deref for CrossCertObject {
+    type Target = Vec<u8>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 impl_debug_hex! { CrossCertObject . 0 }
 
 impl CrossCert {

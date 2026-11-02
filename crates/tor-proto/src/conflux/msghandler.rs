@@ -330,20 +330,29 @@ pub(crate) enum ConfluxCmd {
 }
 
 /// The reason for removing a circuit leg from the conflux set.
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug)]
 pub(crate) enum RemoveLegReason {
     /// The conflux handshake timed out.
     ///
     /// On the client-side, this means we didn't receive
     /// the CONFLUX_LINKED response in time.
-    #[display("conflux handshake timed out")]
     ConfluxHandshakeTimeout,
     /// An error occurred during conflux handshake.
-    #[display("{}", _0)]
     ConfluxHandshakeErr(Error),
     /// The channel was closed.
-    #[display("channel closed")]
     ChannelClosed,
+}
+
+impl core::fmt::Display for RemoveLegReason {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::ConfluxHandshakeTimeout => {
+                formatter.write_fmt(format_args!("conflux handshake timed out"))
+            }
+            Self::ConfluxHandshakeErr(inner) => core::fmt::Display::fmt(inner, formatter),
+            Self::ChannelClosed => formatter.write_fmt(format_args!("channel closed")),
+        }
+    }
 }
 
 /// The conflux status of a conflux circuit.

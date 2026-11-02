@@ -146,15 +146,31 @@ pub(super) struct ConfluxSet {
 }
 
 /// The conflux join point.
-#[derive(Clone, derive_more::Debug)]
+#[derive(Clone)]
 struct JoinPoint {
     /// The hop number.
     hop: HopNum,
     /// The [`HopDetail`] of the hop.
     detail: HopDetail,
     /// The stream map of the joint point, shared with each circuit leg.
-    #[debug(skip)]
     streams: Arc<Mutex<streammap::StreamMap>>,
+}
+
+impl core::fmt::Debug for JoinPoint {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let hop = &self.hop;
+        let detail = &self.detail;
+        core::fmt::DebugStruct::finish_non_exhaustive(core::fmt::DebugStruct::field(
+            core::fmt::DebugStruct::field(
+                &mut core::fmt::Formatter::debug_struct(formatter, "JoinPoint"),
+                "hop",
+                &hop,
+            ),
+            "detail",
+            &detail,
+        ))
+    }
 }
 
 impl ConfluxSet {
@@ -1255,8 +1271,15 @@ impl ConfluxSet {
 
 /// An error returned when a method is expecting a single-leg conflux circuit,
 /// but it is not single-leg.
-#[derive(Clone, Debug, derive_more::Display, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub(super) struct NotSingleLegError(#[source] Bug);
+
+impl core::fmt::Display for NotSingleLegError {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
 
 impl From<NotSingleLegError> for Bug {
     fn from(e: NotSingleLegError) -> Self {

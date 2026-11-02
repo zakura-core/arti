@@ -4,7 +4,7 @@
 use std::{pin::Pin, task::Poll};
 
 use crate::skew::SkewEstimate;
-use educe::Educe;
+
 use futures::{Stream, StreamExt};
 use tor_basic_utils::skip_fmt;
 
@@ -14,15 +14,31 @@ use tor_basic_utils::skip_fmt;
 /// read from it, you will only get the most recent estimate.
 //
 // SEMVER NOTE: this type is re-exported from tor-circmgr.
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 pub struct ClockSkewEvents {
     /// The `tor_async_utils::watch::Receiver` that we're wrapping.
     ///
     /// We wrap this type so that we don't expose its entire API, and so that we
     /// can migrate to some other implementation in the future if we want.
-    #[educe(Debug(method = "skip_fmt"))]
     pub(crate) inner: tor_async_utils::watch::Receiver<Option<SkewEstimate>>,
+}
+
+impl core::fmt::Debug for ClockSkewEvents {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("ClockSkewEvents");
+        let arg = {
+            struct FormattedField<'a>(&'a tor_async_utils::watch::Receiver<Option<SkewEstimate>>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.inner)
+        };
+        builder.field("inner", &arg);
+        builder.finish()
+    }
 }
 
 impl Stream for ClockSkewEvents {

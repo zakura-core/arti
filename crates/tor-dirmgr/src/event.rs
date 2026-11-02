@@ -16,7 +16,6 @@ use std::{
     time::SystemTime,
 };
 
-use educe::Educe;
 use futures::{Future, StreamExt, stream::Stream};
 use itertools::chain;
 use paste::paste;
@@ -310,8 +309,7 @@ struct StatusEntry {
 }
 
 /// The status for a single directory.
-#[derive(Clone, Debug, Default, derive_more::Display)]
-#[display("{0}", progress)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct DirStatus {
     /// How much of the directory do we currently have?
     progress: DirProgress,
@@ -325,14 +323,19 @@ pub(crate) struct DirStatus {
     n_stalls: usize,
 }
 
+impl core::fmt::Display for DirStatus {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let progress = &self.progress;
+        core::fmt::Display::fmt(progress, formatter)
+    }
+}
+
 /// How much progress have we made in downloading a given directory?
 ///
 /// This is a separate type so that we don't make the variants public.
-#[derive(Clone, Debug, Educe)]
-#[educe(Default)]
+#[derive(Clone, Debug)]
 pub(crate) enum DirProgress {
     /// We don't have any information yet.
-    #[educe(Default)]
     NoConsensus {
         /// If present, we are fetching a consensus whose valid-after time
         /// postdates this time.
@@ -369,6 +372,15 @@ pub(crate) enum DirProgress {
     },
 }
 
+impl core::default::Default for DirProgress {
+    #[inline]
+    fn default() -> Self {
+        DirProgress::NoConsensus {
+            after: <Option<SystemTime> as core::default::Default>::default(),
+        }
+    }
+}
+
 /// A reported diagnostic for what kind of trouble we've seen while trying to
 /// bootstrap a directory.
 ///
@@ -385,7 +397,7 @@ pub(crate) enum DirProgress {
 // information. Probably, however, we should only do that after we get some
 // experience with which problems people encounter in practice, and what
 // diagnostics would be useful for them.
-#[derive(Clone, Debug, derive_more::Display)]
+#[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum DirBlockage {
     /// We've been downloading information without error, but we haven't
@@ -394,7 +406,6 @@ pub enum DirBlockage {
     /// This might indicate that there's a problem with information propagating
     /// through the Tor network, or it might indicate that a bogus consensus or
     /// a bad clock has tricked us into asking for something that nobody has.
-    #[display("Can't make progress.")]
     Stalled,
     /// We've gotten a lot of errors without making forward progress on our
     /// bootstrap attempt.
@@ -403,7 +414,6 @@ pub enum DirBlockage {
     /// there's something buggy with our ability to handle directory responses.
     /// It might also indicate a malfunction on our directory guards, or a bug
     /// on our retry logic.
-    #[display("Too many errors without making progress.")]
     TooManyErrors,
     /// We've reset our bootstrap attempt a lot of times.
     ///
@@ -411,8 +421,21 @@ pub enum DirBlockage {
     /// other reasons above, or that we keep getting served a consensus which
     /// turns out, upon trying to fetch certificates, not to be usable.  It can
     /// also indicate a bug in our retry logic.
-    #[display("Had to reset bootstrapping too many times.")]
     TooManyResets,
+}
+
+impl core::fmt::Display for DirBlockage {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Stalled => formatter.write_fmt(format_args!("Can\'t make progress.")),
+            Self::TooManyErrors => {
+                formatter.write_fmt(format_args!("Too many errors without making progress."))
+            }
+            Self::TooManyResets => {
+                formatter.write_fmt(format_args!("Had to reset bootstrapping too many times."))
+            }
+        }
+    }
 }
 
 impl fmt::Display for DirProgress {
@@ -772,15 +795,31 @@ impl DirProgress {
 }
 
 /// A stream of [`DirBootstrapStatus`] events.
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 pub struct DirBootstrapEvents {
     /// The `tor_async_utils::watch::Receiver` that we're wrapping.
     ///
     /// We wrap this type so that we don't expose its entire API, and so that we
     /// can migrate to some other implementation in the future if we want.
-    #[educe(Debug(method = "skip_fmt"))]
     pub(crate) inner: tor_async_utils::watch::Receiver<DirBootstrapStatus>,
+}
+
+impl core::fmt::Debug for DirBootstrapEvents {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("DirBootstrapEvents");
+        let arg = {
+            struct FormattedField<'a>(&'a tor_async_utils::watch::Receiver<DirBootstrapStatus>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.inner)
+        };
+        builder.field("inner", &arg);
+        builder.finish()
+    }
 }
 
 impl Stream for DirBootstrapEvents {

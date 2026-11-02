@@ -1521,21 +1521,29 @@ pub enum GuardRestriction {
 /// The kind of vanguards to use.
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)] //
 #[derive(Serialize, Deserialize)] //
-#[derive(derive_more::Display)] //
+//
 #[serde(rename_all = "lowercase")]
 #[cfg(feature = "vanguards")]
 #[non_exhaustive]
 pub enum VanguardMode {
     /// "Lite" vanguards.
     #[default]
-    #[display("lite")]
     Lite = 1,
     /// "Full" vanguards.
-    #[display("full")]
     Full = 2,
     /// Vanguards are disabled.
-    #[display("disabled")]
     Disabled = 0,
+}
+
+#[cfg(feature = "vanguards")]
+impl core::fmt::Display for VanguardMode {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Lite => formatter.write_fmt(format_args!("lite")),
+            Self::Full => formatter.write_fmt(format_args!("full")),
+            Self::Disabled => formatter.write_fmt(format_args!("disabled")),
+        }
+    }
 }
 
 #[cfg(feature = "vanguards")]
@@ -1582,15 +1590,23 @@ impl VanguardConfig {
 /// The kind of vanguards to use.
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)] //
 #[derive(Serialize, Deserialize)] //
-#[derive(derive_more::Display)] //
+//
 #[serde(rename_all = "lowercase")]
 #[cfg(not(feature = "vanguards"))]
 #[non_exhaustive]
 pub enum VanguardMode {
     /// Vanguards are disabled.
     #[default]
-    #[display("disabled")]
     Disabled = 0,
+}
+
+#[cfg(not(feature = "vanguards"))]
+impl core::fmt::Display for VanguardMode {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Disabled => formatter.write_fmt(format_args!("disabled")),
+        }
+    }
 }
 
 #[cfg(test)]

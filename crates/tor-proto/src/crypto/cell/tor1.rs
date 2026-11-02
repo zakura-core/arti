@@ -127,8 +127,16 @@ where
 
 /// An inbound relay layer, encrypting relay cells for a client.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-#[derive(derive_more::From)]
 pub(crate) struct RelayInbound<SC: StreamCipher, D: Digest + Clone>(CryptState<SC, D>);
+
+impl<SC: StreamCipher, D: Digest + Clone> core::convert::From<CryptState<SC, D>>
+    for RelayInbound<SC, D>
+{
+    #[inline]
+    fn from(value: CryptState<SC, D>) -> Self {
+        RelayInbound(value)
+    }
+}
 impl<SC: StreamCipher, D: Digest + Clone> InboundRelayLayer for RelayInbound<SC, D> {
     fn originate(&mut self, cmd: ChanCmd, cell: &mut RelayCellBody) -> SendmeTag {
         cell.set_digest::<_>(&mut self.0.digest, &mut self.0.last_sendme_tag);
@@ -143,8 +151,16 @@ impl<SC: StreamCipher, D: Digest + Clone> InboundRelayLayer for RelayInbound<SC,
 
 /// An outbound relay layer, decrypting relay cells from a client.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-#[derive(derive_more::From)]
 pub(crate) struct RelayOutbound<SC: StreamCipher, D: Digest + Clone>(CryptState<SC, D>);
+
+impl<SC: StreamCipher, D: Digest + Clone> core::convert::From<CryptState<SC, D>>
+    for RelayOutbound<SC, D>
+{
+    #[inline]
+    fn from(value: CryptState<SC, D>) -> Self {
+        RelayOutbound(value)
+    }
+}
 impl<SC: StreamCipher, D: Digest + Clone> OutboundRelayLayer for RelayOutbound<SC, D> {
     fn decrypt_outbound(&mut self, _cmd: ChanCmd, cell: &mut RelayCellBody) -> Option<SendmeTag> {
         // This is describe in tor-spec 5.5.2.2, "Relaying Forward at Onion Routers"
@@ -167,8 +183,16 @@ impl<SC: StreamCipher, D: Digest + Clone> RelayLayer<RelayOutbound<SC, D>, Relay
 
 /// An outbound client layer, encrypting relay cells for a relay.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-#[derive(derive_more::From)]
 pub(crate) struct ClientOutbound<SC: StreamCipher, D: Digest + Clone>(CryptState<SC, D>);
+
+impl<SC: StreamCipher, D: Digest + Clone> core::convert::From<CryptState<SC, D>>
+    for ClientOutbound<SC, D>
+{
+    #[inline]
+    fn from(value: CryptState<SC, D>) -> Self {
+        ClientOutbound(value)
+    }
+}
 
 impl<SC: StreamCipher, D: Digest + Clone> OutboundClientLayer for ClientOutbound<SC, D> {
     fn originate_for(&mut self, cmd: ChanCmd, cell: &mut RelayCellBody) -> SendmeTag {
@@ -185,8 +209,16 @@ impl<SC: StreamCipher, D: Digest + Clone> OutboundClientLayer for ClientOutbound
 
 /// An outbound client layer, decryption relay cells from a relay.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-#[derive(derive_more::From)]
 pub(crate) struct ClientInbound<SC: StreamCipher, D: Digest + Clone>(CryptState<SC, D>);
+
+impl<SC: StreamCipher, D: Digest + Clone> core::convert::From<CryptState<SC, D>>
+    for ClientInbound<SC, D>
+{
+    #[inline]
+    fn from(value: CryptState<SC, D>) -> Self {
+        ClientInbound(value)
+    }
+}
 impl<SC: StreamCipher, D: Digest + Clone> InboundClientLayer for ClientInbound<SC, D> {
     fn decrypt_inbound(&mut self, _cmd: ChanCmd, cell: &mut RelayCellBody) -> Option<SendmeTag> {
         // This is a single iteration of the loop described in tor-spec

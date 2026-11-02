@@ -241,14 +241,25 @@ impl PaddingRules {
 /// A opaque handle to a padding implementation for a single hop.
 ///
 /// This type is constructed with [`CircuitPadderConfig::create_padder`].
-#[derive(derive_more::Debug)]
+
 #[cfg_attr(feature = "circ-padding-manual", visibility::make(pub))]
 pub(crate) struct CircuitPadder {
     /// The initial padding stats and restrictions for inbound padding.
     initial_stats: PaddingStats,
     /// The underlying backend to use.
-    #[debug(skip)]
     backend: Box<dyn PaddingBackend>,
+}
+
+impl core::fmt::Debug for CircuitPadder {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let initial_stats = &self.initial_stats;
+        core::fmt::DebugStruct::finish_non_exhaustive(core::fmt::DebugStruct::field(
+            &mut core::fmt::Formatter::debug_struct(formatter, "CircuitPadder"),
+            "initial_stats",
+            &initial_stats,
+        ))
+    }
 }
 
 /// An instruction from the padding machine to the circuit.
@@ -416,14 +427,26 @@ const MAX_HOPS: usize = 64;
 /// A handle to the padding state of a single circuit.
 ///
 /// Used to tell the padders about events that they need to react to.
-#[derive(Clone, derive_more::Debug)]
+#[derive(Clone)]
 pub(crate) struct PaddingController<S = DynTimeProvider>
 where
     S: SleepProvider,
 {
     /// The underlying shared state.
-    #[debug(skip)]
     shared: Arc<Mutex<PaddingShared<S>>>,
+}
+
+impl<S> core::fmt::Debug for PaddingController<S>
+where
+    S: SleepProvider,
+{
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::DebugStruct::finish_non_exhaustive(&mut core::fmt::Formatter::debug_struct(
+            formatter,
+            "PaddingController",
+        ))
+    }
 }
 
 /// The shared state for a single circuit's padding.

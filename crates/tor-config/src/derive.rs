@@ -143,8 +143,7 @@ pub mod doc_howto {}
 /// The builder struct implements
 /// [`Builder`](crate::load::Builder),
 /// [`ConfigBuilder`](crate::load::ConfigBuilder),
-/// [`ExtendBuilder`](crate::extend_builder::ExtendBuilder)
-/// and [`Flattenable`](crate::Flattenable).
+/// and [`ExtendBuilder`](crate::extend_builder::ExtendBuilder).
 ///
 /// The _configuration struct_ receives a generated "builder" method,
 /// of type `fn () -> MyConfigBuilder`.
@@ -220,15 +219,6 @@ pub mod doc_generated_code {}
 /// Using this option will prevent your type from participating directly
 /// in the Arti configuration system.
 ///
-///
-/// <div id="tmeta:no_flattenable_trait">
-///
-/// ### `deftly(tor_config(no_flattenable_trait))`  — Don't derive Flattenable for the builder struct
-///
-/// </div>
-///
-/// By default, the generated Builder will derive [`Flattenable`](crate::Flattenable).
-/// This attribute suppresses that behavior.
 ///
 /// <div id="tmeta:no_extendbuilder_trait">
 ///
@@ -937,15 +927,14 @@ pub mod doc_generated_code {}
 ///
 /// </div>
 ///
-/// This option causes a field in the builder to be conditionally present or absent at compile time,
-/// similar to the ordinary [`cfg`] attribute.
-/// However, unlike with the ordinary `cfg` attribute,
-/// if the user provides any configuration values for this field when it is disabled,
-/// the generated `build()` code will emit a warning via [`tracing`] at runtime telling them
-/// what feature they would need to turn on.
+/// This option conditionally enables a builder field and its setters.
+/// When disabled, explicitly providing the field during deserialization is an
+/// error. The error describes the build capability named by `cfg_desc`.
+/// Disabled fields are omitted when serializing the builder, so its default
+/// representation can be deserialized again.
 ///
-/// If an error is more appropriate than a warning, additionally use
-/// [`cfg_reject`].
+/// Direct Rust builders keep their normal defaults. Internally marking a
+/// disabled field still warns during `build()`, or fails with [`cfg_reject`].
 ///
 /// > Note that you _cannot_ use this along with a regular [`cfg`] attribute,
 /// > since a regular [`cfg`] attribute would suppress the field altogether.
@@ -995,9 +984,9 @@ pub mod doc_generated_code {}
 ///
 /// Used alongside [`tor_config(cfg)`](#fmeta:cfg); see also that attribute's documentation.
 ///
-/// Usually, `tor_config(cfg)` causes a warning if values are provided
-/// for a compiled-out configuration option.
-/// When this attribute is present, then `tor_config(cfg)` causes an error instead.
+/// Deserialization always rejects a compiled-out field. This attribute also
+/// makes `build()` reject an internally marked disabled field, rather than
+/// warning about it.
 ///
 /// <div id="fmeta:cfg_desc">
 ///
@@ -1036,7 +1025,6 @@ pub mod doc_generated_code {}
 /// [`no_default_trait`]: crate::derive::doc_ref_attrs#tmeta:no_default_trait
 /// [`no_deserialize_trait`]: crate::derive::doc_ref_attrs#tmeta:no_deserialize_trait
 /// [`no_extendbuilder_trait`]: crate::derive::doc_ref_attrs#tmeta:no_extendbuilder_trait
-/// [`no_flattenable_trait`]: crate::derive::doc_ref_attrs#tmeta:no_flattenable_trait
 /// [`no_magic`]: crate::derive::doc_ref_attrs#fmeta:no_default
 /// [`post_build`]: crate::derive::doc_ref_attrs#tmeta:post_build
 /// [`serde`]:  crate::derive::doc_ref_attrs#fmeta:serde
@@ -1051,11 +1039,11 @@ pub mod doc_ref_attrs {}
 ///   field produces an error. Every field must declare its default behavior.
 /// * The appropriate Serde attributes are provided automatically.
 /// * Sub-builders, lists and maps are supported directly through attributes.
-/// * A `cfg` attribute can warn when a value targets a disabled field.
+/// * A `cfg` attribute rejects deserialization of a disabled field.
 /// * `pre_build` validates before construction; `post_build` can validate or
 ///   normalize the constructed configuration.
 /// * A top-level `build_fn` does not override sub-builder construction.
-/// * Builders implement `ExtendBuilder`, `Flattenable` and `Builder` by default;
+/// * Builders implement `ExtendBuilder` and `Builder` by default;
 ///   the configuration implements `Buildable`.
 /// * Setter and Serde behavior for common types follows Arti's conventions.
 ///
@@ -1178,7 +1166,6 @@ pub mod exports {
         bld_magic_cvt, bld_magic_setter_arg_type, bld_magic_setter_cvt, bld_magic_setter_docs,
         bld_magic_type, list_element, normalize_and_invoke, strip_option,
     };
-    pub use crate::flatten::derive_deftly_template_Flattenable;
     pub use crate::{
         ConfigBuildError, define_list_builder_accessors, define_list_builder_helper,
         define_map_builder,
@@ -1191,7 +1178,6 @@ pub mod exports {
     pub use derive_deftly::Deftly;
     pub use humantime_serde;
     pub use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    pub use serde_value;
     pub use std::{
         clone::Clone,
         convert::{AsRef, Into, TryInto},
@@ -1764,12 +1750,6 @@ define_derive_deftly! {
         ${fmeta(tor_config(field(vis))) as vis, default {} }
     }
 
-    // True if we want to derive Flattenable for the builder type
-    ${defcond DD_FLATTENABLE_ON_BUILDER
-        all(not(tmeta(tor_config(no_deserialize_trait))),
-            not(tmeta(tor_config(no_flattenable_trait)))
-        )}
-
     // Expands to the visibility for the current setter/accessor,
     // and for any types that we generate for it to expose.
     ${define SETTER_VIS {
@@ -1865,9 +1845,6 @@ define_derive_deftly! {
     ${if not(tmeta(tor_config(no_serialize_trait))) {
         #[derive($E::Serialize)]
     }}
-    ${if DD_FLATTENABLE_ON_BUILDER {
-        #[derive_deftly($E::Flattenable)]
-    }}
     ${tmeta(tor_config(attr)) as attrs}
     #[allow(dead_code)]
     ${tattrs non_exhaustive}
@@ -1891,18 +1868,41 @@ define_derive_deftly! {
             $IF_CFG
             $BLD_FVIS ${fdefine $fname} $BLD_FTYPE,
 
-            ${if all(SERDE, fmeta(tor_config(cfg))) {
-                /// Placeholder to catch attempts to use this field when
-                /// disabled by configuration.
-                ///
-                /// (This uses `serde_value` to make sure that Deserialize+Serialize is not
-                /// needlessly lossy.)
+            ${if fmeta(tor_config(cfg)) {
+                /// Marker for a conditionally unavailable field.
                 #[cfg(not(${fmeta(tor_config(cfg)) as token_stream} ))]
-                #[serde(default)]
-                ${fdefine $fname} $E::Option<$E::serde_value::Value>,
+                ${if SERDE { #[serde(default, skip_serializing)] }}
+                ${if not(tmeta(tor_config(no_deserialize_trait))) {
+                    #[serde(deserialize_with = ${concat
+                        "__reject_disabled_" $tname "_" $fname
+                    })]
+                }}
+                ${fdefine $fname} $E::Option<()>,
             }}
         )
     }
+
+    // Reject an explicitly supplied disabled field without buffering its value.
+    // A module-local function avoids adding bounds on the configuration type.
+    ${if not(tmeta(tor_config(no_deserialize_trait))) {
+      $(
+        ${when fmeta(tor_config(cfg))}
+        #[cfg(not(${fmeta(tor_config(cfg)) as token_stream} ))]
+        // Preserve the type name to distinguish names with identical snake case.
+        #[allow(non_snake_case)]
+        fn $<__reject_disabled_ $tname _ $fname><'de, D>(
+            _deserializer: D,
+        ) -> $E::Result<$E::Option<()>, D::Error>
+        where D: $E::Deserializer<'de>
+        {
+            Err(<D::Error as $crate::deps::serde::de::Error>::custom(${concat
+                "Unsupported configuration for '" $fname
+                "': the program was not built "
+                ${fmeta(tor_config(cfg_desc)) as str}
+            }))
+        }
+      )
+    }}
 
     // -------------------
     // Define any list-builder or map-builder types.
@@ -2426,7 +2426,9 @@ define_derive_deftly! {
             // TODO: doesn't work on generics. Do we care?  If so, how should we fix?
             fn test_impl_default() {
                 let def = super::$ttype::default();
-                let empty_config = $E::serde_value::Value::Map($E::Default::default());
+                let empty_config = $crate::deps::serde::de::value::MapDeserializer::<
+                    _, $crate::deps::serde::de::value::Error,
+                >::new(::std::iter::empty::<(::std::string::String, ())>());
                 let builder = <super::$<$ttype Builder> as $E::Deserialize>
                     ::deserialize(empty_config).unwrap();
                 let from_empty = builder.$BLD_NAME().unwrap();
@@ -2603,12 +2605,7 @@ mod test {
 
         #[derive(Deftly, Clone, Debug, PartialEq)]
         #[derive_deftly(TorConfig)]
-        #[deftly(tor_config(
-            no_serialize_trait,
-            no_test_default,
-            no_extendbuilder_trait,
-            no_flattenable_trait
-        ))]
+        #[deftly(tor_config(no_serialize_trait, no_test_default, no_extendbuilder_trait))]
         pub(super) struct CfgGeneric<T, U>
         where
             T: Clone + std::fmt::Debug + PartialEq + Default,
@@ -2897,29 +2894,75 @@ mod test {
         let v = b.build().unwrap();
         assert_eq!(v.flower_power, 12);
         assert_eq!(v.flower_power_err, 14);
+        let serialized = toml::to_string(&b).unwrap();
+        let roundtrip: t::CfgEnabledBuilder = toml::from_str(&serialized).unwrap();
+        assert_eq!(roundtrip.build().unwrap(), v);
         assert!(!logs_contain("no effect"));
     }
 
     #[test]
     #[traced_test]
     fn test_cfg_disabled() {
-        let s = r#"
-        time_travel = "hello world"
-        "#;
-        let b: t::CfgDisabledBuilder = toml::from_str(s).unwrap();
-        let v = b.build().unwrap();
-        assert_eq!(v.time_travel, 0);
-        assert!(logs_contain(
-            "Ignored configuration for 'time_travel'. \
-            This option has no effect unless the program is built with resublimated thiotimoline"
-        ));
+        use derive_deftly::Deftly;
 
-        let s = r#"
-        time_travel_err = "hello world"
-        "#;
-        let b: t::CfgDisabledBuilder = toml::from_str(s).unwrap();
-        let e = b.build().unwrap_err();
-        assert_matches!(e, ConfigBuildError::NoCompileTimeSupport { .. });
+        for field in ["time_travel", "time_travel_err"] {
+            for value in [r#""hello world""#, "true", "[1, 2]", "{ x = 1 }"] {
+                let input = format!("{field} = {value}");
+                let error = toml::from_str::<t::CfgDisabledBuilder>(&input)
+                    .unwrap_err()
+                    .to_string();
+                assert!(error.contains(&format!("Unsupported configuration for '{field}'")));
+                assert!(error.contains("with resublimated thiotimoline"));
+            }
+            let input = format!(r#"{{"{field}": null}}"#);
+            let error = serde_json::from_str::<t::CfgDisabledBuilder>(&input)
+                .unwrap_err()
+                .to_string();
+            assert!(error.contains(&format!("Unsupported configuration for '{field}'")));
+        }
+
+        let builder = t::CfgDisabledBuilder::default();
+        let value = builder.build().unwrap();
+        assert_eq!(value.time_travel, 0);
+        assert_eq!(value.time_travel_err, 0);
+        let serialized = serde_json::to_string(&builder).unwrap();
+        assert_eq!(serialized, "{}");
+        let roundtrip: t::CfgDisabledBuilder = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(roundtrip.build().unwrap(), value);
+        assert!(!logs_contain("Ignored configuration"));
+
+        #[derive(Deftly, Debug, Clone, PartialEq)]
+        #[derive_deftly(TorConfig)]
+        #[deftly(tor_config(no_serialize_trait, no_deserialize_trait))]
+        struct TypedOnly {
+            #[deftly(tor_config(default, cfg = { false }, cfg_desc = "for testing"))]
+            unavailable: u32,
+        }
+        assert_eq!(TypedOnly::builder().build().unwrap().unavailable, 0);
+        let mut typed = TypedOnly::builder();
+        typed.unavailable = Some(());
+        assert_eq!(typed.build().unwrap().unavailable, 0);
+        assert!(logs_contain("Ignored configuration for 'unavailable'"));
+
+        #[derive(Deftly, Debug, Clone, PartialEq)]
+        #[derive_deftly(TorConfig)]
+        #[deftly(tor_config(no_deserialize_trait))]
+        struct SerializeOnly {
+            #[deftly(tor_config(
+                default, cfg = { false }, cfg_reject, cfg_desc = "for testing"
+            ))]
+            unavailable: u32,
+        }
+        assert_eq!(
+            serde_json::to_string(&SerializeOnly::builder()).unwrap(),
+            "{}"
+        );
+        let mut serialize_only = SerializeOnly::builder();
+        serialize_only.unavailable = Some(());
+        assert_matches!(
+            serialize_only.build().unwrap_err(),
+            ConfigBuildError::NoCompileTimeSupport { .. }
+        );
     }
 
     #[test]

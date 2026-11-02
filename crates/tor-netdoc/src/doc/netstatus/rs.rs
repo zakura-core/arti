@@ -36,11 +36,10 @@ use tor_llcrypto::pk::rsa::RsaIdentity;
 /// This can either be a parsed Tor version, or an unparsed string.
 //
 // TODO: This might want to merge, at some point, with routerdesc::RelayPlatform.
-#[derive(Clone, Debug, Eq, PartialEq, Hash, derive_more::Display)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 #[non_exhaustive]
 pub enum SoftwareVersion {
     /// A Tor version
-    #[display("Tor {_0}")]
     CTor(TorVersion),
 
     /// A string we couldn't parse.
@@ -48,6 +47,15 @@ pub enum SoftwareVersion {
     /// This may be a C tor version that we couldn't parse,
     /// or some other software.
     Other(Intern<str>),
+}
+
+impl core::fmt::Display for SoftwareVersion {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::CTor(inner) => formatter.write_fmt(format_args!("Tor {0}", inner)),
+            Self::Other(inner) => core::fmt::Display::fmt(inner, formatter),
+        }
+    }
 }
 
 /// A cache of unparsable version strings.

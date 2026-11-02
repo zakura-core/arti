@@ -116,11 +116,18 @@ pub struct HsDesc {
 /// A type of authentication that is required when introducing to an onion
 /// service.
 #[non_exhaustive]
-#[derive(Debug, Clone, Copy, Eq, PartialEq, derive_more::Display)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum IntroAuthType {
     /// Ed25519 authentication is required.
-    #[display("ed25519")]
     Ed25519,
+}
+
+impl core::fmt::Display for IntroAuthType {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Ed25519 => formatter.write_fmt(format_args!("ed25519")),
+        }
+    }
 }
 
 /// Information in an onion service descriptor about a single

@@ -18,8 +18,6 @@ use crate::parse::rules::*;
 use crate::parse::tokenize::*;
 use crate::{NetdocErrorKind as EK, Result};
 
-use educe::Educe;
-
 /// Describe the rules for one section of a document.
 ///
 /// The rules are represented as a mapping from token index to
@@ -38,9 +36,15 @@ pub(crate) struct SectionRules<T: Keyword> {
 }
 
 /// The entry or entries for a particular keyword within a document.
-#[derive(Clone, Educe)]
-#[educe(Default)]
+#[derive(Clone)]
 struct TokVal<'a, K: Keyword>(Vec<Item<'a, K>>);
+
+impl<'a, K: Keyword> core::default::Default for TokVal<'a, K> {
+    #[inline]
+    fn default() -> Self {
+        TokVal(<Vec<Item<'a, K>> as core::default::Default>::default())
+    }
+}
 
 impl<'a, K: Keyword> TokVal<'a, K> {
     /// Return the number of Items for this value.

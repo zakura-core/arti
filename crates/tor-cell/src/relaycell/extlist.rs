@@ -24,12 +24,27 @@ use tor_memquota::{HasMemoryCostStructural, derive_deftly_template_HasMemoryCost
 /// * Parties MUST ignore any occurrences all occurrences of an extension
 ///   with a given type after the first such occurrence.
 /// * Extensions SHOULD be sent in numerically ascending order by type.
-#[derive(Clone, Debug, derive_more::Deref, derive_more::DerefMut, Deftly)]
+#[derive(Clone, Debug, Deftly)]
 #[derive_deftly(HasMemoryCost)]
 #[deftly(has_memory_cost(bounds = "T: HasMemoryCostStructural"))]
 pub(super) struct ExtList<T> {
     /// The extensions themselves.
     pub(super) extensions: Vec<T>,
+}
+
+impl<T> core::ops::Deref for ExtList<T> {
+    type Target = Vec<T>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.extensions
+    }
+}
+
+impl<T> core::ops::DerefMut for ExtList<T> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.extensions
+    }
 }
 impl<T> Default for ExtList<T> {
     fn default() -> Self {
@@ -40,10 +55,32 @@ impl<T> Default for ExtList<T> {
 }
 
 /// As ExtList, but held by reference.
-#[derive(Clone, Debug, derive_more::Deref, derive_more::DerefMut, derive_more::From)]
+#[derive(Clone, Debug)]
 pub(super) struct ExtListRef<'a, T> {
     /// A reference to a slice of extensions.
     extensions: &'a [T],
+}
+
+impl<'a, T> core::ops::Deref for ExtListRef<'a, T> {
+    type Target = &'a [T];
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.extensions
+    }
+}
+
+impl<'a, T> core::ops::DerefMut for ExtListRef<'a, T> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.extensions
+    }
+}
+
+impl<'a, T> core::convert::From<&'a [T]> for ExtListRef<'a, T> {
+    #[inline]
+    fn from(value: &'a [T]) -> Self {
+        ExtListRef { extensions: value }
+    }
 }
 
 /// A kind of extension that can be used with some kind of relay message.

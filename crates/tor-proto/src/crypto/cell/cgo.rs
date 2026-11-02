@@ -452,11 +452,22 @@ impl<EtBC: BlkCipher, PrfBC: BlkCipherEnc> CryptInit for CryptState<EtBC, PrfBC>
 
 /// An instance of CGO used for outbound client encryption.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-#[derive(Clone, derive_more::From)]
+#[derive(Clone)]
 pub(crate) struct ClientOutbound<EtBC, PrfBC>(CryptState<EtBC, PrfBC>)
 where
     EtBC: BlkCipherDec,
     PrfBC: BlkCipherEnc;
+
+impl<EtBC, PrfBC> core::convert::From<CryptState<EtBC, PrfBC>> for ClientOutbound<EtBC, PrfBC>
+where
+    EtBC: BlkCipherDec,
+    PrfBC: BlkCipherEnc,
+{
+    #[inline]
+    fn from(value: CryptState<EtBC, PrfBC>) -> Self {
+        ClientOutbound(value)
+    }
+}
 impl<EtBC, PrfBC> super::OutboundClientLayer for ClientOutbound<EtBC, PrfBC>
 where
     EtBC: BlkCipherDec,
@@ -481,11 +492,22 @@ where
 
 /// An instance of CGO used for inbound client encryption.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-#[derive(Clone, derive_more::From)]
+#[derive(Clone)]
 pub(crate) struct ClientInbound<EtBC, PrfBC>(CryptState<EtBC, PrfBC>)
 where
     EtBC: BlkCipherDec,
     PrfBC: BlkCipherEnc;
+
+impl<EtBC, PrfBC> core::convert::From<CryptState<EtBC, PrfBC>> for ClientInbound<EtBC, PrfBC>
+where
+    EtBC: BlkCipherDec,
+    PrfBC: BlkCipherEnc,
+{
+    #[inline]
+    fn from(value: CryptState<EtBC, PrfBC>) -> Self {
+        ClientInbound(value)
+    }
+}
 impl<EtBC, PrfBC> super::InboundClientLayer for ClientInbound<EtBC, PrfBC>
 where
     EtBC: BlkCipherDec,
@@ -512,11 +534,22 @@ where
 
 /// An instance of CGO used for outbound (away from the client) relay encryption.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-#[derive(Clone, derive_more::From)]
+#[derive(Clone)]
 pub(crate) struct RelayOutbound<EtBC, PrfBC>(CryptState<EtBC, PrfBC>)
 where
     EtBC: BlkCipherEnc,
     PrfBC: BlkCipherEnc;
+
+impl<EtBC, PrfBC> core::convert::From<CryptState<EtBC, PrfBC>> for RelayOutbound<EtBC, PrfBC>
+where
+    EtBC: BlkCipherEnc,
+    PrfBC: BlkCipherEnc,
+{
+    #[inline]
+    fn from(value: CryptState<EtBC, PrfBC>) -> Self {
+        RelayOutbound(value)
+    }
+}
 impl<EtBC, PrfBC> super::OutboundRelayLayer for RelayOutbound<EtBC, PrfBC>
 where
     EtBC: BlkCipherEnc,
@@ -539,11 +572,22 @@ where
 
 /// An instance of CGO used for inbound (towards the client) relay encryption.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-#[derive(Clone, derive_more::From)]
+#[derive(Clone)]
 pub(crate) struct RelayInbound<EtBC, PrfBC>(CryptState<EtBC, PrfBC>)
 where
     EtBC: BlkCipherEnc,
     PrfBC: BlkCipherEnc;
+
+impl<EtBC, PrfBC> core::convert::From<CryptState<EtBC, PrfBC>> for RelayInbound<EtBC, PrfBC>
+where
+    EtBC: BlkCipherEnc,
+    PrfBC: BlkCipherEnc,
+{
+    #[inline]
+    fn from(value: CryptState<EtBC, PrfBC>) -> Self {
+        RelayInbound(value)
+    }
+}
 impl<EtBC, PrfBC> super::InboundRelayLayer for RelayInbound<EtBC, PrfBC>
 where
     EtBC: BlkCipherEnc,

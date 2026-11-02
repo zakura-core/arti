@@ -57,13 +57,27 @@ pub trait EncodableItem: ItemType {
 }
 
 /// A public key, keypair, or key certificate.
-#[derive(Debug, Clone, derive_more::From)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum KeystoreItem {
     /// A public key or a keypair.
     Key(SshKeyData),
     /// A certificate.
     Cert(CertData),
+}
+
+impl core::convert::From<SshKeyData> for KeystoreItem {
+    #[inline]
+    fn from(value: SshKeyData) -> Self {
+        KeystoreItem::Key(value)
+    }
+}
+
+impl core::convert::From<CertData> for KeystoreItem {
+    #[inline]
+    fn from(value: CertData) -> Self {
+        KeystoreItem::Cert(value)
+    }
 }
 
 impl KeystoreItem {

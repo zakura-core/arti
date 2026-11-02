@@ -128,8 +128,7 @@
 /// ```ignore
 /// pub type ConnectionMap = BTreeMap<String, ConnConfig>;
 ///
-/// #[derive(Clone,Debug,Serialize,Educe)]
-/// #[educe(Deref,DerefMut)]
+/// #[derive(Clone,Debug,Serialize)]
 /// pub struct ConnectionMapBuilder(BTreeMap<String, ConnConfigBuilder);
 ///
 /// impl ConnectionMapBuilder {
@@ -213,10 +212,19 @@ macro_rules! define_map_builder {
         $v type $maptype = $mtype ;
 
         $(#[ $b_m ])*
-        #[derive(Clone,Debug,$crate::deps::serde::Serialize, $crate::deps::educe::Educe)]
-        #[educe(Deref, DerefMut)]
+        #[derive(Clone,Debug,$crate::deps::serde::Serialize)]
         #[serde(transparent)]
         $b_v struct $btype( $bmtype );
+
+        impl ::std::ops::Deref for $btype {
+            type Target = $bmtype;
+            #[inline]
+            fn deref(&self) -> &Self::Target { &self.0 }
+        }
+        impl ::std::ops::DerefMut for $btype {
+            #[inline]
+            fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+        }
 
         impl $btype {
             /// Construct the final map.

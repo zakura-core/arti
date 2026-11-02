@@ -1,7 +1,6 @@
 //! Code for exporting events from the channel manager.
 #![allow(dead_code, unreachable_pub)]
 
-use educe::Educe;
 use futures::{Stream, StreamExt};
 use std::fmt;
 use tor_async_utils::watch;
@@ -37,21 +36,32 @@ pub struct ConnStatus {
 }
 
 /// A problem detected while connecting to the Tor network.
-#[derive(Debug, Clone, Eq, PartialEq, derive_more::Display)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum ConnBlockage {
-    #[display("unable to connect to the internet")]
     /// We haven't been able to make successful TCP connections.
     NoTcp,
     /// We've made TCP connections, but our TLS connections either failed, or
     /// got hit by an attempted man-in-the-middle attack.
-    #[display("our internet connection seems to be filtered")]
     NoHandshake,
     /// We've made TCP connections, and our TLS connections mostly succeeded,
     /// but we encountered failures that are well explained by clock skew,
     /// or expired certificates.
-    #[display("relays all seem to be using expired certificates")]
     CertsExpired,
+}
+
+impl core::fmt::Display for ConnBlockage {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::NoTcp => formatter.write_fmt(format_args!("unable to connect to the internet")),
+            Self::NoHandshake => {
+                formatter.write_fmt(format_args!("our internet connection seems to be filtered"))
+            }
+            Self::CertsExpired => formatter.write_fmt(format_args!(
+                "relays all seem to be using expired certificates",
+            )),
+        }
+    }
 }
 
 impl ConnStatus {
@@ -151,15 +161,31 @@ impl fmt::Display for ConnStatus {
 /// Note that the bootstrap status is not monotonic: we might become less
 /// bootstrapped than we were before.  (For example, the internet could go
 /// down.)
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 pub struct ConnStatusEvents {
     /// The receiver that implements this stream.
     ///
     /// (We wrap it in a new type here so that we can replace the implementation
     /// later on if we need to.)
-    #[educe(Debug(method = "skip_fmt"))]
     inner: watch::Receiver<ConnStatus>,
+}
+
+impl core::fmt::Debug for ConnStatusEvents {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("ConnStatusEvents");
+        let arg = {
+            struct FormattedField<'a>(&'a watch::Receiver<ConnStatus>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.inner)
+        };
+        builder.field("inner", &arg);
+        builder.finish()
+    }
 }
 
 impl Stream for ConnStatusEvents {

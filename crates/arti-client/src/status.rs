@@ -3,7 +3,6 @@
 
 use std::{borrow::Cow, fmt, fmt::Display};
 
-use educe::Educe;
 use futures::{Stream, StreamExt};
 use tor_basic_utils::skip_fmt;
 use tor_chanmgr::{ConnBlockage, ConnStatus, ConnStatusEvents};
@@ -140,13 +139,20 @@ impl BootstrapStatus {
 }
 
 /// A reason why a client believes it is stuck.
-#[derive(Clone, Debug, derive_more::Display)]
-#[display("{} ({})", kind, message)]
+#[derive(Clone, Debug)]
 pub struct Blockage {
     /// Why do we think we're blocked?
     kind: BlockageKind,
     /// A human-readable message about the blockage.
     message: Cow<'static, str>,
+}
+
+impl core::fmt::Display for Blockage {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let kind = &self.kind;
+        let message = &self.message;
+        formatter.write_fmt(format_args!("{0} ({1})", kind, message))
+    }
 }
 
 impl Blockage {
@@ -164,33 +170,44 @@ impl Blockage {
 /// A specific type of blockage that a client believes it is experiencing.
 ///
 /// Used to distinguish among instances of [`Blockage`].
-#[derive(Clone, Debug, derive_more::Display)]
+#[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum BlockageKind {
     /// The client has been disabled.
     ///
     /// This happens is the client was built with `BootstrapBehavior::Manual`,
     /// and the client has not yet been told that it can bootstrap.
-    #[display("Client has been disabled")]
     Disabled,
     /// There is some kind of problem with connecting to the network.
-    #[display("We seem to be offline")]
     Offline,
     /// We can connect, but our connections seem to be filtered.
-    #[display("Our internet connection seems filtered")]
     Filtering,
     /// We have some other kind of problem connecting to Tor
-    #[display("Can't reach the Tor network")]
     CantReachTor,
     /// We believe our clock is set incorrectly, and that's preventing us from
     /// successfully with relays and/or from finding a directory that we trust.
-    #[display("Clock is skewed.")]
     ClockSkewed,
     /// We've encountered some kind of problem downloading directory
     /// information, and it doesn't seem to be caused by any particular
     /// connection problem.
-    #[display("Can't bootstrap a Tor directory.")]
     CantBootstrap,
+}
+
+impl core::fmt::Display for BlockageKind {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Disabled => formatter.write_fmt(format_args!("Client has been disabled")),
+            Self::Offline => formatter.write_fmt(format_args!("We seem to be offline")),
+            Self::Filtering => {
+                formatter.write_fmt(format_args!("Our internet connection seems filtered"))
+            }
+            Self::CantReachTor => formatter.write_fmt(format_args!("Can\'t reach the Tor network")),
+            Self::ClockSkewed => formatter.write_fmt(format_args!("Clock is skewed.")),
+            Self::CantBootstrap => {
+                formatter.write_fmt(format_args!("Can\'t bootstrap a Tor directory."))
+            }
+        }
+    }
 }
 
 impl From<ConnBlockage> for BlockageKind {
@@ -290,12 +307,28 @@ pub(crate) async fn report_status(
 // the future, and because some of the functionality exposed by Receiver (like
 // `borrow()` and the watch receiver’s other methods) are extraneous to the API
 // we want.
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 pub struct BootstrapEvents {
     /// The receiver that implements this stream.
-    #[educe(Debug(method = "skip_fmt"))]
     pub(crate) inner: tor_async_utils::watch::Receiver<BootstrapStatus>,
+}
+
+impl core::fmt::Debug for BootstrapEvents {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("BootstrapEvents");
+        let arg = {
+            struct FormattedField<'a>(&'a tor_async_utils::watch::Receiver<BootstrapStatus>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.inner)
+        };
+        builder.field("inner", &arg);
+        builder.finish()
+    }
 }
 
 impl Stream for BootstrapEvents {

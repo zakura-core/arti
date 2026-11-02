@@ -92,7 +92,7 @@ use void::ResultVoidExt as _;
 
 use derive_deftly::{Deftly, define_derive_deftly};
 use digest::Digest;
-use educe::Educe;
+
 use itertools::Itertools;
 use std::sync::LazyLock;
 use tor_checkable::{ExternallySigned, TimeBound, timed::TimeRangeBound};
@@ -284,9 +284,37 @@ use derive_deftly_template_Lifetime;
 /// As used in a `consensus-method` item:
 /// <https://spec.torproject.org/dir-spec/consensus-formats.html#item:consensus-method>
 #[derive(Debug, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash, Copy)] //
-#[derive(derive_more::From, derive_more::Into, derive_more::Display, derive_more::FromStr)]
 #[allow(clippy::exhaustive_structs)] // we're v unlikely to want to change this to u16 or u64
 pub struct ConsensusMethod(pub u32);
+
+impl core::convert::From<u32> for ConsensusMethod {
+    #[inline]
+    fn from(value: u32) -> Self {
+        ConsensusMethod(value)
+    }
+}
+
+impl core::convert::From<ConsensusMethod> for u32 {
+    #[inline]
+    fn from(value: ConsensusMethod) -> Self {
+        value.0
+    }
+}
+
+impl core::fmt::Display for ConsensusMethod {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
+
+impl core::str::FromStr for ConsensusMethod {
+    type Err = <u32 as core::str::FromStr>::Err;
+    #[inline]
+    fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
+        core::str::FromStr::from_str(s).map(Self)
+    }
+}
 impl NormalItemArgument for ConsensusMethod {}
 
 /// A set of consensus methods
@@ -376,11 +404,19 @@ pub struct VotingDelay {
 //  - Encoding throws `Bug` if the resulting document will be clearly garbage,
 //    forbidding `=`, whitespace, and controls.  If the supplied keywords are bizarre,
 //    it may generate surprising documents (eg, containing exciting Unicode).
-#[derive(Debug, Clone, Educe, Eq, PartialEq)]
-#[educe(Default)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct NetParams<T> {
     /// Map from keys to values.
     params: HashMap<String, T>,
+}
+
+impl<T> core::default::Default for NetParams<T> {
+    #[inline]
+    fn default() -> Self {
+        NetParams {
+            params: <HashMap<String, T> as core::default::Default>::default(),
+        }
+    }
 }
 
 impl<T> NetParams<T> {
@@ -573,8 +609,23 @@ impl ProtoStatuses {
 // TODO unify RecommendedTorVersions, RelayPlatform, TorVersion
 // When this is fixed, remove the workaround in netstatus::test::roundtrip_netstatus
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)] //
-#[derive(derive_more::Deref, derive_more::Into)]
+
 pub struct RecommendedTorVersions(BTreeSet<String>);
+
+impl core::ops::Deref for RecommendedTorVersions {
+    type Target = BTreeSet<String>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl core::convert::From<RecommendedTorVersions> for BTreeSet<String> {
+    #[inline]
+    fn from(value: RecommendedTorVersions) -> Self {
+        value.0
+    }
+}
 
 /// Erroneous "recommended Tor versions" information
 #[derive(Clone, Debug, Eq, PartialEq, thiserror::Error)]
@@ -809,9 +860,24 @@ pub enum DirectorySignatureHashAlgo {
 /// we must remember whether the argument was present.
 ///
 /// <https://spec.torproject.org/dir-spec/consensus-formats.html#item:directory-signature>
-#[derive(Debug, Clone, derive_more::Deref, derive_more::DerefMut)]
+#[derive(Debug, Clone)]
 #[allow(clippy::exhaustive_structs)]
 pub struct DigestAlgoInSignature(pub Option<KeywordOrString<DirectorySignatureHashAlgo>>);
+
+impl core::ops::Deref for DigestAlgoInSignature {
+    type Target = Option<KeywordOrString<DirectorySignatureHashAlgo>>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl core::ops::DerefMut for DigestAlgoInSignature {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 impl ItemArgumentParseable for DigestAlgoInSignature {
     fn from_args<'s>(args: &mut ArgumentStream<'s>) -> Result<Self, ArgumentError> {
@@ -994,11 +1060,30 @@ pub enum VoteVerifyFailed {
 }
 
 /// A shared random value produced by the directory authorities.
-#[derive(
-    Debug, Clone, Copy, Eq, PartialEq, derive_more::From, derive_more::Into, derive_more::AsRef,
-)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 // (This doesn't need to use CtByteArray; we don't really need to compare these.)
 pub struct SharedRandVal([u8; 32]);
+
+impl core::convert::From<[u8; 32]> for SharedRandVal {
+    #[inline]
+    fn from(value: [u8; 32]) -> Self {
+        SharedRandVal(value)
+    }
+}
+
+impl core::convert::From<SharedRandVal> for [u8; 32] {
+    #[inline]
+    fn from(value: SharedRandVal) -> Self {
+        value.0
+    }
+}
+
+impl core::convert::AsRef<[u8; 32]> for SharedRandVal {
+    #[inline]
+    fn as_ref(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
 
 /// A shared-random value produced by the directory authorities,
 /// along with meta-information about that value.

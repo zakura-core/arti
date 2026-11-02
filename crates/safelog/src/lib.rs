@@ -50,8 +50,6 @@
 //! <!-- @@ end lint list maintained by maint/add_warning @@ -->
 
 // TODO: Try making it not Deref and having expose+expose_mut instead; how bad is it?
-
-use educe::Educe;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -80,20 +78,77 @@ pub use flags::unsafe_logging_enabled;
 ///
 /// This behavior can be overridden locally by using
 /// [`with_safe_logging_suppressed`] and globally with [`disable_safe_logging`].
-#[derive(Educe, Clone, Copy)]
-#[educe(
-    Default(bound),
-    Deref,
-    DerefMut,
-    Eq(bound),
-    Hash(bound),
-    Ord(bound),
-    PartialEq(bound),
-    PartialOrd(bound)
-)]
+#[derive(Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Sensitive<T>(T);
+
+impl<T> core::default::Default for Sensitive<T>
+where
+    T: core::default::Default,
+{
+    #[inline]
+    fn default() -> Self {
+        Sensitive(<T as core::default::Default>::default())
+    }
+}
+
+impl<T> core::ops::Deref for Sensitive<T> {
+    type Target = T;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> core::ops::DerefMut for Sensitive<T> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T> core::cmp::PartialEq for Sensitive<T>
+where
+    T: core::cmp::PartialEq,
+{
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        !core::cmp::PartialEq::ne(&self.0, &other.0)
+    }
+}
+
+impl<T> core::cmp::Eq for Sensitive<T> where T: core::cmp::Eq {}
+
+impl<T> core::cmp::PartialOrd for Sensitive<T>
+where
+    T: core::cmp::PartialOrd,
+{
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        core::cmp::PartialOrd::partial_cmp(&self.0, &other.0)
+    }
+}
+
+impl<T> core::cmp::Ord for Sensitive<T>
+where
+    T: core::cmp::Ord,
+{
+    #[inline]
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        core::cmp::Ord::cmp(&self.0, &other.0)
+    }
+}
+
+impl<T> core::hash::Hash for Sensitive<T>
+where
+    T: core::hash::Hash,
+{
+    #[inline]
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        core::hash::Hash::hash(&self.0, state);
+    }
+}
 
 impl<T> Sensitive<T> {
     /// Create a new `Sensitive<T>`, wrapping a provided `value`.
@@ -210,8 +265,18 @@ impl_display_traits! {
 /// An object that may or may not be sensitive.
 ///
 /// See [`Sensitive`] for the guarantees it provides for the sensitive case.
-#[derive(Clone, derive_more::Display)]
+#[derive(Clone)]
 pub struct MaybeSensitive<T>(either::Either<T, Sensitive<T>>);
+
+impl<T> core::fmt::Display for MaybeSensitive<T>
+where
+    either::Either<T, Sensitive<T>>: core::fmt::Display,
+{
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
 
 impl<T> MaybeSensitive<T> {
     /// Build a sensitive container.
@@ -324,21 +389,84 @@ impl<'a, T: Redactable + ?Sized> Redactable for &'a T {
 }
 
 /// A wrapper around a `Redactable` that displays it in redacted format.
-#[derive(Educe, Clone, Copy)]
-#[educe(
-    Default(bound),
-    Deref,
-    DerefMut,
-    Eq(bound),
-    Hash(bound),
-    Ord(bound),
-    PartialEq(bound),
-    PartialOrd(bound)
-)]
-#[derive(derive_more::From)]
+#[derive(Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Redacted<T: Redactable>(T);
+
+impl<T: Redactable> core::default::Default for Redacted<T>
+where
+    T: core::default::Default,
+{
+    #[inline]
+    fn default() -> Self {
+        Redacted(<T as core::default::Default>::default())
+    }
+}
+
+impl<T: Redactable> core::ops::Deref for Redacted<T> {
+    type Target = T;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T: Redactable> core::ops::DerefMut for Redacted<T> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T: Redactable> core::cmp::PartialEq for Redacted<T>
+where
+    T: core::cmp::PartialEq,
+{
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        !core::cmp::PartialEq::ne(&self.0, &other.0)
+    }
+}
+
+impl<T: Redactable> core::cmp::Eq for Redacted<T> where T: core::cmp::Eq {}
+
+impl<T: Redactable> core::cmp::PartialOrd for Redacted<T>
+where
+    T: core::cmp::PartialOrd,
+{
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        core::cmp::PartialOrd::partial_cmp(&self.0, &other.0)
+    }
+}
+
+impl<T: Redactable> core::cmp::Ord for Redacted<T>
+where
+    T: core::cmp::Ord,
+{
+    #[inline]
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        core::cmp::Ord::cmp(&self.0, &other.0)
+    }
+}
+
+impl<T: Redactable> core::hash::Hash for Redacted<T>
+where
+    T: core::hash::Hash,
+{
+    #[inline]
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        core::hash::Hash::hash(&self.0, state);
+    }
+}
+
+impl<T: Redactable> core::convert::From<T> for Redacted<T> {
+    #[inline]
+    fn from(value: T) -> Self {
+        Redacted(value)
+    }
+}
 
 impl<T: Redactable> Redacted<T> {
     /// Create a new `Redacted`.
@@ -388,8 +516,18 @@ impl<T: Redactable> std::fmt::Debug for Redacted<T> {
 /// An object that may or may not be redacted.
 ///
 /// Used to implement conditional redaction
-#[derive(Clone, derive_more::Display)]
+#[derive(Clone)]
 pub struct MaybeRedacted<T: Redactable>(either::Either<T, Redacted<T>>);
+
+impl<T: Redactable> core::fmt::Display for MaybeRedacted<T>
+where
+    either::Either<T, Redacted<T>>: core::fmt::Display,
+{
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
 
 impl<T: Redactable> std::fmt::Debug for MaybeRedacted<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -461,14 +599,26 @@ where
 ///
 /// (If safe-logging is not enabled, it will de displayed in its unredacted form.)
 #[allow(clippy::exhaustive_structs)]
-#[derive(derive_more::AsRef)]
 pub struct DispRedacted<T: ?Sized>(pub T);
+
+impl<T: ?Sized> core::convert::AsRef<T> for DispRedacted<T> {
+    #[inline]
+    fn as_ref(&self) -> &T {
+        &self.0
+    }
+}
 
 /// A wrapper around a [`DisplayRedacted`] that implements [`Display`](std::fmt::Display)
 /// by displaying the object in its un-redacted form.
 #[allow(clippy::exhaustive_structs)]
-#[derive(derive_more::AsRef)]
 pub struct DispUnredacted<T: ?Sized>(pub T);
+
+impl<T: ?Sized> core::convert::AsRef<T> for DispUnredacted<T> {
+    #[inline]
+    fn as_ref(&self) -> &T {
+        &self.0
+    }
+}
 
 impl<T> std::fmt::Display for DispRedacted<T>
 where
@@ -557,7 +707,7 @@ mod test {
 
     #[test]
     fn clone_bound() {
-        // Here we'll make sure that educe bounds work about the way we expect.
+        // Check that cloning the wrappers has the intended trait bounds.
         #[derive(Clone)]
         struct A;
         struct B;

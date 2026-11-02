@@ -45,8 +45,6 @@ base64ct = "1.8"
 caret = { package = "zakura-caret", path = "../caret", version = "0.11.0-zakura.1" }
 cfg-if = "1.0.5"
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
-derive_more = { version = "2.1.1", features = ["full"] }
-educe = "0.4.23"
 futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }
 httparse = "1.10"
 metrics = { version = "0.24.6", optional = true }

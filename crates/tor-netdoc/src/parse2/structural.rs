@@ -5,9 +5,17 @@ use super::*;
 /// Predicate for testing whether a keyword is a structural one that we should stop at
 ///
 /// This helper type allows us to compose predicates in curried form with `|`.
-#[derive(Debug, Copy, Clone, derive_more::Deref)]
+#[derive(Debug, Copy, Clone)]
 #[allow(clippy::exhaustive_structs)]
 pub struct StopAt<P: StopPredicate>(pub P);
+
+impl<P: StopPredicate> core::ops::Deref for StopAt<P> {
+    type Target = P;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 /// Raw predicate, usually a closure, that can appear within `StopAt`.
 ///

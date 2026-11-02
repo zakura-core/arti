@@ -31,7 +31,6 @@ use std::pin::Pin;
 // TODO, coarsetime maybe?  But see arti#496 and also we want to use the mockable SleepProvider
 use web_time_compat::{Duration, Instant};
 
-use educe::Educe;
 use futures::FutureExt;
 use futures::future::{self, FusedFuture};
 use pin_project::pin_project;
@@ -221,8 +220,6 @@ struct PreparedParameters {
 }
 
 /// Return value from `prepare_to_sleep`: instructions for what caller ought to do
-#[derive(Educe)]
-#[educe(Debug)]
 enum SleepInstructions<'f, R: SleepProvider> {
     /// Caller should send padding immediately
     Immediate {
@@ -232,7 +229,26 @@ enum SleepInstructions<'f, R: SleepProvider> {
     /// Caller should wait forever
     Forever,
     /// Caller should `await` this
-    Waker(#[educe(Debug(ignore))] Pin<&'f mut R::SleepFuture>),
+    Waker(Pin<&'f mut R::SleepFuture>),
+}
+
+impl<'f, R: SleepProvider> core::fmt::Debug for SleepInstructions<'f, R> {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            SleepInstructions::Immediate { now } => {
+                let mut builder = formatter.debug_struct("Immediate");
+                builder.field("now", now);
+                builder.finish()
+            }
+            SleepInstructions::Forever => formatter.write_str("Forever"),
+            SleepInstructions::Waker(_) => {
+                let mut builder = formatter.debug_tuple("Waker");
+                builder.finish()
+            }
+        }
+    }
 }
 
 impl<R: SleepProvider> Timer<R> {
@@ -627,7 +643,6 @@ mod test {
         //  deviation of the CDF power from B^2 to B^1.98
         //  wrong minimum value by 25ms out of 12s, low_ms = min + 25
         //  wrong maximum value by 10ms out of 12s, high_ms = max -1 - 10
-
         #[allow(non_snake_case)]
         let mut N = 100_0000;
 

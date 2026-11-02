@@ -16,7 +16,6 @@
 //!    well-formed? For open streams, the streams themselves handle this check.
 //!    For half-closed streams, the reactor handles it by calling
 //!    `consume_checked_msg()`.
-
 pub(crate) mod circuit;
 mod conflux;
 mod control;
@@ -61,7 +60,7 @@ use crate::channel::Channel;
 use crate::conflux::msghandler::RemoveLegReason;
 use crate::crypto::handshake::ntor::{NtorClient, NtorPublicKey};
 use circuit::CircuitCmd;
-use derive_more::From;
+
 use smallvec::smallvec;
 use tor_cell::chancell::CircId;
 use tor_llcrypto::pk;
@@ -120,7 +119,7 @@ pub(crate) enum CircuitHandshake {
 // and coming up with more intuitive names.
 
 /// One or more [`RunOnceCmdInner`] to run inside [`Reactor::run_once`].
-#[derive(From, Debug)]
+#[derive(Debug)]
 #[allow(clippy::large_enum_variant)] // TODO #2003: resolve this
 enum RunOnceCmd {
     /// Run a single `RunOnceCmdInner` command.
@@ -134,14 +133,26 @@ enum RunOnceCmd {
     Multiple(Vec<RunOnceCmdInner>),
 }
 
+impl core::convert::From<RunOnceCmdInner> for RunOnceCmd {
+    #[inline]
+    fn from(value: RunOnceCmdInner) -> Self {
+        RunOnceCmd::Single(value)
+    }
+}
+
+impl core::convert::From<Vec<RunOnceCmdInner>> for RunOnceCmd {
+    #[inline]
+    fn from(value: Vec<RunOnceCmdInner>) -> Self {
+        RunOnceCmd::Multiple(value)
+    }
+}
+
 /// Instructions for running something in the reactor loop.
 ///
 /// Run at the end of [`Reactor::run_once`].
 //
 // TODO: many of the variants of this enum have an identical CtrlMsg counterpart.
 // We should consider making each variant a tuple variant and deduplicating the fields.
-#[derive(educe::Educe)]
-#[educe(Debug)]
 enum RunOnceCmdInner {
     /// Send a RELAY cell.
     Send {
@@ -161,7 +172,6 @@ enum RunOnceCmdInner {
         /// A message handler to install.
         ///
         /// If this is `None`, there must already be a message handler installed
-        #[educe(Debug(ignore))]
         handler: Option<Box<dyn MetaCellHandler + Send + 'static>>,
         /// A sender that we use to tell the caller that the message was sent
         /// and the handler installed.
@@ -263,7 +273,6 @@ enum RunOnceCmdInner {
     #[cfg(feature = "conflux")]
     Link {
         /// The circuits to link into the tunnel
-        #[educe(Debug(ignore))]
         circuits: Vec<Circuit>,
         /// Oneshot channel for notifying of conflux handshake completion.
         answer: ConfluxLinkResultChannel,
@@ -286,6 +295,125 @@ enum RunOnceCmdInner {
     },
     /// Perform a clean shutdown on this circuit.
     CleanShutdown,
+}
+
+impl core::fmt::Debug for RunOnceCmdInner {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            RunOnceCmdInner::Send { leg, cell, done } => {
+                let mut builder = formatter.debug_struct("Send");
+                builder.field("leg", leg);
+                builder.field("cell", cell);
+                builder.field("done", done);
+                builder.finish()
+            }
+            #[cfg(feature = "send-control-msg")]
+            RunOnceCmdInner::SendMsgAndInstallHandler {
+                msg,
+                handler: _,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("SendMsgAndInstallHandler");
+                builder.field("msg", msg);
+                builder.field("done", done);
+                builder.finish()
+            }
+            RunOnceCmdInner::HandleSendMe { leg, hop, sendme } => {
+                let mut builder = formatter.debug_struct("HandleSendMe");
+                builder.field("leg", leg);
+                builder.field("hop", hop);
+                builder.field("sendme", sendme);
+                builder.finish()
+            }
+            RunOnceCmdInner::BeginStream {
+                cell,
+                stream_id,
+                hop,
+                leg,
+                stream_components,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("BeginStream");
+                builder.field("cell", cell);
+                builder.field("stream_id", stream_id);
+                builder.field("hop", hop);
+                builder.field("leg", leg);
+                builder.field("stream_components", stream_components);
+                builder.field("done", done);
+                builder.finish()
+            }
+            RunOnceCmdInner::MaybeSendXon {
+                rate,
+                stream_id,
+                hop,
+            } => {
+                let mut builder = formatter.debug_struct("MaybeSendXon");
+                builder.field("rate", rate);
+                builder.field("stream_id", stream_id);
+                builder.field("hop", hop);
+                builder.finish()
+            }
+            RunOnceCmdInner::CloseStream {
+                hop,
+                sid,
+                behav,
+                reason,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("CloseStream");
+                builder.field("hop", hop);
+                builder.field("sid", sid);
+                builder.field("behav", behav);
+                builder.field("reason", reason);
+                builder.field("done", done);
+                builder.finish()
+            }
+            RunOnceCmdInner::FirstHopClockSkew { answer } => {
+                let mut builder = formatter.debug_struct("FirstHopClockSkew");
+                builder.field("answer", answer);
+                builder.finish()
+            }
+            RunOnceCmdInner::RemoveLeg { leg, reason } => {
+                let mut builder = formatter.debug_struct("RemoveLeg");
+                builder.field("leg", leg);
+                builder.field("reason", reason);
+                builder.finish()
+            }
+            #[cfg(feature = "conflux")]
+            RunOnceCmdInner::ConfluxHandshakeComplete { leg, cell } => {
+                let mut builder = formatter.debug_struct("ConfluxHandshakeComplete");
+                builder.field("leg", leg);
+                builder.field("cell", cell);
+                builder.finish()
+            }
+            #[cfg(feature = "conflux")]
+            RunOnceCmdInner::Link {
+                circuits: _,
+                answer,
+            } => {
+                let mut builder = formatter.debug_struct("Link");
+                builder.field("answer", answer);
+                builder.finish()
+            }
+            #[cfg(feature = "conflux")]
+            RunOnceCmdInner::Enqueue { leg, msg } => {
+                let mut builder = formatter.debug_struct("Enqueue");
+                builder.field("leg", leg);
+                builder.field("msg", msg);
+                builder.finish()
+            }
+            #[cfg(feature = "circ-padding")]
+            RunOnceCmdInner::PaddingAction { leg, padding_event } => {
+                let mut builder = formatter.debug_struct("PaddingAction");
+                builder.field("leg", leg);
+                builder.field("padding_event", padding_event);
+                builder.finish()
+            }
+            RunOnceCmdInner::CleanShutdown => formatter.write_str("CleanShutdown"),
+        }
+    }
 }
 
 impl RunOnceCmdInner {
@@ -329,7 +457,7 @@ impl RunOnceCmdInner {
 }
 
 /// A command to execute at the end of [`Reactor::run_once`].
-#[derive(From, Debug)]
+#[derive(Debug)]
 #[allow(clippy::large_enum_variant)] // TODO #2003: should we resolve this?
 enum CircuitEvent {
     /// Run a single `CircuitCmd` command.
@@ -385,6 +513,60 @@ enum CircuitEvent {
         /// The error that causes this protocol violation.
         err: crate::Error,
     },
+}
+
+impl core::convert::From<(UniqId, CircuitCmd)> for CircuitEvent {
+    #[inline]
+    fn from(value: (UniqId, CircuitCmd)) -> Self {
+        CircuitEvent::RunCmd {
+            leg: value.0,
+            cmd: value.1,
+        }
+    }
+}
+
+impl core::convert::From<CtrlMsg> for CircuitEvent {
+    #[inline]
+    fn from(value: CtrlMsg) -> Self {
+        CircuitEvent::HandleControl(value)
+    }
+}
+
+impl core::convert::From<(UniqId, ClientCircChanMsg)> for CircuitEvent {
+    #[inline]
+    fn from(value: (UniqId, ClientCircChanMsg)) -> Self {
+        CircuitEvent::HandleCell {
+            leg: value.0,
+            cell: value.1,
+        }
+    }
+}
+
+impl core::convert::From<(UniqId, RemoveLegReason)> for CircuitEvent {
+    #[inline]
+    fn from(value: (UniqId, RemoveLegReason)) -> Self {
+        CircuitEvent::RemoveLeg {
+            leg: value.0,
+            reason: value.1,
+        }
+    }
+}
+
+impl core::convert::From<(UniqId, PaddingEvent)> for CircuitEvent {
+    #[inline]
+    fn from(value: (UniqId, PaddingEvent)) -> Self {
+        CircuitEvent::PaddingAction {
+            leg: value.0,
+            padding_event: value.1,
+        }
+    }
+}
+
+impl core::convert::From<crate::Error> for CircuitEvent {
+    #[inline]
+    fn from(value: crate::Error) -> Self {
+        CircuitEvent::ProtoViolation { err: value }
+    }
 }
 
 impl CircuitEvent {
@@ -1129,7 +1311,6 @@ impl Reactor {
                 // If we reach this point, it means we have more than one leg
                 // (otherwise the .remove() would've returned a Shutdown error),
                 // so we expect there to be a ConfluxHandshakeContext installed.
-
                 #[cfg(feature = "conflux")]
                 if is_conflux_pending {
                     let (error, proto_violation): (_, Option<Error>) = match &reason {

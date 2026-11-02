@@ -133,7 +133,7 @@ mod test {
     #![allow(clippy::string_slice)] // See arti#2571
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
     use super::*;
-    use educe::Educe;
+
     use std::fmt::Debug;
     use void::{ResultVoidExt as _, Void};
 
@@ -145,26 +145,58 @@ mod test {
     ///
     /// Comparisons use only the value in `v`, but we track its value identity,
     /// which lets us see (for example) whether an "equal" update did anything.
-    #[derive(Debug, Clone, Educe)]
-    #[educe(PartialEq)]
+    #[derive(Debug, Clone)]
     struct Value {
         v: char,
-        #[educe(PartialEq(ignore))]
+
         id: Id,
+    }
+
+    impl core::cmp::PartialEq for Value {
+        #[inline]
+        fn eq(&self, other: &Self) -> bool {
+            if core::cmp::PartialEq::ne(&self.v, &other.v) {
+                return false;
+            }
+            true
+        }
     }
 
     /// Test wrapper for `RangeInclusiveMap`
     ///
     /// Maintains a separate copy of the expected current V for each K, in `reference`.
     /// Cross-checks it.
-    #[derive(Debug, Clone, Educe)]
-    #[educe(Default, PartialEq)]
+    #[derive(Debug, Clone)]
     struct TestState {
         map: RangeInclusiveMap<u8, Value>,
-        #[educe(Default(expression = "[None; _]"))] // Only short arrays are Default :-/
+        // Only short arrays are Default :-/
         reference: [Option<char>; 256],
-        #[educe(PartialEq(ignore))]
+
         ids: IdGenerator,
+    }
+
+    impl core::default::Default for TestState {
+        #[inline]
+        fn default() -> Self {
+            TestState {
+                map: <RangeInclusiveMap<u8, Value> as core::default::Default>::default(),
+                reference: [None; _],
+                ids: <IdGenerator as core::default::Default>::default(),
+            }
+        }
+    }
+
+    impl core::cmp::PartialEq for TestState {
+        #[inline]
+        fn eq(&self, other: &Self) -> bool {
+            if core::cmp::PartialEq::ne(&self.map, &other.map) {
+                return false;
+            }
+            if core::cmp::PartialEq::ne(&self.reference, &other.reference) {
+                return false;
+            }
+            true
+        }
     }
 
     /// avoids constant repetition of `let ; += 1;` pattern

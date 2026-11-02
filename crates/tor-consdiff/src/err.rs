@@ -1,7 +1,6 @@
 //! Declare an error type for the tor-consdiff crate.
 
 use thiserror::Error;
-use tor_netdoc::parse2;
 
 use std::num::ParseIntError;
 
@@ -15,7 +14,7 @@ pub enum Error {
     #[error("Invalid diff: {0}")]
     BadDiff(&'static str),
 
-    /// We received or generated a diff that is implausibly large.
+    /// We received a diff that is implausibly large.
     #[error("Diff too large in relation to consensus")]
     DiffTooLarge,
 
@@ -23,15 +22,6 @@ pub enum Error {
     /// to the given input.
     #[error("Diff didn't apply to input: {0}")]
     CantApply(&'static str),
-
-    /// Invalid input for consdiff computation supplied, most likely not a valid
-    /// consensus.
-    #[error("Invalid input supplied: {0}")]
-    InvalidInput(parse2::ParseError),
-
-    /// Internal error.
-    #[error("Internal error")]
-    Bug(tor_error::Bug),
 }
 
 impl From<ParseIntError> for Error {
@@ -43,42 +33,4 @@ impl From<hex::FromHexError> for Error {
     fn from(_e: hex::FromHexError) -> Error {
         Error::BadDiff("invalid hexadecimal in 'hash' line")
     }
-}
-
-impl From<parse2::ParseError> for Error {
-    fn from(e: parse2::ParseError) -> Self {
-        Self::InvalidInput(e)
-    }
-}
-
-impl From<tor_error::Bug> for Error {
-    fn from(e: tor_error::Bug) -> Self {
-        Self::Bug(e)
-    }
-}
-
-/// An error type for consensus diff generation.
-///
-// TODO: Potentially make this a first-class citizen error and rename Error to
-// ApplyConsDiffError.
-#[derive(Clone, Debug, Error, PartialEq, Eq)]
-pub(crate) enum GenEdDiffError {
-    /// Line does not end with a Unix line ending.
-    #[error("Line {lno} does not end with a Unix line ending")]
-    MissingUnixLineEnding {
-        /// The line number of the missing newline.
-        lno: usize,
-    },
-
-    /// Diff results in the insertion of a line with a single dot, which is not
-    /// possible according to the specification.
-    #[error("Dotline found at {lno}")]
-    ContainsDotLine {
-        /// The line number of the missing newline.
-        lno: usize,
-    },
-
-    /// Formatting error, mostly convenience to allow for `?` in write calls.
-    #[error("Formatting error: {0}")]
-    Write(#[from] std::fmt::Error),
 }

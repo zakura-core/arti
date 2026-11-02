@@ -345,8 +345,6 @@ pub(crate) struct StreamReqInfo {
 pub(crate) type StreamReqSender = mq_queue::Sender<StreamReqInfo, MpscSpec>;
 
 /// Data required for handling an incoming stream request.
-#[derive(educe::Educe)]
-#[educe(Debug)]
 #[cfg(any(feature = "hs-service", feature = "relay"))]
 pub(crate) struct IncomingStreamRequestHandler {
     /// A sender for sharing information about an incoming stream request.
@@ -359,8 +357,19 @@ pub(crate) struct IncomingStreamRequestHandler {
     pub(crate) cmd_checker: AnyCmdChecker,
     /// An [`IncomingStreamRequestFilter`] for checking whether the user wants
     /// this request, or wants to reject it immediately.
-    #[educe(Debug(ignore))]
     pub(crate) filter: Box<dyn IncomingStreamRequestFilter>,
+}
+
+#[cfg(any(feature = "hs-service", feature = "relay"))]
+impl core::fmt::Debug for IncomingStreamRequestHandler {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("IncomingStreamRequestHandler");
+        builder.field("incoming_sender", &self.incoming_sender);
+        builder.field("hop_num", &self.hop_num);
+        builder.field("cmd_checker", &self.cmd_checker);
+        builder.finish()
+    }
 }
 
 #[cfg(test)]
