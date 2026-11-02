@@ -4312,17 +4312,12 @@ dependencies = [
 name = "zakura-tor-consdiff"
 version = "0.47.0-zakura.1"
 dependencies = [
- "derive_more",
  "digest 0.10.7",
  "hex",
- "imara-diff",
  "rand 0.10.3",
- "static_assertions",
  "thiserror 2.0.21",
  "zakura-tor-basic-utils",
- "zakura-tor-error",
  "zakura-tor-llcrypto",
- "zakura-tor-netdoc",
 ]
 
 [[package]]

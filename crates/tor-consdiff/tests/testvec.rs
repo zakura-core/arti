@@ -11,10 +11,17 @@ fn apply_tricky() {
 }
 
 #[test]
-fn gen_tricky() {
+fn apply_replacement() {
     let base = include_str!("../testdata/consensus1.txt");
     let target = include_str!("../testdata/consensus2.txt");
-    let diff = tor_consdiff::gen_cons_diff(base, target, NoSizeCheck).unwrap();
+    // Use the independently generated fixture's frozen signed-input and
+    // target hashes, then replace the whole document without an LCS provider.
+    let header = include_str!("../testdata/diff1.txt")
+        .lines()
+        .take(2)
+        .collect::<Vec<_>>()
+        .join("\n");
+    let diff = format!("{header}\n1,$d\n0a\n{target}.\n");
 
     assert_eq!(
         diff.lines().take(2).collect::<Vec<_>>(),
@@ -24,7 +31,13 @@ fn gen_tricky() {
         ]
     );
 
-    // Should not be necessary because gen_cons_diff already does that.
-    let result = tor_consdiff::apply_diff(base, &diff, None, NoSizeCheck).unwrap();
+    let expected_input =
+        hex::decode("B03DA3ACA1D3C1D083E3FF97873002416EBD81A058B406D5C5946EAB53A79663")
+            .unwrap()
+            .try_into()
+            .unwrap();
+    let result = tor_consdiff::apply_diff(base, &diff, Some(expected_input), NoSizeCheck).unwrap();
+    result.check_digest().unwrap();
     assert_eq!(result.to_string(), target);
+    assert!(tor_consdiff::apply_diff(base, &diff, Some([0; 32]), NoSizeCheck).is_err());
 }
