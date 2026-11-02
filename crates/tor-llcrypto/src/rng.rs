@@ -1,14 +1,21 @@
 //! Random number generation.
 //!
-//! For most purposes in Arti, we use one of two random number generators:
-//!  - `rand::rng()` (formerly called `rand::thread_rng()`, up till rand 0.9)
-//!  - The [`CautiousRng`] implemented here.
-//!
-//! [`CautiousRng`] should be used whenever we are generating
-//! a medium- or long-term cryptographic key:
-//! one that will be stored to disk, or used for more than a single communication.
-//! It is slower than [`rand::rng()`],
-//! but is more robust against several kinds of failure.
+//! Most Arti operations use [`rand::rng()`]
+//! (formerly called `rand::thread_rng()`, up till rand 0.9).
+#![cfg_attr(
+    any(feature = "full", feature = "keymgr"),
+    doc = "
+For medium- or long-term cryptographic keys, use [`CautiousRng`]:
+keys stored to disk, or used for more than a single communication.
+It is slower than [`rand::rng()`],
+but is more robust against several kinds of failure."
+)]
+#![cfg_attr(
+    not(any(feature = "full", feature = "keymgr")),
+    doc = "
+Enable the `full` or `keymgr` feature for the additional entropy machinery
+used when generating medium- or long-term cryptographic keys."
+)]
 //
 // Note: Although we want to use CautiousRng
 // whenever we generate a medium- or long-term key,
@@ -16,19 +23,18 @@
 // security hole if we use rand::rng() instead:
 // CautiousRng is a defense-in-depth mechanism.
 
-use std::convert::Infallible;
-
-use digest::{ExtendableOutput, Update};
-
-use rand::rngs::SysRng;
-use rand_core::TryRng;
-use sha3::Shake256;
-use zeroize::Zeroizing;
+#[cfg(any(feature = "full", feature = "keymgr"))]
+use {
+    digest::{ExtendableOutput, Update},
+    rand::rngs::SysRng,
+    rand_core::TryRng,
+    sha3::Shake256,
+    std::convert::Infallible,
+    zeroize::Zeroizing,
+};
 
 /// Trait representing an Rng where every output is derived from
 /// supposedly strong entropy.
-///
-/// Implemented by [`CautiousRng`].
 ///
 /// # Warning
 ///
@@ -36,9 +42,20 @@ use zeroize::Zeroizing;
 /// any Rng to which you apply this trait should be _at least_ as
 /// unpredictable and secure as `SysRng`.
 ///
-/// We recommend using [`CautiousRng`] when you need an instance of this trait.
+#[cfg_attr(
+    any(feature = "full", feature = "keymgr"),
+    doc = "
+We recommend using [`CautiousRng`] when you need an instance of this trait."
+)]
+#[cfg_attr(
+    not(any(feature = "full", feature = "keymgr")),
+    doc = "
+Enable the `full` or `keymgr` feature for the recommended implementation of
+this trait."
+)]
 pub trait EntropicRng: rand_core::CryptoRng {}
 
+#[cfg(any(feature = "full", feature = "keymgr"))]
 impl EntropicRng for CautiousRng {}
 
 /// Functionality for testing Rng code that requires an EntropicRng.
@@ -92,8 +109,11 @@ pub use testing::FakeEntropicRng;
 /// [^scary]: Who else remembers [CVE-2008-0166](https://www.cve.org/CVERecord?id=CVE-2008-0166)?
 #[derive(Default)]
 #[allow(clippy::exhaustive_structs)]
+#[cfg(any(feature = "full", feature = "keymgr"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "full", feature = "keymgr"))))]
 pub struct CautiousRng;
 
+#[cfg(any(feature = "full", feature = "keymgr"))]
 impl TryRng for CautiousRng {
     type Error = Infallible;
 
@@ -161,6 +181,7 @@ impl TryRng for CautiousRng {
     }
 }
 
+#[cfg(any(feature = "full", feature = "keymgr"))]
 impl rand_core::TryCryptoRng for CautiousRng {}
 
 /// A backup RNG, independent of other known sources.
@@ -169,7 +190,7 @@ impl rand_core::TryCryptoRng for CautiousRng {}
 /// in the event of catastrophic failure.
 ///
 /// A failure from this RNG _does not_ cause a panic.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(any(feature = "full", feature = "keymgr"), not(target_arch = "wasm32")))]
 mod backup {
 
     use rand::TryRng;

@@ -15,6 +15,10 @@ repository = "https://github.com/zakura-core/arti"
 default = []
 memquota-memcost = ["tor-memquota-cost"]
 full = [
+    "dep:rand_chacha",
+    "dep:rand_jitter",
+    "dep:rdrand",
+    "dep:reseeding_rng",
     "memquota-memcost",
     "rng-compat",
     "safelog/full",
@@ -33,7 +37,14 @@ hsv3-client = ["__is_experimental"]
 # Enable support for cryptography needed to be an onion service v3 service.
 hsv3-service = ["__is_experimental"]
 # Enable support for cryptography needed for key management.
-keymgr = ["cvt-x25519", "__is_experimental"]
+keymgr = [
+    "cvt-x25519",
+    "dep:rand_chacha",
+    "dep:rand_jitter",
+    "dep:rdrand",
+    "dep:reseeding_rng",
+    "__is_experimental",
+]
 # Enable extra support for converting keys to and from x25519
 cvt-x25519 = []
 # Compatibility support for older versions of the rand crate.
@@ -57,8 +68,8 @@ hex = "0.4"
 rand = "0.10.3"
 rand_core = "0.10.1"
 rand_core_06 = { package = "rand_core", version = "0.6", default-features = false }
-rand_jitter = { version = "0.6", features = ["std"] }
-reseeding_rng = "0.10.7"
+rand_jitter = { version = "0.6", features = ["std"], optional = true }
+reseeding_rng = { version = "0.10.7", optional = true }
 rsa = "0.9.10"
 safelog = { package = "zakura-safelog", version = "0.10.0-zakura.1", path = "../safelog" }
 serde = "1.0.229"
@@ -84,10 +95,10 @@ tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-uti
 all-features = true
 
 [target.'cfg(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64"))'.dependencies]
-rdrand = "0.9"
+rdrand = { version = "0.9", optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-rand_chacha = "0.10.0"
+rand_chacha = { version = "0.10.0", optional = true }
 
 [target.wasm32-unknown-unknown.dependencies]
 getrandom = { version = "0.4.3", features = ["wasm_js"] }
