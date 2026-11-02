@@ -4277,7 +4277,6 @@ dependencies = [
  "paste",
  "postage",
  "serde",
- "serde-value",
  "serde_ignored",
  "serde_json",
  "strum",

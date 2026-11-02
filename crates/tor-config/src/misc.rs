@@ -126,9 +126,10 @@ macro_rules! impl_not_auto_value {
 
                 #[test]
                 fn [<auto_is_not_a_valid_value_for_ $ty>]() {
-                    let res = $crate::deps::serde_value::Value::String(
-                        "auto".into()
-                    ).deserialize_into::<$ty>();
+                    let input = $crate::deps::serde::de::value::StringDeserializer::<
+                        $crate::deps::serde::de::value::Error,
+                    >::new("auto".into());
+                    let res = <$ty as $crate::deps::serde::Deserialize>::deserialize(input);
 
                     assert!(
                         res.is_err(),
