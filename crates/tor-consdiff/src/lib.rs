@@ -54,7 +54,6 @@ use std::num::NonZeroUsize;
 use std::str::FromStr;
 
 mod err;
-use digest::Digest;
 pub use err::Error;
 
 /// Result type used by this crate
@@ -994,6 +993,8 @@ hash B03DA3ACA1D3C1D083E3FF97873002416EBD81A058B406D5C5946EAB53A79663 F6789F35B6
 
     /// An independent whole-document replacement in the restricted ed format.
     fn replacement_diff(base: &str, target: &str) -> String {
+        use digest::Digest;
+
         let before = "00".repeat(32);
         let after = hex::encode(tor_llcrypto::d::Sha3_256::digest(target.as_bytes()));
         let delete = if base.is_empty() { "" } else { "1,$d\n" };
