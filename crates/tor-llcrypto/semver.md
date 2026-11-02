@@ -37,3 +37,17 @@ No new public or `pub(crate)` Rust items, signatures, constructors, fields,
 enum variants, aliases, constants, or exported templates are introduced.
 RSA, Ed25519, X25519, SHA-2, SHA-3, SHAKE, onion-service authentication, random
 number generation, and the optional SHA-1 assembly selection are unchanged.
+
+CHANGED: `rng::CautiousRng` now requires either the existing `full` or `keymgr`
+Cargo feature. Its public unit constructor and its `Default`, `TryRng`,
+`TryCryptoRng`, and `EntropicRng` implementations have the same availability.
+The entropy mixing and backup RNG implementations are unchanged when enabled.
+The `EntropicRng` marker trait remains unconditional, and the testing-only
+`FakeEntropicRng` type and its implementations retain their existing feature.
+
+The existing `full` and `keymgr` features enable the now-optional `rand_jitter`,
+`reseeding_rng`, architecture-specific `rdrand`, and native `rand_chacha`
+dependencies. No new named or implicit Cargo features, Rust signatures,
+`pub(crate)` items, types, methods, constants, or trait implementations are
+introduced. Builds enabling neither feature no longer compile the additional
+entropy machinery used only for medium- or long-term key generation.
