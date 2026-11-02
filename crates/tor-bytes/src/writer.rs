@@ -2,8 +2,6 @@
 
 use std::marker::PhantomData;
 
-use educe::Educe;
-
 use crate::EncodeError;
 use crate::EncodeResult;
 use crate::Writeable;
@@ -114,8 +112,6 @@ pub trait Writer {
 /// Work in progress state for writing a nested (length-counted) item
 ///
 /// You must call `finish` !
-#[derive(Educe)]
-#[educe(Deref, DerefMut)]
 pub struct NestedWriter<'w, W, L>
 where
     W: ?Sized,
@@ -136,8 +132,28 @@ where
     /// Exposing this inner `Vec` is harmless.)
     ///
     /// We must allocate here because some `Writer`s are streaming
-    #[educe(Deref, DerefMut)]
     inner: Vec<u8>,
+}
+
+impl<'w, W, L> core::ops::Deref for NestedWriter<'w, W, L>
+where
+    W: ?Sized,
+{
+    type Target = Vec<u8>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<'w, W, L> core::ops::DerefMut for NestedWriter<'w, W, L>
+where
+    W: ?Sized,
+{
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
 }
 
 /// Implementation of `write_nested_*` - generic over the length type

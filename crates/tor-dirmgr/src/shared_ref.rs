@@ -2,8 +2,6 @@
 
 use std::sync::{Arc, RwLock};
 
-use educe::Educe;
-
 use crate::{Error, Result};
 
 /// A shareable mutable-ish optional reference to a an [`Arc`].
@@ -14,8 +12,7 @@ use crate::{Error, Result};
 ///
 // We give this construction its own type to simplify its users, and make
 // sure we don't hold the lock against any async suspend points.
-#[derive(Debug, Educe)]
-#[educe(Default)]
+#[derive(Debug)]
 #[cfg_attr(docsrs, doc(cfg(feature = "experimental-api")))]
 #[cfg_attr(not(feature = "experimental-api"), allow(unreachable_pub))]
 pub struct SharedMutArc<T> {
@@ -24,6 +21,15 @@ pub struct SharedMutArc<T> {
     /// (It's okay to use RwLock here, because we never suspend
     /// while holding the lock.)
     dir: RwLock<Option<Arc<T>>>,
+}
+
+impl<T> core::default::Default for SharedMutArc<T> {
+    #[inline]
+    fn default() -> Self {
+        SharedMutArc {
+            dir: <RwLock<Option<Arc<T>>> as core::default::Default>::default(),
+        }
+    }
 }
 
 #[cfg_attr(not(feature = "experimental-api"), allow(unreachable_pub))]

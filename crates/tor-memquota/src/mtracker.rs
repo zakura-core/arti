@@ -119,20 +119,33 @@ pub struct MemoryQuotaTracker {
 ///
 /// In Arti, we usually use a newtype around `Account`, rather than a bare `Account`.
 /// See `tor_proto::memquota`.
-#[derive(Educe)]
-#[educe(Debug)]
 pub struct Account(IfEnabled<AccountInner>);
 
+impl core::fmt::Debug for Account {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_tuple("Account");
+        builder.field(&self.0);
+        builder.finish()
+    }
+}
+
 /// Contents of an enabled [`Account`]
-#[derive(Educe)]
-#[educe(Debug)]
 pub struct AccountInner {
     /// The account ID
     aid: refcount::Ref<AId>,
 
     /// The underlying tracker
-    #[educe(Debug(ignore))]
     tracker: Arc<MemoryQuotaTracker>,
+}
+
+impl core::fmt::Debug for AccountInner {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("AccountInner");
+        builder.field("aid", &self.aid);
+        builder.finish()
+    }
 }
 
 /// Weak handle onto an Account
@@ -145,20 +158,35 @@ pub struct AccountInner {
 // We can't lift out Arc, so that the caller sees `Arc<Account>`,
 // because an Account is Arc<MemoryQuotaTracker> plus AId,
 // not Arc of something account-specific.
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 pub struct WeakAccount(IfEnabled<WeakAccountInner>);
 
+impl core::fmt::Debug for WeakAccount {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_tuple("WeakAccount");
+        builder.field(&self.0);
+        builder.finish()
+    }
+}
+
 /// Contents of an enabled [`WeakAccount`]
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 pub struct WeakAccountInner {
     /// The account ID
     aid: AId,
 
     /// The underlying tracker
-    #[educe(Debug(ignore))]
     tracker: Weak<MemoryQuotaTracker>,
+}
+
+impl core::fmt::Debug for WeakAccountInner {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("WeakAccountInner");
+        builder.field("aid", &self.aid);
+        builder.finish()
+    }
 }
 
 /// Handle onto a participant's participation in a tracker

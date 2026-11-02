@@ -9,7 +9,6 @@
 //! handled via [`GuardUsable`].
 use crate::{FirstHopId, daemon};
 
-use educe::Educe;
 use futures::{Future, channel::mpsc::UnboundedSender};
 use pin_project::pin_project;
 use std::fmt::Debug;
@@ -111,8 +110,6 @@ pub enum GuardStatus {
 /// The `GuardMgr` needs to know about these statuses, so that it can tell
 /// whether the guard is running or not.
 #[must_use = "You need to report the status of any guard that you asked for"]
-#[derive(Educe)]
-#[educe(Debug)]
 pub struct GuardMonitor {
     /// The Id that we're going to report about.
     id: RequestId,
@@ -134,8 +131,29 @@ pub struct GuardMonitor {
     /// TODO: This doesn't really need to be an Option, but we use None
     /// here to indicate that we've already used the sender, and it can't
     /// be used again.
-    #[educe(Debug(method = "skip_fmt"))]
     snd: Option<UnboundedSender<daemon::Msg>>,
+}
+
+impl core::fmt::Debug for GuardMonitor {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("GuardMonitor");
+        builder.field("id", &self.id);
+        builder.field("pending_status", &self.pending_status);
+        builder.field("ignore_indeterminate", &self.ignore_indeterminate);
+        builder.field("pending_skew", &self.pending_skew);
+        let arg = {
+            struct FormattedField<'a>(&'a Option<UnboundedSender<daemon::Msg>>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.snd)
+        };
+        builder.field("snd", &arg);
+        builder.finish()
+    }
 }
 
 impl GuardMonitor {

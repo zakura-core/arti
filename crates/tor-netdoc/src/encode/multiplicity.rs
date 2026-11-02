@@ -54,23 +54,63 @@ use crate::parse2;
 ///
 /// This is distinct from `parse2::MultiplicitySelector`,
 /// principally because it has the opposite variance.
-#[derive(Educe)]
-#[educe(Clone, Copy, Default)]
 pub struct MultiplicitySelector<Field>(PhantomData<fn(Field)>);
+
+impl<Field> Clone for MultiplicitySelector<Field> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+impl<Field> Copy for MultiplicitySelector<Field> {}
+impl<Field> Default for MultiplicitySelector<Field> {
+    #[inline]
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
 
 /// Helper type implementing `MultiplicityMethods`, after the multiplicity is determined
 ///
 /// **For use by macros**.
-#[derive(Educe)]
-#[educe(Clone, Copy, Default)]
 pub struct DeterminedMultiplicitySelector<Field>(PhantomData<fn(Field)>);
+
+impl<Field> core::clone::Clone for DeterminedMultiplicitySelector<Field> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<Field> core::marker::Copy for DeterminedMultiplicitySelector<Field> {}
+
+impl<Field> core::default::Default for DeterminedMultiplicitySelector<Field> {
+    #[inline]
+    fn default() -> Self {
+        DeterminedMultiplicitySelector(<PhantomData<fn(Field)> as core::default::Default>::default())
+    }
+}
 
 /// Helper type implementing `MultiplicityMethods`, when a field is statically a singleton
 ///
 /// **For use by macros**.
-#[derive(Educe)]
-#[educe(Clone, Copy, Default)]
 pub struct SingletonMultiplicitySelector<Field>(PhantomData<fn(Field)>);
+
+impl<Field> core::clone::Clone for SingletonMultiplicitySelector<Field> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<Field> core::marker::Copy for SingletonMultiplicitySelector<Field> {}
+
+impl<Field> core::default::Default for SingletonMultiplicitySelector<Field> {
+    #[inline]
+    fn default() -> Self {
+        SingletonMultiplicitySelector(<PhantomData<fn(Field)> as core::default::Default>::default())
+    }
+}
 
 /// Methods for handling some multiplicity of netdoc elements, during encoding
 ///

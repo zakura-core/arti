@@ -19,8 +19,6 @@
 //!
 //! [`Channel::engage_padding_activities`]: super::Channel::engage_padding_activities
 
-use educe::Educe;
-
 use tor_cell::chancell::msg::PaddingNegotiate;
 
 use super::padding;
@@ -32,9 +30,7 @@ use super::padding;
 /// the body of `struct ChannelPaddingInstructions`, with the following differences:
 ///
 ///  * field visibility specifiers are not specified; they are provided by the macro
-///  * non-doc attributes that ought to be applied to fields in `ChannelPaddingInstructions`
-///    are prefixed with `field`, e.g. `#[field educe(Default ...)]`;
-///    this allows applying doc attributes to other items too.
+///  * field documentation is copied to the corresponding generated fields.
 ///
 /// Generates, fairly straightforwardly:
 ///
@@ -48,7 +44,6 @@ use super::padding;
 /// Within the macro body, we indent the per-field `$( )*` with 2 spaces.
 macro_rules! define_channels_insns_and_automatic_impls { { $(
     $( #[doc $($doc_attr:tt)*] )*
-    $( #[field $other_attr:meta] )*
     $field:ident : $ty:ty
 ),* $(,)? } => {
 
@@ -68,12 +63,10 @@ macro_rules! define_channels_insns_and_automatic_impls { { $(
     /// possibly into channel-specific updates.
     ///
     /// `Default` is a placeholder to use pending availability of a netdir etc.
-    #[derive(Debug, Educe, Clone, Eq, PartialEq)]
-    #[educe(Default)]
+    #[derive(Debug, Clone, Eq, PartialEq)]
     pub struct ChannelPaddingInstructions {
       $(
         $( #[doc $($doc_attr)*] )*
-        $( #[$other_attr] )*
         pub(crate) $field: $ty,
       )*
     }
@@ -171,7 +164,6 @@ define_channels_insns_and_automatic_impls! {
     // The initial configuration of the padding timer used by the reactor has no
     // parameters, so does not send padding.  We need to mirror that here, so that we
     // give the reactor an initial set of timing parameters.
-    #[field educe(Default(expression = "padding::Parameters::disabled()"))]
     padding_parameters: padding::Parameters,
 
     /// Channel padding negotiation cell
@@ -186,6 +178,17 @@ define_channels_insns_and_automatic_impls! {
     ///
     /// [`Channel::engage_padding_activities`]: super::Channel::engage_padding_activities
     padding_negotiate: PaddingNegotiate,
+}
+
+impl Default for ChannelPaddingInstructions {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            padding_enable: false,
+            padding_parameters: padding::Parameters::disabled(),
+            padding_negotiate: PaddingNegotiate::default(),
+        }
+    }
 }
 
 /// Builder for a channels padding instructions update

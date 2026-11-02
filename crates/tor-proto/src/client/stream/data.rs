@@ -30,8 +30,6 @@ use std::sync::Arc;
 #[cfg(feature = "stream-ctrl")]
 use std::sync::{Mutex, Weak};
 
-use educe::Educe;
-
 use crate::client::ClientTunnel;
 use crate::memquota::StreamAccount;
 use crate::stream::StreamReceiver;
@@ -776,8 +774,6 @@ type BoxSyncFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + Sync + 'a>>;
 /// We have to use an enum here because, for as long as we're waiting
 /// for a flush operation to complete, the future returned by
 /// `flush_cell()` owns the DataWriterImpl.
-#[derive(Educe)]
-#[educe(Debug)]
 enum DataWriterState {
     /// The writer has closed or gotten an error: nothing more to do.
     Closed,
@@ -786,14 +782,43 @@ enum DataWriterState {
     Ready(DataWriterImpl),
     /// The writer is flushing a cell.
     Flushing(
-        #[educe(Debug(method = "skip_fmt"))] //
+        //
         BoxSyncFuture<'static, (DataWriterImpl, Result<()>)>,
     ),
 }
 
+impl core::fmt::Debug for DataWriterState {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            DataWriterState::Closed => formatter.write_str("Closed"),
+            DataWriterState::Ready(writer) => {
+                let mut builder = formatter.debug_tuple("Ready");
+                builder.field(writer);
+                builder.finish()
+            }
+            DataWriterState::Flushing(future) => {
+                let mut builder = formatter.debug_tuple("Flushing");
+                let arg = {
+                    struct FormattedField<'a>(
+                        &'a BoxSyncFuture<'static, (DataWriterImpl, Result<()>)>,
+                    );
+                    impl<'a> core::fmt::Debug for FormattedField<'a> {
+                        fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                            skip_fmt(self.0, formatter)
+                        }
+                    }
+                    FormattedField(future)
+                };
+                builder.field(&arg);
+                builder.finish()
+            }
+        }
+    }
+}
+
 /// Internal: the write part of a DataStream
-#[derive(Educe)]
-#[educe(Debug)]
 struct DataWriterImpl {
     /// The underlying StreamTarget object.
     s: StreamTarget,
@@ -807,7 +832,6 @@ struct DataWriterImpl {
     // enough for now.  If we _do_ make it bigger, we'll have to change
     // our use of Data::split_from to handle the case where we can't fit
     // all the data.
-    #[educe(Debug(method = "skip_fmt"))]
     buf: Box<[u8]>,
 
     /// Number of unflushed bytes in buf.
@@ -819,6 +843,29 @@ struct DataWriterImpl {
     /// Shared user-visible information about the state of this stream.
     #[cfg(feature = "stream-ctrl")]
     status: Arc<Mutex<DataStreamStatus>>,
+}
+
+impl core::fmt::Debug for DataWriterImpl {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("DataWriterImpl");
+        builder.field("s", &self.s);
+        let arg = {
+            struct FormattedField<'a>(&'a [u8]);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(&self.0, formatter)
+                }
+            }
+            FormattedField(&self.buf)
+        };
+        builder.field("buf", &arg);
+        builder.field("n_pending", &self.n_pending);
+        builder.field("relay_cell_format", &self.relay_cell_format);
+        #[cfg(feature = "stream-ctrl")]
+        builder.field("status", &self.status);
+        builder.finish()
+    }
 }
 
 impl DataWriterInner {
@@ -1035,8 +1082,6 @@ impl DataReaderInner {
 // TODO: We don't need to implement the state in this way anymore now that we've removed the saved
 // future. There are a few ways we could simplify this. See:
 // https://gitlab.torproject.org/tpo/core/arti/-/merge_requests/3076#note_3218210
-#[derive(Educe)]
-#[educe(Debug)]
 // We allow this since it's expected that streams will spend most of their time in the `Open` state,
 // and will be cleaned up shortly after closing.
 #[allow(clippy::large_enum_variant)]
@@ -1047,13 +1092,25 @@ enum DataReaderState {
     Open(DataReaderImpl),
 }
 
+impl core::fmt::Debug for DataReaderState {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            DataReaderState::Closed => formatter.write_str("Closed"),
+            DataReaderState::Open(reader) => {
+                let mut builder = formatter.debug_tuple("Open");
+                builder.field(reader);
+                builder.finish()
+            }
+        }
+    }
+}
+
 /// Wrapper for the read part of a [`DataStream`].
-#[derive(Educe)]
-#[educe(Debug)]
 #[pin_project]
 struct DataReaderImpl {
     /// The underlying StreamReceiver object.
-    #[educe(Debug(method = "skip_fmt"))]
     #[pin]
     s: StreamReceiver,
 
@@ -1061,7 +1118,6 @@ struct DataReaderImpl {
     /// been able to send to the caller yet.
     // TODO: This data structure is probably not what we want, but
     // it's good enough for now.
-    #[educe(Debug(method = "skip_fmt"))]
     pending: Vec<u8>,
 
     /// Index into pending to show what we've already read.
@@ -1073,6 +1129,38 @@ struct DataReaderImpl {
     /// Shared user-visible information about the state of this stream.
     #[cfg(feature = "stream-ctrl")]
     status: Arc<Mutex<DataStreamStatus>>,
+}
+
+impl core::fmt::Debug for DataReaderImpl {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("DataReaderImpl");
+        let arg = {
+            struct FormattedField<'a>(&'a StreamReceiver);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.s)
+        };
+        builder.field("s", &arg);
+        let arg = {
+            struct FormattedField<'a>(&'a Vec<u8>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.pending)
+        };
+        builder.field("pending", &arg);
+        builder.field("offset", &self.offset);
+        builder.field("connected", &self.connected);
+        #[cfg(feature = "stream-ctrl")]
+        builder.field("status", &self.status);
+        builder.finish()
+    }
 }
 
 impl AsyncRead for DataReaderInner {

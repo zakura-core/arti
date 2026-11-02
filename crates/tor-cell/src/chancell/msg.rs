@@ -10,7 +10,6 @@ use tor_units::IntegerMilliseconds;
 
 use caret::caret_int;
 use derive_deftly::Deftly;
-use educe::Educe;
 
 /// Trait for the 'bodies' of channel messages.
 pub trait Body: Readable {
@@ -378,9 +377,8 @@ impl Readable for Created2 {
 ///
 /// A different protocol is defined over the relay cells; it is implemented
 /// in the [crate::relaycell] module.
-#[derive(Clone, Educe, derive_more::From, Deftly)]
+#[derive(Clone, derive_more::From, Deftly)]
 #[derive_deftly(HasMemoryCost)]
-#[educe(Debug)]
 pub struct Relay {
     /// The contents of the relay cell as encoded for transfer.
     ///
@@ -389,8 +387,25 @@ pub struct Relay {
     /// places where we _don't_ Box things that we should, and more copies than
     /// necessary happen. We should refactor our data handling until we're mostly
     /// moving around pointers rather than copying data;  see ticket #7.
-    #[educe(Debug(method = "skip_fmt"))]
     body: BoxedCellBody,
+}
+
+impl core::fmt::Debug for Relay {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("Relay");
+        let arg = {
+            struct FormattedField<'a>(&'a BoxedCellBody);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.body)
+        };
+        builder.field("body", &arg);
+        builder.finish()
+    }
 }
 impl Relay {
     /// Construct a Relay message from a slice containing its contents.

@@ -31,7 +31,6 @@ bench = ["dep:visibility"]
 [dependencies]
 cfg-if = "1.0.5"
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
-educe = "0.4.23"
 event-listener = "5"
 extend = "1.2.0"
 futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }

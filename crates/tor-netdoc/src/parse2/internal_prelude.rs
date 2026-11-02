@@ -1,7 +1,6 @@
 //! Prelude used internally for everything in `parse2`.
 //!
 //! This is also exported, but with `#[doc(hidden)]`, for the benefit of our public macros.
-
 pub use std::collections::{BTreeSet, HashSet};
 pub use std::fmt::{self, Debug, Display, Write as _};
 pub use std::hash::Hash;
@@ -16,7 +15,6 @@ pub use std::time::{Duration, SystemTime};
 
 pub use derive_deftly::{Deftly, define_derive_deftly, define_derive_deftly_module};
 pub use digest::Digest;
-pub use educe::Educe;
 pub use itertools::Itertools;
 pub use paste::paste;
 pub use thiserror::Error;

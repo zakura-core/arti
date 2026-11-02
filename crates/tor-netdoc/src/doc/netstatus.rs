@@ -92,7 +92,7 @@ use void::ResultVoidExt as _;
 
 use derive_deftly::{Deftly, define_derive_deftly};
 use digest::Digest;
-use educe::Educe;
+
 use itertools::Itertools;
 use std::sync::LazyLock;
 use tor_checkable::{ExternallySigned, TimeBound, timed::TimeRangeBound};
@@ -376,11 +376,19 @@ pub struct VotingDelay {
 //  - Encoding throws `Bug` if the resulting document will be clearly garbage,
 //    forbidding `=`, whitespace, and controls.  If the supplied keywords are bizarre,
 //    it may generate surprising documents (eg, containing exciting Unicode).
-#[derive(Debug, Clone, Educe, Eq, PartialEq)]
-#[educe(Default)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct NetParams<T> {
     /// Map from keys to values.
     params: HashMap<String, T>,
+}
+
+impl<T> core::default::Default for NetParams<T> {
+    #[inline]
+    fn default() -> Self {
+        NetParams {
+            params: <HashMap<String, T> as core::default::Default>::default(),
+        }
+    }
 }
 
 impl<T> NetParams<T> {
