@@ -5,7 +5,7 @@
 //! [`with_safe_logging_suppressed`]).
 
 use crate::{Error, Result};
-use fluid_let::fluid_let;
+use std::cell::Cell;
 use std::sync::atomic::{AtomicIsize, Ordering};
 
 /// A global atomic used to track locking guards for enabling and disabling
@@ -15,16 +15,15 @@ use std::sync::atomic::{AtomicIsize, Ordering};
 /// greater than 0 if we have enabled safe logging, and 0 if nobody cares.
 static LOGGING_STATE: AtomicIsize = AtomicIsize::new(0);
 
-fluid_let!(
-    /// A dynamic variable used to temporarily disable safe-logging.
-    static SAFE_LOGGING_SUPPRESSED_IN_THREAD: bool
-);
+thread_local! {
+    /// Whether this thread is temporarily displaying sensitive values.
+    static SAFE_LOGGING_SUPPRESSED_IN_THREAD: Cell<bool> = const { Cell::new(false) };
+}
 
 /// Returns true if we are displaying sensitive values, false otherwise.
 #[doc(hidden)]
 pub fn unsafe_logging_enabled() -> bool {
-    LOGGING_STATE.load(Ordering::Relaxed) < 0
-        || SAFE_LOGGING_SUPPRESSED_IN_THREAD.get(|v| v == Some(&true))
+    LOGGING_STATE.load(Ordering::Relaxed) < 0 || SAFE_LOGGING_SUPPRESSED_IN_THREAD.get()
 }
 
 /// Run a given function with the regular `safelog` functionality suppressed.
@@ -53,10 +52,24 @@ pub fn with_safe_logging_suppressed<F, V>(func: F) -> V
 where
     F: FnOnce() -> V,
 {
-    // This sets the value of the variable to Some(true) temporarily, for as
-    // long as `func` is being called.  It uses thread-local variables
-    // internally.
-    SAFE_LOGGING_SUPPRESSED_IN_THREAD.set(true, func)
+    SAFE_LOGGING_SUPPRESSED_IN_THREAD.with(|suppressed| {
+        struct Restore<'a> {
+            suppressed: &'a Cell<bool>,
+            previous: bool,
+        }
+
+        impl Drop for Restore<'_> {
+            fn drop(&mut self) {
+                self.suppressed.set(self.previous);
+            }
+        }
+
+        let _restore = Restore {
+            previous: suppressed.replace(true),
+            suppressed,
+        };
+        func()
+    })
 }
 
 /// Enum to describe what kind of a [`Guard`] we've created.
@@ -249,6 +262,49 @@ mod test {
             assert!(unsafe_logging_enabled());
             with_safe_logging_suppressed(|| assert!(unsafe_logging_enabled()));
         }
+    }
+
+    #[test]
+    #[serial]
+    fn nested_suppression_preserves_scope_and_thread_isolation() {
+        let secret = crate::Sensitive::new("swordfish");
+        assert_eq!(secret.to_string(), "[scrubbed]");
+        let result = with_safe_logging_suppressed(|| {
+            assert_eq!(secret.to_string(), "swordfish");
+            with_safe_logging_suppressed(|| assert_eq!(secret.to_string(), "swordfish"));
+            assert_eq!(secret.to_string(), "swordfish");
+            std::thread::spawn(|| {
+                assert_eq!(crate::Sensitive::new("swordfish").to_string(), "[scrubbed]");
+            })
+            .join()
+            .unwrap();
+            17
+        });
+        assert_eq!(result, 17);
+        assert_eq!(secret.to_string(), "[scrubbed]");
+    }
+
+    #[test]
+    #[serial]
+    fn unwinding_restores_suppression() {
+        let secret = crate::Sensitive::new("swordfish");
+        let result = std::panic::catch_unwind(|| {
+            with_safe_logging_suppressed(|| {
+                assert_eq!(secret.to_string(), "swordfish");
+                panic!("unwind out of suppression");
+            });
+        });
+        assert!(result.is_err());
+        assert_eq!(secret.to_string(), "[scrubbed]");
+
+        with_safe_logging_suppressed(|| {
+            let result = std::panic::catch_unwind(|| {
+                with_safe_logging_suppressed(|| panic!("unwind into outer suppression"));
+            });
+            assert!(result.is_err());
+            assert_eq!(secret.to_string(), "swordfish");
+        });
+        assert_eq!(secret.to_string(), "[scrubbed]");
     }
 
     #[test]
