@@ -55,8 +55,6 @@ use std::result::Result as StdResult;
 /// The difference between this and [`CtrlCmd`] is that `CtrlMsg`s
 /// cause the reactor to send cells on the reactor's `chan_sender`,
 /// whereas `CtrlCmd` do not.
-#[derive(educe::Educe)]
-#[educe(Debug)]
 pub(crate) enum CtrlMsg {
     /// Create the first hop of this circuit.
     Create {
@@ -157,7 +155,6 @@ pub(crate) enum CtrlMsg {
         /// A message handler to install.
         ///
         /// If this is `None`, there must already be a message handler installed
-        #[educe(Debug(ignore))]
         handler: Option<Box<dyn MetaCellHandler + Send + 'static>>,
         /// A sender that we use to tell the caller that the message was sent
         /// and the handler installed.
@@ -186,7 +183,6 @@ pub(crate) enum CtrlMsg {
     #[allow(unused)] // TODO(conflux)
     LinkCircuits {
         /// The circuits to link into the tunnel,
-        #[educe(Debug(ignore))]
         circuits: Vec<Circuit>,
         /// Oneshot channel to notify sender when all the specified circuits have finished linking,
         /// or have failed to link.
@@ -199,14 +195,137 @@ pub(crate) enum CtrlMsg {
     },
 }
 
+impl core::fmt::Debug for CtrlMsg {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            CtrlMsg::Create {
+                recv_created,
+                handshake,
+                settings,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("Create");
+                builder.field("recv_created", recv_created);
+                builder.field("handshake", handshake);
+                builder.field("settings", settings);
+                builder.field("done", done);
+                builder.finish()
+            }
+            CtrlMsg::ExtendNtor {
+                peer_id,
+                public_key,
+                linkspecs,
+                settings,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("ExtendNtor");
+                builder.field("peer_id", peer_id);
+                builder.field("public_key", public_key);
+                builder.field("linkspecs", linkspecs);
+                builder.field("settings", settings);
+                builder.field("done", done);
+                builder.finish()
+            }
+            CtrlMsg::ExtendNtorV3 {
+                peer_id,
+                public_key,
+                linkspecs,
+                settings,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("ExtendNtorV3");
+                builder.field("peer_id", peer_id);
+                builder.field("public_key", public_key);
+                builder.field("linkspecs", linkspecs);
+                builder.field("settings", settings);
+                builder.field("done", done);
+                builder.finish()
+            }
+            CtrlMsg::BeginStream {
+                hop,
+                message,
+                memquota,
+                done,
+                cmd_checker,
+            } => {
+                let mut builder = formatter.debug_struct("BeginStream");
+                builder.field("hop", hop);
+                builder.field("message", message);
+                builder.field("memquota", memquota);
+                builder.field("done", done);
+                builder.field("cmd_checker", cmd_checker);
+                builder.finish()
+            }
+            #[cfg(feature = "hs-service")]
+            CtrlMsg::ClosePendingStream {
+                hop,
+                stream_id,
+                message,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("ClosePendingStream");
+                builder.field("hop", hop);
+                builder.field("stream_id", stream_id);
+                builder.field("message", message);
+                builder.field("done", done);
+                builder.finish()
+            }
+            #[cfg(feature = "send-control-msg")]
+            CtrlMsg::SendMsg { hop, msg, sender } => {
+                let mut builder = formatter.debug_struct("SendMsg");
+                builder.field("hop", hop);
+                builder.field("msg", msg);
+                builder.field("sender", sender);
+                builder.finish()
+            }
+            #[cfg(feature = "send-control-msg")]
+            CtrlMsg::SendMsgAndInstallHandler {
+                msg,
+                handler: _,
+                sender,
+            } => {
+                let mut builder = formatter.debug_struct("SendMsgAndInstallHandler");
+                builder.field("msg", msg);
+                builder.field("sender", sender);
+                builder.finish()
+            }
+            CtrlMsg::FlowCtrlUpdate {
+                msg,
+                stream_id,
+                hop,
+            } => {
+                let mut builder = formatter.debug_struct("FlowCtrlUpdate");
+                builder.field("msg", msg);
+                builder.field("stream_id", stream_id);
+                builder.field("hop", hop);
+                builder.finish()
+            }
+            CtrlMsg::FirstHopClockSkew { answer } => {
+                let mut builder = formatter.debug_struct("FirstHopClockSkew");
+                builder.field("answer", answer);
+                builder.finish()
+            }
+            #[cfg(feature = "conflux")]
+            CtrlMsg::LinkCircuits {
+                circuits: _,
+                answer,
+            } => {
+                let mut builder = formatter.debug_struct("LinkCircuits");
+                builder.field("answer", answer);
+                builder.finish()
+            }
+        }
+    }
+}
+
 /// A message telling the reactor to do something.
 ///
 /// The difference between this and [`CtrlMsg`] is that `CtrlCmd`s
 /// never cause cells to sent on the channel,
 /// while `CtrlMsg`s potentially do: `CtrlMsg`s are mapped to [`RunOnceCmdInner`] commands,
 /// some of which instruct the reactor to send cells down the channel.
-#[derive(educe::Educe)]
-#[educe(Debug)]
 pub(crate) enum CtrlCmd {
     /// Shut down the reactor.
     Shutdown,
@@ -218,7 +337,6 @@ pub(crate) enum CtrlCmd {
     ExtendVirtual {
         /// The cryptographic algorithms and keys to use when communicating with
         /// the newly added hop.
-        #[educe(Debug(ignore))]
         cell_crypto: (
             Box<dyn OutboundClientLayer + Send>,
             Box<dyn InboundClientLayer + Send>,
@@ -248,7 +366,6 @@ pub(crate) enum CtrlCmd {
         /// The hop that is allowed to create streams.
         hop: TargetHop,
         /// A filter used to check requests before passing them on.
-        #[educe(Debug(ignore))]
         #[cfg(feature = "hs-service")]
         filter: Box<dyn IncomingStreamRequestFilter>,
     },
@@ -308,6 +425,104 @@ pub(crate) enum CtrlCmd {
         /// A sender to receive the reply.
         sender: oneshot::Sender<TunnelActivity>,
     },
+}
+
+impl core::fmt::Debug for CtrlCmd {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            CtrlCmd::Shutdown => formatter.write_str("Shutdown"),
+            #[cfg(feature = "hs-common")]
+            CtrlCmd::ExtendVirtual {
+                cell_crypto: _,
+                settings,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("ExtendVirtual");
+                builder.field("settings", settings);
+                builder.field("done", done);
+                builder.finish()
+            }
+            CtrlCmd::ResolveTargetHop { hop, done } => {
+                let mut builder = formatter.debug_struct("ResolveTargetHop");
+                builder.field("hop", hop);
+                builder.field("done", done);
+                builder.finish()
+            }
+            #[cfg(feature = "hs-service")]
+            CtrlCmd::AwaitStreamRequest {
+                incoming_sender,
+                cmd_checker,
+                done,
+                hop,
+                filter: _,
+            } => {
+                let mut builder = formatter.debug_struct("AwaitStreamRequest");
+                builder.field("incoming_sender", incoming_sender);
+                builder.field("cmd_checker", cmd_checker);
+                builder.field("done", done);
+                builder.field("hop", hop);
+                builder.finish()
+            }
+            #[cfg(feature = "hs-service")]
+            CtrlCmd::GetBindingKey { hop, done } => {
+                let mut builder = formatter.debug_struct("GetBindingKey");
+                builder.field("hop", hop);
+                builder.field("done", done);
+                builder.finish()
+            }
+            #[cfg(test)]
+            CtrlCmd::AddFakeHop {
+                relay_cell_format,
+                fwd_lasthop,
+                rev_lasthop,
+                peer_id,
+                params,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("AddFakeHop");
+                builder.field("relay_cell_format", relay_cell_format);
+                builder.field("fwd_lasthop", fwd_lasthop);
+                builder.field("rev_lasthop", rev_lasthop);
+                builder.field("peer_id", peer_id);
+                builder.field("params", params);
+                builder.field("done", done);
+                builder.finish()
+            }
+            #[cfg(test)]
+            CtrlCmd::QuerySendWindow { hop, leg, done } => {
+                let mut builder = formatter.debug_struct("QuerySendWindow");
+                builder.field("hop", hop);
+                builder.field("leg", leg);
+                builder.field("done", done);
+                builder.finish()
+            }
+            #[cfg(feature = "conflux")]
+            CtrlCmd::ShutdownAndReturnCircuit { answer } => {
+                let mut builder = formatter.debug_struct("ShutdownAndReturnCircuit");
+                builder.field("answer", answer);
+                builder.finish()
+            }
+            #[cfg(feature = "circ-padding-manual")]
+            CtrlCmd::SetPadder {
+                hop,
+                padder,
+                sender,
+            } => {
+                let mut builder = formatter.debug_struct("SetPadder");
+                builder.field("hop", hop);
+                builder.field("padder", padder);
+                builder.field("sender", sender);
+                builder.finish()
+            }
+            CtrlCmd::GetTunnelActivity { sender } => {
+                let mut builder = formatter.debug_struct("GetTunnelActivity");
+                builder.field("sender", sender);
+                builder.finish()
+            }
+        }
+    }
 }
 
 /// A flow control update message.

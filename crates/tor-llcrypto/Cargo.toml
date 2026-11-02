@@ -54,7 +54,6 @@ derive-deftly = { version = "~1.14.0" }
 derive_more = { version = "2.1.1", features = ["full"] }
 digest = "0.10.7"
 ed25519-dalek = { version = "2.2", features = ["batch", "hazmat"] }
-educe = "0.4.23"
 hex = "0.4"
 rand = "0.10.3"
 rand_core = "0.10.1"

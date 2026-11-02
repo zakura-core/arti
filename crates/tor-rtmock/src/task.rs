@@ -19,7 +19,7 @@ use futures::pin_mut;
 use futures::task::{FutureObj, Spawn, SpawnError};
 
 use assert_matches::assert_matches;
-use educe::Educe;
+
 use itertools::Either::{self, *};
 use itertools::{chain, izip};
 use slotmap_careful::DenseSlotMap;
@@ -78,12 +78,18 @@ type MainFuture<'m> = Pin<&'m mut dyn Future<Output = ()>>;
 ///
 /// The executor will malfunction or panic if reentered.
 /// (Eg, if `block_on` is reentered.)
-#[derive(Clone, Default, Educe)]
-#[educe(Debug)]
+#[derive(Clone, Default)]
 pub struct MockExecutor {
     /// Mutable state
-    #[educe(Debug(ignore))]
     shared: Arc<Shared>,
+}
+
+impl core::fmt::Debug for MockExecutor {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("MockExecutor");
+        builder.finish()
+    }
 }
 
 /// Shared state and ancillary information
@@ -135,8 +141,7 @@ use task_id::Ti as TaskId;
 /// So we cannot store that future in `Data` because `Data` is `'static`.
 /// Instead, this main task future is passed as an argument down the call stack.
 /// In the data structure we simply store a placeholder, `TaskFutureInfo::Main`.
-#[derive(Educe, derive_more::Debug)]
-#[educe(Default)]
+#[derive(derive_more::Debug)]
 struct Data {
     /// Tasks
     ///
@@ -169,8 +174,21 @@ struct Data {
     ///
     ///  1. no-one but the named thread is allowed to modify this field.
     ///  2. after modifying this field, signal `thread_condvar`
-    #[educe(Default(expression = "ThreadDescriptor::Executor"))]
     thread_to_run: ThreadDescriptor,
+}
+
+impl core::default::Default for Data {
+    #[inline]
+    fn default() -> Self {
+        Data {
+            tasks: <DenseSlotMap<TaskId, Task> as core::default::Default>::default(),
+            awake: <VecDeque<TaskId> as core::default::Default>::default(),
+            progressing_until_stalled:
+                <Option<ProgressingUntilStalled> as core::default::Default>::default(),
+            scheduling: <SchedulingPolicy as core::default::Default>::default(),
+            thread_to_run: ThreadDescriptor::Executor,
+        }
+    }
 }
 
 /// How we should schedule?
@@ -218,11 +236,9 @@ struct Task {
 }
 
 /// A future as stored in our record of a [`Task`]
-#[derive(Educe)]
-#[educe(Debug)]
 enum TaskFutureInfo {
     /// The [`Future`].  All is normal.
-    Normal(#[educe(Debug(ignore))] TaskFuture),
+    Normal(TaskFuture),
     /// The future isn't here because this task is the main future for `block_on`
     Main,
     /// This task is actually a [`Subthread`](MockExecutor::subthread_spawn)
@@ -230,6 +246,21 @@ enum TaskFutureInfo {
     /// Instead of polling it, we'll switch to it with
     /// [`thread_context_switch`](Shared::thread_context_switch).
     Subthread,
+}
+
+impl core::fmt::Debug for TaskFutureInfo {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            TaskFutureInfo::Normal(_) => {
+                let mut builder = formatter.debug_tuple("Normal");
+                builder.finish()
+            }
+            TaskFutureInfo::Main => formatter.write_str("Main"),
+            TaskFutureInfo::Subthread => formatter.write_str("Subthread"),
+        }
+    }
 }
 
 /// State of a task - do we think it needs to be polled?
@@ -302,12 +333,17 @@ struct ProgressingUntilStalled {
 ///
 /// Existence of this struct implies `Data.progressing_until_stalled` is `Some`.
 /// There can only be one at a time.
-#[derive(Educe)]
-#[educe(Debug)]
 struct ProgressUntilStalledFuture {
     /// Executor's state; this future's state is in `.progressing_until_stalled`
-    #[educe(Debug(ignore))]
     shared: Arc<Shared>,
+}
+
+impl core::fmt::Debug for ProgressUntilStalledFuture {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("ProgressUntilStalledFuture");
+        builder.finish()
+    }
 }
 
 /// Identifies a thread we know about - the executor thread, or a Subthread
@@ -1682,7 +1718,6 @@ mod test {
         // If `_fut_drop_late = fut` in execute_until_first_stall (the main loop)
         // is replaced with `drop(fut)` (dropping the future at the wrong moment),
         // we do indeed get deadlock, so this test case is working.
-
         struct ReentersOnDrop {
             runtime: MockExecutor,
         }

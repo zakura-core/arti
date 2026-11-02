@@ -143,7 +143,7 @@ macro_rules! caret_int {
                 }
             }
         }
-        // `#[educe(Debug)]` could do this for us, but let's not deepen this macrology
+        // A derived Debug could do this, but keep this macro straightforward.
         impl std::fmt::Debug for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, "{}({})", stringify!($name), self)

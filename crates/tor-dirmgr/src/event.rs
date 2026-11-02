@@ -16,7 +16,6 @@ use std::{
     time::SystemTime,
 };
 
-use educe::Educe;
 use futures::{Future, StreamExt, stream::Stream};
 use itertools::chain;
 use paste::paste;
@@ -328,11 +327,9 @@ pub(crate) struct DirStatus {
 /// How much progress have we made in downloading a given directory?
 ///
 /// This is a separate type so that we don't make the variants public.
-#[derive(Clone, Debug, Educe)]
-#[educe(Default)]
+#[derive(Clone, Debug)]
 pub(crate) enum DirProgress {
     /// We don't have any information yet.
-    #[educe(Default)]
     NoConsensus {
         /// If present, we are fetching a consensus whose valid-after time
         /// postdates this time.
@@ -367,6 +364,15 @@ pub(crate) enum DirProgress {
         // guards are missing microdescriptors, to give a better explanation for
         // the case where we won't switch our consensus because of that.
     },
+}
+
+impl core::default::Default for DirProgress {
+    #[inline]
+    fn default() -> Self {
+        DirProgress::NoConsensus {
+            after: <Option<SystemTime> as core::default::Default>::default(),
+        }
+    }
 }
 
 /// A reported diagnostic for what kind of trouble we've seen while trying to
@@ -772,15 +778,31 @@ impl DirProgress {
 }
 
 /// A stream of [`DirBootstrapStatus`] events.
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 pub struct DirBootstrapEvents {
     /// The `tor_async_utils::watch::Receiver` that we're wrapping.
     ///
     /// We wrap this type so that we don't expose its entire API, and so that we
     /// can migrate to some other implementation in the future if we want.
-    #[educe(Debug(method = "skip_fmt"))]
     pub(crate) inner: tor_async_utils::watch::Receiver<DirBootstrapStatus>,
+}
+
+impl core::fmt::Debug for DirBootstrapEvents {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("DirBootstrapEvents");
+        let arg = {
+            struct FormattedField<'a>(&'a tor_async_utils::watch::Receiver<DirBootstrapStatus>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.inner)
+        };
+        builder.field("inner", &arg);
+        builder.finish()
+    }
 }
 
 impl Stream for DirBootstrapEvents {

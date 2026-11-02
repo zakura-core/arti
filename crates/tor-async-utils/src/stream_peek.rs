@@ -4,7 +4,6 @@
 //! (if there is one, or there can immediately be one),
 //! *without* getting involved with the async tasks.
 
-use educe::Educe;
 use futures::Stream;
 use futures::stream::FusedStream;
 use pin_project::pin_project;
@@ -300,8 +299,6 @@ impl<S: Stream> FusedStream for StreamUnobtrusivePeeker<S> {
 
 /// Future from [`StreamUnobtrusivePeeker::peek`]
 // TODO: Move to tor_async_utils::peekable_stream.
-#[derive(Educe)]
-#[educe(Debug(bound("S: Debug")))]
 #[must_use = "peek() return a Future, which does nothing unless awaited"]
 pub struct PeekFuture<'s, S> {
     /// The underlying stream.
@@ -309,6 +306,18 @@ pub struct PeekFuture<'s, S> {
     /// `Some` until we have returned `Ready`, then `None`.
     /// See comment in `poll`.
     peeker: Option<Pin<&'s mut S>>,
+}
+
+impl<'s, S> core::fmt::Debug for PeekFuture<'s, S>
+where
+    S: Debug,
+{
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("PeekFuture");
+        builder.field("peeker", &self.peeker);
+        builder.finish()
+    }
 }
 
 impl<'s, S: PeekableStream> PeekFuture<'s, S> {

@@ -121,7 +121,6 @@ use futures::channel::mpsc;
 use futures::io::{AsyncRead, AsyncWrite};
 use tor_basic_utils::oneshot;
 
-use educe::Educe;
 use futures::{FutureExt as _, Sink};
 use std::result::Result as StdResult;
 use std::sync::Arc;
@@ -359,8 +358,7 @@ struct MutableDetails {
 ///  3. It doesn't want to be in the channel reactor since that's super hot.
 ///
 /// See also the overview at [`tor_proto::channel::padding`](padding)
-#[derive(Debug, Educe)]
-#[educe(Default)]
+#[derive(Debug)]
 enum PaddingControlState {
     /// No usage of this channel, so far, implies sending or negotiating channel padding.
     ///
@@ -372,7 +370,6 @@ enum PaddingControlState {
     ///    (which is fine since this timer is not enabled).
     ///  * We don't send any PADDING_NEGOTIATE cells.  The peer is supposed to come to the
     ///    same conclusions as us, based on channel usage: it should also not send padding.
-    #[educe(Default)]
     UsageDoesNotImplyPadding {
         /// The last padding parameters (from reparameterize)
         ///
@@ -389,6 +386,16 @@ enum PaddingControlState {
     /// Once we have set this variant, it remains this way forever for this channel,
     /// (the spec speaks of channels "only used for" certain purposes not getting padding).
     PaddingConfigured,
+}
+
+impl core::default::Default for PaddingControlState {
+    #[inline]
+    fn default() -> Self {
+        PaddingControlState::UsageDoesNotImplyPadding {
+            padding_params: <ChannelPaddingInstructionsUpdates as core::default::Default>::default(
+            ),
+        }
+    }
 }
 
 use PaddingControlState as PCS;

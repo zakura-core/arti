@@ -97,3 +97,7 @@ Their checked arithmetic, lazy platform-limit discovery and nightly standard
 library path retain the existing behavior. The `saturating_time_nightly`
 configuration is now recognized on this crate instead of the removed package.
 No dependency edge, clock provider or platform restriction is added.
+
+BREAKING: Remove the doc-hidden `parse2::internal_prelude::Educe` re-export.
+The parser macros and existing trait implementations now use standard Rust
+without Educe; their trait bounds and behavior are unchanged.

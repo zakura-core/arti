@@ -39,3 +39,8 @@ for an unavailable field is now `Option<()>`, without retaining input data.
 As before, field-level Serde customization is not forwarded to unavailable
 placeholders; container-level field naming still applies. No public helper,
 feature, constructor or trait method is added.
+
+BREAKING: Remove the doc-hidden `deps::educe` re-export. The exported
+`define_map_builder!` macro now implements `Deref` and `DerefMut` directly,
+with the same target and behavior. Existing configuration traits, defaults,
+Serde support and feature availability are unchanged.

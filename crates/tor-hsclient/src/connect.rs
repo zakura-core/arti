@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use educe::Educe;
+
 use futures::{AsyncRead, AsyncWrite};
 use itertools::Itertools;
 use rand::RngExt;
@@ -73,8 +73,8 @@ macro_rules! DataTunnel{ { $R:ty, $M:ty } => {
 } }
 
 /// Information about a hidden service, including our connection history
-#[derive(Default, Educe)]
-#[educe(Debug)]
+#[derive(Default)]
+
 // This type is actually crate-private, since it isn't re-exported, but it must
 // be `pub` because it appears as a default for a type parameter in HsClientConnector.
 pub struct Data {
@@ -91,6 +91,17 @@ pub struct Data {
     ///
     /// Any HsDir that does not have an entry in this map can be requeried.
     hsdirs: DataHsDirs,
+}
+
+impl core::fmt::Debug for Data {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("Data");
+        builder.field("desc", &self.desc);
+        builder.field("ipts", &self.ipts);
+        builder.field("hsdirs", &self.hsdirs);
+        builder.finish()
+    }
 }
 
 /// An onion service descriptor and its associated HsBlindId.

@@ -16,7 +16,6 @@
 //!    well-formed? For open streams, the streams themselves handle this check.
 //!    For half-closed streams, the reactor handles it by calling
 //!    `consume_checked_msg()`.
-
 pub(crate) mod circuit;
 mod conflux;
 mod control;
@@ -140,8 +139,6 @@ enum RunOnceCmd {
 //
 // TODO: many of the variants of this enum have an identical CtrlMsg counterpart.
 // We should consider making each variant a tuple variant and deduplicating the fields.
-#[derive(educe::Educe)]
-#[educe(Debug)]
 enum RunOnceCmdInner {
     /// Send a RELAY cell.
     Send {
@@ -161,7 +158,6 @@ enum RunOnceCmdInner {
         /// A message handler to install.
         ///
         /// If this is `None`, there must already be a message handler installed
-        #[educe(Debug(ignore))]
         handler: Option<Box<dyn MetaCellHandler + Send + 'static>>,
         /// A sender that we use to tell the caller that the message was sent
         /// and the handler installed.
@@ -263,7 +259,6 @@ enum RunOnceCmdInner {
     #[cfg(feature = "conflux")]
     Link {
         /// The circuits to link into the tunnel
-        #[educe(Debug(ignore))]
         circuits: Vec<Circuit>,
         /// Oneshot channel for notifying of conflux handshake completion.
         answer: ConfluxLinkResultChannel,
@@ -286,6 +281,125 @@ enum RunOnceCmdInner {
     },
     /// Perform a clean shutdown on this circuit.
     CleanShutdown,
+}
+
+impl core::fmt::Debug for RunOnceCmdInner {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            RunOnceCmdInner::Send { leg, cell, done } => {
+                let mut builder = formatter.debug_struct("Send");
+                builder.field("leg", leg);
+                builder.field("cell", cell);
+                builder.field("done", done);
+                builder.finish()
+            }
+            #[cfg(feature = "send-control-msg")]
+            RunOnceCmdInner::SendMsgAndInstallHandler {
+                msg,
+                handler: _,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("SendMsgAndInstallHandler");
+                builder.field("msg", msg);
+                builder.field("done", done);
+                builder.finish()
+            }
+            RunOnceCmdInner::HandleSendMe { leg, hop, sendme } => {
+                let mut builder = formatter.debug_struct("HandleSendMe");
+                builder.field("leg", leg);
+                builder.field("hop", hop);
+                builder.field("sendme", sendme);
+                builder.finish()
+            }
+            RunOnceCmdInner::BeginStream {
+                cell,
+                stream_id,
+                hop,
+                leg,
+                stream_components,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("BeginStream");
+                builder.field("cell", cell);
+                builder.field("stream_id", stream_id);
+                builder.field("hop", hop);
+                builder.field("leg", leg);
+                builder.field("stream_components", stream_components);
+                builder.field("done", done);
+                builder.finish()
+            }
+            RunOnceCmdInner::MaybeSendXon {
+                rate,
+                stream_id,
+                hop,
+            } => {
+                let mut builder = formatter.debug_struct("MaybeSendXon");
+                builder.field("rate", rate);
+                builder.field("stream_id", stream_id);
+                builder.field("hop", hop);
+                builder.finish()
+            }
+            RunOnceCmdInner::CloseStream {
+                hop,
+                sid,
+                behav,
+                reason,
+                done,
+            } => {
+                let mut builder = formatter.debug_struct("CloseStream");
+                builder.field("hop", hop);
+                builder.field("sid", sid);
+                builder.field("behav", behav);
+                builder.field("reason", reason);
+                builder.field("done", done);
+                builder.finish()
+            }
+            RunOnceCmdInner::FirstHopClockSkew { answer } => {
+                let mut builder = formatter.debug_struct("FirstHopClockSkew");
+                builder.field("answer", answer);
+                builder.finish()
+            }
+            RunOnceCmdInner::RemoveLeg { leg, reason } => {
+                let mut builder = formatter.debug_struct("RemoveLeg");
+                builder.field("leg", leg);
+                builder.field("reason", reason);
+                builder.finish()
+            }
+            #[cfg(feature = "conflux")]
+            RunOnceCmdInner::ConfluxHandshakeComplete { leg, cell } => {
+                let mut builder = formatter.debug_struct("ConfluxHandshakeComplete");
+                builder.field("leg", leg);
+                builder.field("cell", cell);
+                builder.finish()
+            }
+            #[cfg(feature = "conflux")]
+            RunOnceCmdInner::Link {
+                circuits: _,
+                answer,
+            } => {
+                let mut builder = formatter.debug_struct("Link");
+                builder.field("answer", answer);
+                builder.finish()
+            }
+            #[cfg(feature = "conflux")]
+            RunOnceCmdInner::Enqueue { leg, msg } => {
+                let mut builder = formatter.debug_struct("Enqueue");
+                builder.field("leg", leg);
+                builder.field("msg", msg);
+                builder.finish()
+            }
+            #[cfg(feature = "circ-padding")]
+            RunOnceCmdInner::PaddingAction { leg, padding_event } => {
+                let mut builder = formatter.debug_struct("PaddingAction");
+                builder.field("leg", leg);
+                builder.field("padding_event", padding_event);
+                builder.finish()
+            }
+            RunOnceCmdInner::CleanShutdown => formatter.write_str("CleanShutdown"),
+        }
+    }
 }
 
 impl RunOnceCmdInner {
@@ -1129,7 +1243,6 @@ impl Reactor {
                 // If we reach this point, it means we have more than one leg
                 // (otherwise the .remove() would've returned a Shutdown error),
                 // so we expect there to be a ConfluxHandshakeContext installed.
-
                 #[cfg(feature = "conflux")]
                 if is_conflux_pending {
                     let (error, proto_violation): (_, Option<Error>) = match &reason {

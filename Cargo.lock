@@ -852,18 +852,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "educe"
-version = "0.4.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f0042ff8246a363dbe77d2ceedb073339e85a804b9a47636c6e016a9a32c05f"
-dependencies = [
- "enum-ordinalize",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "either"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -904,19 +892,6 @@ version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f282cfdfe92516eb26c2af8589c274c7c17681f5ecc03c18255fe741c6aa64eb"
 dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.119",
-]
-
-[[package]]
-name = "enum-ordinalize"
-version = "3.1.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bf1fa3f06bbff1ea5b1a9c7b14aa992a39657db60a2759457328d7e058f49ee"
-dependencies = [
- "num-bigint",
- "num-traits",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -1795,16 +1770,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "num-bigint"
-version = "0.4.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367"
-dependencies = [
- "num-integer",
- "num-traits",
 ]
 
 [[package]]
@@ -3907,7 +3872,6 @@ dependencies = [
  "cfg-if",
  "derive-deftly",
  "derive_more",
- "educe",
  "futures",
  "futures-rustls",
  "hostname-validator",
@@ -3983,7 +3947,6 @@ name = "zakura-safelog"
 version = "0.10.0-zakura.1"
 dependencies = [
  "derive_more",
- "educe",
  "either",
  "fluid-let",
  "serde",
@@ -4009,7 +3972,6 @@ version = "0.9.0-zakura.1"
 dependencies = [
  "anyhow",
  "derive_more",
- "educe",
  "tempfile",
 ]
 
@@ -4020,7 +3982,6 @@ dependencies = [
  "cfg-if",
  "criterion",
  "derive-deftly",
- "educe",
  "event-listener",
  "extend",
  "futures",
@@ -4047,7 +4008,6 @@ version = "0.47.0-zakura.1"
 dependencies = [
  "derive-deftly",
  "derive_more",
- "educe",
  "extend",
  "futures",
  "getrandom 0.4.3",
@@ -4075,7 +4035,6 @@ dependencies = [
  "bytes",
  "derive-deftly",
  "digest 0.10.7",
- "educe",
  "getrandom 0.4.3",
  "hex-literal",
  "thiserror 2.0.21",
@@ -4093,7 +4052,6 @@ dependencies = [
  "bytes",
  "derive-deftly",
  "derive_more",
- "educe",
  "getset",
  "hex",
  "hex-literal",
@@ -4164,7 +4122,6 @@ dependencies = [
  "cfg-if",
  "derive-deftly",
  "derive_more",
- "educe",
  "float_eq",
  "futures",
  "futures-await-test",
@@ -4220,7 +4177,6 @@ dependencies = [
  "derive-deftly",
  "derive_more",
  "dyn-clone",
- "educe",
  "futures",
  "futures-await-test",
  "getset",
@@ -4266,7 +4222,6 @@ dependencies = [
  "assert_matches",
  "cfg-if",
  "derive-deftly",
- "educe",
  "either",
  "extend",
  "futures",
@@ -4311,17 +4266,12 @@ dependencies = [
 name = "zakura-tor-consdiff"
 version = "0.47.0-zakura.1"
 dependencies = [
- "derive_more",
  "digest 0.10.7",
  "hex",
- "imara-diff",
  "rand 0.10.3",
- "static_assertions",
  "thiserror 2.0.21",
  "zakura-tor-basic-utils",
- "zakura-tor-error",
  "zakura-tor-llcrypto",
- "zakura-tor-netdoc",
 ]
 
 [[package]]
@@ -4384,7 +4334,6 @@ dependencies = [
  "base64ct",
  "derive_more",
  "digest 0.10.7",
- "educe",
  "event-listener",
  "filetime",
  "float_eq",
@@ -4461,7 +4410,6 @@ version = "0.47.0-zakura.1"
 dependencies = [
  "derive-deftly",
  "derive_more",
- "educe",
  "float_eq",
  "futures",
  "getset",
@@ -4505,7 +4453,6 @@ dependencies = [
  "cfg-if",
  "derive-deftly",
  "derive_more",
- "educe",
  "either",
  "futures",
  "humantime",
@@ -4674,7 +4621,6 @@ dependencies = [
  "derive_more",
  "digest 0.10.7",
  "ed25519-dalek",
- "educe",
  "getrandom 0.2.17",
  "getrandom 0.4.3",
  "hex",
@@ -4726,7 +4672,6 @@ dependencies = [
  "derive-deftly",
  "derive_more",
  "dyn-clone",
- "educe",
  "extend",
  "futures",
  "itertools 0.15.0",
@@ -4813,7 +4758,6 @@ dependencies = [
  "derive-deftly",
  "derive_more",
  "digest 0.10.7",
- "educe",
  "extend",
  "getset",
  "hex",
@@ -4907,7 +4851,6 @@ dependencies = [
  "derive-deftly",
  "derive_more",
  "digest 0.10.7",
- "educe",
  "futures",
  "futures-util",
  "getrandom 0.3.4",
@@ -5021,7 +4964,6 @@ dependencies = [
  "coarsetime",
  "derive_more",
  "dyn-clone",
- "educe",
  "futures",
  "futures-rustls",
  "getset",
@@ -5053,7 +4995,6 @@ dependencies = [
  "async-trait",
  "derive-deftly",
  "derive_more",
- "educe",
  "futures",
  "futures-await-test",
  "humantime",
@@ -5080,7 +5021,6 @@ dependencies = [
  "anyhow",
  "arbitrary",
  "derive-deftly",
- "educe",
  "hex-literal",
  "subtle",
  "thiserror 2.0.21",
