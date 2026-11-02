@@ -47,7 +47,6 @@ impl<T> core::fmt::Debug for NotifySender<T> {
 // We should theoretically be able to impl `Clone`, but `Fuse` does not implement `Clone` so we'd
 // have to implement something manually. If we do want `Clone` in the future, be careful about the
 // initial state of the new `NotifyReceiver` (see the `try_recv` in `NotifySender::subscribe`).
-
 #[pin_project]
 pub(crate) struct NotifyReceiver<T = ()> {
     /// The "receiver" we use to implement the async behaviour.

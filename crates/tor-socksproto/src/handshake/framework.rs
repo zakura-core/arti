@@ -101,7 +101,6 @@ pub struct PreciseReads;
 //
 // `P` prevents accidentally mixing `Finished.into_output`
 // with reads into the whole buffer, not limited by the deficit.
-
 pub struct Buffer<P: ReadPrecision = ()> {
     /// The actual buffer
     buf: Box<[u8]>,

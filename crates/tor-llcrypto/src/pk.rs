@@ -2,7 +2,6 @@
 //!
 //! In old places, Tor uses RSA; newer Tor public-key cryptography is
 //! based on curve25519 and ed25519.
-
 pub mod ed25519;
 pub mod keymanip;
 pub mod rsa;

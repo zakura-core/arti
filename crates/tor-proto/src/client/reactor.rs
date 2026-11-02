@@ -16,7 +16,6 @@
 //!    well-formed? For open streams, the streams themselves handle this check.
 //!    For half-closed streams, the reactor handles it by calling
 //!    `consume_checked_msg()`.
-
 pub(crate) mod circuit;
 mod conflux;
 mod control;
@@ -140,7 +139,6 @@ enum RunOnceCmd {
 //
 // TODO: many of the variants of this enum have an identical CtrlMsg counterpart.
 // We should consider making each variant a tuple variant and deduplicating the fields.
-
 enum RunOnceCmdInner {
     /// Send a RELAY cell.
     Send {
@@ -1245,7 +1243,6 @@ impl Reactor {
                 // If we reach this point, it means we have more than one leg
                 // (otherwise the .remove() would've returned a Shutdown error),
                 // so we expect there to be a ConfluxHandshakeContext installed.
-
                 #[cfg(feature = "conflux")]
                 if is_conflux_pending {
                     let (error, proto_violation): (_, Option<Error>) = match &reason {

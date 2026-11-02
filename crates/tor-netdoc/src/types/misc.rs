@@ -2,7 +2,6 @@
 //!
 //! There are some types that are pretty common, like "ISOTime",
 //! "base64-encoded data", and so on.
-
 pub use b16impl::*;
 pub use b64impl::*;
 pub use contact_info::*;

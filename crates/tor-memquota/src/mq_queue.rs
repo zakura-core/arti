@@ -132,7 +132,6 @@ where
 /// Returned by [`ChannelSpec::new_mq`], a method on `C`.
 /// See the [module-level docs](crate::mq_queue).
 // not Clone, see below
-
 pub struct Receiver<T: Debug + Send + 'static, C: ChannelSpec> {
     /// Payload
     //

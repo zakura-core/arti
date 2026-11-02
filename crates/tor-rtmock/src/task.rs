@@ -1718,7 +1718,6 @@ mod test {
         // If `_fut_drop_late = fut` in execute_until_first_stall (the main loop)
         // is replaced with `drop(fut)` (dropping the future at the wrong moment),
         // we do indeed get deadlock, so this test case is working.
-
         struct ReentersOnDrop {
             runtime: MockExecutor,
         }

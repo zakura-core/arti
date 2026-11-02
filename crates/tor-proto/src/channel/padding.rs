@@ -643,7 +643,6 @@ mod test {
         //  deviation of the CDF power from B^2 to B^1.98
         //  wrong minimum value by 25ms out of 12s, low_ms = min + 25
         //  wrong maximum value by 10ms out of 12s, high_ms = max -1 - 10
-
         #[allow(non_snake_case)]
         let mut N = 100_0000;
 

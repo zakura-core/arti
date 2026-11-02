@@ -722,7 +722,6 @@ macro_rules! assert_val_impl_trait {
 }
 
 // ----------------------------------------------------------------------
-
 #[cfg(test)]
 mod test {
     // @@ begin test lint list maintained by maint/add_warning @@

@@ -299,7 +299,6 @@ impl<S: Stream> FusedStream for StreamUnobtrusivePeeker<S> {
 
 /// Future from [`StreamUnobtrusivePeeker::peek`]
 // TODO: Move to tor_async_utils::peekable_stream.
-
 #[must_use = "peek() return a Future, which does nothing unless awaited"]
 pub struct PeekFuture<'s, S> {
     /// The underlying stream.

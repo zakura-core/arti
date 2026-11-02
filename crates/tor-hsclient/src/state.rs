@@ -166,7 +166,6 @@ type ServiceRecord<D> = isol_map::Record<HsClientSecretKeys, ServiceState<D>>;
 /// `last_used` is used to expire data eventually.
 //
 // TODO unify this with channels and circuits.  See arti#778.
-
 enum ServiceState<D: MockableConnectorData> {
     /// We don't have a circuit
     Closed {

@@ -50,7 +50,6 @@
 //! <!-- @@ end lint list maintained by maint/add_warning @@ -->
 
 // TODO: Try making it not Deref and having expose+expose_mut instead; how bad is it?
-
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 

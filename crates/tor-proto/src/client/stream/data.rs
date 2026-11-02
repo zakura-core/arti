@@ -854,7 +854,7 @@ impl core::fmt::Debug for DataWriterImpl {
             struct FormattedField<'a>(&'a [u8]);
             impl<'a> core::fmt::Debug for FormattedField<'a> {
                 fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
-                    skip_fmt(self.0, formatter)
+                    skip_fmt(&self.0, formatter)
                 }
             }
             FormattedField(&self.buf)
@@ -1082,7 +1082,6 @@ impl DataReaderInner {
 // TODO: We don't need to implement the state in this way anymore now that we've removed the saved
 // future. There are a few ways we could simplify this. See:
 // https://gitlab.torproject.org/tpo/core/arti/-/merge_requests/3076#note_3218210
-
 // We allow this since it's expected that streams will spend most of their time in the `Open` state,
 // and will be cleaned up shortly after closing.
 #[allow(clippy::large_enum_variant)]

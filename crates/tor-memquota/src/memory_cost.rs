@@ -259,7 +259,6 @@ mod test {
 
     // We don't really need to test the correctness, since this is just type wrappers.
     // But we should at least demonstrate that the API is usable.
-
     #[derive(Debug)]
     struct DummyParticipant;
     impl IsParticipant for DummyParticipant {

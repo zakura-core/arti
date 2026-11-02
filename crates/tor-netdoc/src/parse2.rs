@@ -74,7 +74,6 @@
 //! Some old netdoc constructs are not supported.
 //! For example, the obsolete `opt` prefix on safe-to-ignore Items.
 //! The parser may make different decisions about netdocs with anomalous item ordering.
-
 #[doc(hidden)]
 #[macro_use]
 pub mod internal_prelude;

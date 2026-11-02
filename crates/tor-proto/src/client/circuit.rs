@@ -34,7 +34,6 @@
 //! # Limitations
 //!
 //! This is client-only.
-
 pub(crate) mod halfcirc;
 
 #[cfg(feature = "hs-common")]
