@@ -50,9 +50,22 @@ use crate::encode;
 ///
 /// This is distinct from `encode::MultiplicitySelector`,
 /// principally because it has the opposite variance.
-#[derive(Educe)]
-#[educe(Clone, Copy, Default)]
+
 pub struct MultiplicitySelector<Field>(PhantomData<fn() -> Field>);
+
+impl<Field> Clone for MultiplicitySelector<Field> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+impl<Field> Copy for MultiplicitySelector<Field> {}
+impl<Field> Default for MultiplicitySelector<Field> {
+    #[inline]
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
 
 /// Helper type that allows us to implement Debug
 ///

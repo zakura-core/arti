@@ -15,7 +15,6 @@ repository = "https://github.com/zakura-core/arti"
 [dependencies]
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_more = { version = "2.1.1", features = ["full"] }
-educe = "0.4.23"
 extend = "1.2.0"
 futures = { version = "0.3.34", default-features = false, features = ["std"] }
 hex = "0.4"
@@ -33,7 +32,6 @@ web-time-compat = { package = "zakura-web-time-compat", version = "0.3.0-zakura.
 
 [dev-dependencies]
 derive_more = { version = "2.1.1", features = ["full"] }
-educe = "0.4.23"
 futures = { version = "0.3.34", default-features = false, features = ["async-await"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde-value = "0.7.0"

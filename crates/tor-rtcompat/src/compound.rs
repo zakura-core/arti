@@ -7,7 +7,7 @@ use crate::traits::*;
 use crate::unix;
 use crate::{CoarseInstant, CoarseTimeProvider};
 use async_trait::async_trait;
-use educe::Educe;
+
 use futures::{future::FutureObj, task::Spawn};
 use std::future::Future;
 use std::io::Result as IoResult;
@@ -27,14 +27,30 @@ use web_time_compat::{Instant, SystemTime};
 /// You can use this structure to create new runtimes in two ways: either by
 /// overriding a single part of an existing runtime, or by building an entirely
 /// new runtime from pieces.
-#[derive(Educe)]
-#[educe(Clone)] // #[derive(Clone)] wrongly infers Clone bounds on the generic parameters
+
+// #[derive(Clone)] wrongly infers Clone bounds on the generic parameters
 pub struct CompoundRuntime<TaskR, SleepR, CoarseTimeR, TcpR, UnixR, TlsR, UdpR> {
     /// The actual collection of Runtime objects.
     ///
     /// We wrap this in an Arc rather than requiring that each item implement
     /// Clone, though we could change our minds later on.
     inner: Arc<Inner<TaskR, SleepR, CoarseTimeR, TcpR, UnixR, TlsR, UdpR>>,
+}
+
+impl<TaskR, SleepR, CoarseTimeR, TcpR, UnixR, TlsR, UdpR> core::clone::Clone
+    for CompoundRuntime<TaskR, SleepR, CoarseTimeR, TcpR, UnixR, TlsR, UdpR>
+{
+    #[inline]
+    fn clone(&self) -> Self {
+        CompoundRuntime {
+            inner: core::clone::Clone::clone(&self.inner),
+        }
+    }
+    #[allow(clippy::incorrect_clone_impl_on_copy_type)]
+    #[inline]
+    fn clone_from(&mut self, _source: &Self) {
+        core::clone::Clone::clone_from(&mut self.inner, &_source.inner);
+    }
 }
 
 /// A collection of objects implementing that traits that make up a [`Runtime`]

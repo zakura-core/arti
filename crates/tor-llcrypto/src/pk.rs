@@ -14,7 +14,7 @@ pub mod rsa;
 /// [`x25519_dalek`].
 pub mod curve25519 {
     use derive_deftly::Deftly;
-    use educe::Educe;
+
     use subtle::ConstantTimeEq;
 
     use crate::util::ct::derive_deftly_template_PartialEqFromCtEq;
@@ -22,14 +22,21 @@ pub mod curve25519 {
 
     /// A keypair containing a [`StaticSecret`] and its corresponding public key.
     #[allow(clippy::exhaustive_structs)]
-    #[derive(Clone, Educe)]
-    #[educe(Debug)]
+    #[derive(Clone)]
     pub struct StaticKeypair {
         /// The secret part of the key.
-        #[educe(Debug(ignore))]
         pub secret: StaticSecret,
         /// The public part of this key.
         pub public: PublicKey,
+    }
+
+    impl core::fmt::Debug for StaticKeypair {
+        #[inline]
+        fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+            let mut builder = formatter.debug_struct("StaticKeypair");
+            builder.field("public", &self.public);
+            builder.finish()
+        }
     }
 
     /// A curve25519 secret key that can only be used once,

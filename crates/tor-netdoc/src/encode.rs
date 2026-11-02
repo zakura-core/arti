@@ -49,7 +49,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 use base64ct::{Base64, Encoding};
-use educe::Educe;
+
 use itertools::Itertools;
 use paste::paste;
 use rand::{CryptoRng, Rng};

@@ -6,7 +6,6 @@ use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
 
 use derive_deftly::define_derive_deftly;
 use derive_more::{Deref, Display, Into};
-use educe::Educe;
 
 /// Alias to force use of RandomState, regardless of features enabled in `weak_tables`.
 ///
@@ -30,9 +29,20 @@ type WeakHashSet<T> = weak_table::WeakHashSet<T, std::hash::RandomState>;
 //
 // Right now, this is the bare minimum of derives; it may need more in the
 // future.  If so, just add them.
-#[derive(Debug, Default, PartialEq, Eq, Hash, Display, Into, Deref, Educe)]
-#[educe(Clone)]
+#[derive(Debug, Default, PartialEq, Eq, Hash, Display, Into, Deref)]
 pub struct Intern<T: ?Sized>(Arc<T>);
+
+impl<T: ?Sized> core::clone::Clone for Intern<T> {
+    #[inline]
+    fn clone(&self) -> Self {
+        Intern(core::clone::Clone::clone(&self.0))
+    }
+    #[allow(clippy::incorrect_clone_impl_on_copy_type)]
+    #[inline]
+    fn clone_from(&mut self, _source: &Self) {
+        core::clone::Clone::clone_from(&mut self.0, &_source.0);
+    }
+}
 
 impl<T: ?Sized> Intern<T> {
     /// Creates an [`Intern`] from an arbitrary [`Arc`].

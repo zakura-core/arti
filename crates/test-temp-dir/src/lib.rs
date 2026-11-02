@@ -60,7 +60,6 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, anyhow};
 use derive_more::{Deref, DerefMut};
-use educe::Educe;
 
 /// The env var the user should set to control test temp dir handling
 const RETAIN_VAR: &str = "TEST_TEMP_RETAIN";
@@ -84,8 +83,7 @@ pub enum TestTempDir {
 /// Using this type means that the `T` won't outlive the temporary directory.
 /// (Typically, if it were to, things would malfunction.
 /// There might even be security hazards!)
-#[derive(Clone, Copy, Deref, DerefMut, Educe)]
-#[educe(Debug(bound))]
+#[derive(Clone, Copy, Deref, DerefMut)]
 pub struct TestTempDirGuard<'d, T> {
     /// The thing
     #[deref]
@@ -95,8 +93,19 @@ pub struct TestTempDirGuard<'d, T> {
     /// Placate the compiler
     ///
     /// We use a notional `()` since we don't want the compiler to infer drop glue.
-    #[educe(Debug(ignore))]
     tempdir: PhantomData<&'d ()>,
+}
+
+impl<'d, T> core::fmt::Debug for TestTempDirGuard<'d, T>
+where
+    T: core::fmt::Debug,
+{
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("TestTempDirGuard");
+        builder.field("thing", &self.thing);
+        builder.finish()
+    }
 }
 
 impl TestTempDir {

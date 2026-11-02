@@ -16,7 +16,6 @@ use std::marker::PhantomData;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use educe::Educe;
 use futures::stream::{Fuse, FusedStream};
 use futures::{Stream, StreamExt};
 use pin_project::pin_project;
@@ -25,15 +24,22 @@ use tor_async_utils::watch;
 /// A [`NotifySender`] which can notify [`NotifyReceiver`]s.
 ///
 /// See the [module documentation](self) for details.
-#[derive(Educe)]
-#[educe(Debug)]
+
 pub(crate) struct NotifySender<T = ()> {
     /// The "sender" we use to implement the async behaviour.
     sender: watch::Sender<()>,
     /// Allows the user to optionally attach a type marker to identify the purpose of the
     /// notifications.
-    #[educe(Debug(ignore))]
     _marker: PhantomData<fn() -> T>,
+}
+
+impl<T> core::fmt::Debug for NotifySender<T> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("NotifySender");
+        builder.field("sender", &self.sender);
+        builder.finish()
+    }
 }
 
 /// A [`NotifyReceiver`] which can receive notifications from a [`NotifySender`].
@@ -42,8 +48,7 @@ pub(crate) struct NotifySender<T = ()> {
 // We should theoretically be able to impl `Clone`, but `Fuse` does not implement `Clone` so we'd
 // have to implement something manually. If we do want `Clone` in the future, be careful about the
 // initial state of the new `NotifyReceiver` (see the `try_recv` in `NotifySender::subscribe`).
-#[derive(Educe)]
-#[educe(Debug)]
+
 #[pin_project]
 pub(crate) struct NotifyReceiver<T = ()> {
     /// The "receiver" we use to implement the async behaviour.
@@ -51,8 +56,16 @@ pub(crate) struct NotifyReceiver<T = ()> {
     receiver: Fuse<watch::Receiver<()>>,
     /// Allows the user to optionally attach a type marker to identify the purpose of the
     /// notifications.
-    #[educe(Debug(ignore))]
     _marker: PhantomData<fn() -> T>,
+}
+
+impl<T> core::fmt::Debug for NotifyReceiver<T> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("NotifyReceiver");
+        builder.field("receiver", &self.receiver);
+        builder.finish()
+    }
 }
 
 impl NotifySender {

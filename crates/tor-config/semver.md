@@ -21,3 +21,8 @@ The configuration errors, list/map helpers, standard-builder macro, exported
 and crate-visible declarations and behavior. No public or crate-visible API,
 feature or helper is added. Existing helper/default/Serde/error-prefix tests
 and examples now use `TorConfig` or explicit Rust builders.
+
+BREAKING: Remove the doc-hidden `deps::educe` re-export. The exported
+`define_map_builder!` macro now implements `Deref` and `DerefMut` directly,
+with the same target and behavior. Existing configuration traits, defaults,
+Serde support and feature availability are unchanged.

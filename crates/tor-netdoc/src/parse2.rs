@@ -126,9 +126,8 @@ pub(crate) use internal_prelude::EP;
 ///
 /// Specific document and type parsing methods may use these parameters
 /// to control their parsing behaviour at run-time.
-#[derive(educe::Educe, Debug, Clone)]
+#[derive(Debug, Clone)]
 #[allow(clippy::manual_non_exhaustive)]
-#[educe(Default)]
 pub struct ParseOptions {
     /// Retain unknown values?
     ///
@@ -145,12 +144,21 @@ pub struct ParseOptions {
     /// but less useful for types that appear only in a netstatus preamble.
     ///
     /// This is currently used for router flags.
-    #[educe(Default(expression = "Unknown::new_discard()"))]
     pub retain_unknown_values: Unknown<()>,
 
     // Like `#[non_exhaustive]`, but doesn't prevent use of struct display syntax with `..`
     #[doc(hidden)]
     _private_non_exhaustive: (),
+}
+
+impl core::default::Default for ParseOptions {
+    #[inline]
+    fn default() -> Self {
+        ParseOptions {
+            retain_unknown_values: Unknown::new_discard(),
+            _private_non_exhaustive: <() as core::default::Default>::default(),
+        }
+    }
 }
 
 /// Input to a network document top-level parsing operation

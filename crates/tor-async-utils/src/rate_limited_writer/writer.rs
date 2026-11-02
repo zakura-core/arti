@@ -16,8 +16,7 @@ use tor_basic_utils::token_bucket::{NeverEnoughTokensError, TokenBucket, TokenBu
 /// A rate-limited async [writer](AsyncWrite).
 ///
 /// This can be used as a wrapper around an existing [`AsyncWrite`] writer.
-#[derive(educe::Educe)]
-#[educe(Debug)]
+
 #[pin_project::pin_project]
 pub struct RateLimitedWriter<W: AsyncWrite, P: SleepProvider> {
     /// The token bucket.
@@ -29,18 +28,27 @@ pub struct RateLimitedWriter<W: AsyncWrite, P: SleepProvider> {
     /// For example, use [`SleepProvider::now()`],
     /// not [`Instant::now()`](std::time::Instant::now) or
     /// [`InstantExt::get`](web_time_compat::InstantExt::get).
-    #[educe(Debug(ignore))]
     sleep_provider: P,
     /// See [`RateLimitedWriterConfig::wake_when_bytes_available`].
     wake_when_bytes_available: NonZero<u64>,
     /// The inner writer.
-    #[educe(Debug(ignore))]
+
     #[pin]
     inner: W,
     /// We need to store the sleep future if [`AsyncWrite::poll_write()`] blocks.
-    #[educe(Debug(ignore))]
+
     #[pin]
     sleep_fut: Option<SyncFuture<P::SleepFuture>>,
+}
+
+impl<W: AsyncWrite, P: SleepProvider> core::fmt::Debug for RateLimitedWriter<W, P> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("RateLimitedWriter");
+        builder.field("bucket", &self.bucket);
+        builder.field("wake_when_bytes_available", &self.wake_when_bytes_available);
+        builder.finish()
+    }
 }
 
 impl<W, P> RateLimitedWriter<W, P>

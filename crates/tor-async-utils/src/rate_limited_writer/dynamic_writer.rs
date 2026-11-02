@@ -14,17 +14,25 @@ use super::writer::{RateLimitedWriter, RateLimitedWriterConfig};
 ///
 /// This wraps a [`RateLimitedWriter`] and watches a stream for configuration changes (such as rate
 /// limit changes).
-#[derive(educe::Educe)]
-#[educe(Debug)]
+
 #[pin_project::pin_project]
 pub struct DynamicRateLimitedWriter<W: AsyncWrite, S, P: SleepProvider> {
     /// The rate-limited writer.
     #[pin]
     writer: RateLimitedWriter<W, P>,
     /// A stream that provides configuration updates, including rate limit updates.
-    #[educe(Debug(ignore))]
+
     #[pin]
     updates: S,
+}
+
+impl<W: AsyncWrite, S, P: SleepProvider> core::fmt::Debug for DynamicRateLimitedWriter<W, S, P> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("DynamicRateLimitedWriter");
+        builder.field("writer", &self.writer);
+        builder.finish()
+    }
 }
 
 impl<W, S, P> DynamicRateLimitedWriter<W, S, P>

@@ -3,7 +3,6 @@
 
 use std::{borrow::Cow, fmt, fmt::Display};
 
-use educe::Educe;
 use futures::{Stream, StreamExt};
 use tor_basic_utils::skip_fmt;
 use tor_chanmgr::{ConnBlockage, ConnStatus, ConnStatusEvents};
@@ -290,12 +289,28 @@ pub(crate) async fn report_status(
 // the future, and because some of the functionality exposed by Receiver (like
 // `borrow()` and the watch receiver’s other methods) are extraneous to the API
 // we want.
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 pub struct BootstrapEvents {
     /// The receiver that implements this stream.
-    #[educe(Debug(method = "skip_fmt"))]
     pub(crate) inner: tor_async_utils::watch::Receiver<BootstrapStatus>,
+}
+
+impl core::fmt::Debug for BootstrapEvents {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("BootstrapEvents");
+        let arg = {
+            struct FormattedField<'a>(&'a tor_async_utils::watch::Receiver<BootstrapStatus>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.inner)
+        };
+        builder.field("inner", &arg);
+        builder.finish()
+    }
 }
 
 impl Stream for BootstrapEvents {

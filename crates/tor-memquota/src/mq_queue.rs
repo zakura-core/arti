@@ -82,8 +82,7 @@ use tor_async_utils::{ErasedSinkTrySendError, SinkCloseChannel, SinkTrySend};
 ///
 /// Returned by [`ChannelSpec::new_mq`], a method on `C`.
 /// See the [module-level docs](crate::mq_queue).
-#[derive(Educe)]
-#[educe(Debug, Clone(bound = "C::Sender<Entry<T>>: Clone"))]
+
 pub struct Sender<T: Debug + Send + 'static, C: ChannelSpec> {
     /// The inner sink
     tx: C::Sender<Entry<T>>,
@@ -92,8 +91,39 @@ pub struct Sender<T: Debug + Send + 'static, C: ChannelSpec> {
     mq: TypedParticipation<Entry<T>>,
 
     /// Time provider for getting the data age
-    #[educe(Debug(ignore))] // CoarseTimeProvider isn't Debug
+    // CoarseTimeProvider isn't Debug
     runtime: DynTimeProvider,
+}
+
+impl<T: Debug + Send + 'static, C: ChannelSpec> core::fmt::Debug for Sender<T, C> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("Sender");
+        builder.field("tx", &self.tx);
+        builder.field("mq", &self.mq);
+        builder.finish()
+    }
+}
+
+impl<T: Debug + Send + 'static, C: ChannelSpec> core::clone::Clone for Sender<T, C>
+where
+    C::Sender<Entry<T>>: Clone,
+{
+    #[inline]
+    fn clone(&self) -> Self {
+        Sender {
+            tx: core::clone::Clone::clone(&self.tx),
+            mq: core::clone::Clone::clone(&self.mq),
+            runtime: core::clone::Clone::clone(&self.runtime),
+        }
+    }
+    #[allow(clippy::incorrect_clone_impl_on_copy_type)]
+    #[inline]
+    fn clone_from(&mut self, _source: &Self) {
+        core::clone::Clone::clone_from(&mut self.tx, &_source.tx);
+        core::clone::Clone::clone_from(&mut self.mq, &_source.mq);
+        core::clone::Clone::clone_from(&mut self.runtime, &_source.runtime);
+    }
 }
 
 //---------- Receiver ----------
@@ -102,8 +132,8 @@ pub struct Sender<T: Debug + Send + 'static, C: ChannelSpec> {
 ///
 /// Returned by [`ChannelSpec::new_mq`], a method on `C`.
 /// See the [module-level docs](crate::mq_queue).
-#[derive(Educe)] // not Clone, see below
-#[educe(Debug)]
+// not Clone, see below
+
 pub struct Receiver<T: Debug + Send + 'static, C: ChannelSpec> {
     /// Payload
     //
@@ -124,12 +154,20 @@ pub struct Receiver<T: Debug + Send + 'static, C: ChannelSpec> {
     inner: Arc<ReceiverInner<T, C>>,
 }
 
+impl<T: Debug + Send + 'static, C: ChannelSpec> core::fmt::Debug for Receiver<T, C> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("Receiver");
+        builder.field("inner", &self.inner);
+        builder.finish()
+    }
+}
+
 /// Payload of `Receiver`, that's within the `Arc`, but contains the `Mutex`.
 ///
 /// This is a separate type because
 /// it's what we need to implement [`IsParticipant`] for.
-#[derive(Educe)]
-#[educe(Debug)]
+
 struct ReceiverInner<T: Debug + Send + 'static, C: ChannelSpec> {
     /// Mutable state
     ///
@@ -140,6 +178,15 @@ struct ReceiverInner<T: Debug + Send + 'static, C: ChannelSpec> {
     state: Mutex<Result<ReceiverState<T, C>, CollapsedDueToReclaim>>,
 }
 
+impl<T: Debug + Send + 'static, C: ChannelSpec> core::fmt::Debug for ReceiverInner<T, C> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("ReceiverInner");
+        builder.field("state", &self.state);
+        builder.finish()
+    }
+}
+
 /// Mutable state of a `Receiver`
 ///
 /// Normally the mutex is only locked by the receiving task.
@@ -147,8 +194,7 @@ struct ReceiverInner<T: Debug + Send + 'static, C: ChannelSpec> {
 /// which has a clone of the `Arc<ReceiverInner>`.
 ///
 /// Within `Arc<Mutex<Result<, >>>`.
-#[derive(Educe)]
-#[educe(Debug)]
+
 struct ReceiverState<T: Debug + Send + 'static, C: ChannelSpec> {
     /// The inner stream, but with an unobtrusive peek for getting the oldest data age
     rx: StreamUnobtrusivePeeker<C::Receiver<Entry<T>>>,
@@ -169,8 +215,27 @@ struct ReceiverState<T: Debug + Send + 'static, C: ChannelSpec> {
     /// Hooks passed to [`Receiver::register_collapse_hook`]
     ///
     /// When receiver dropped, or memory reclaimed, we call all of these.
-    #[educe(Debug(method = "receiver_state_debug_collapse_notify"))]
     collapse_callbacks: Vec<CollapseCallback>,
+}
+
+impl<T: Debug + Send + 'static, C: ChannelSpec> core::fmt::Debug for ReceiverState<T, C> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("ReceiverState");
+        builder.field("rx", &self.rx);
+        builder.field("mq", &self.mq);
+        let arg = {
+            struct FormattedField<'a>(&'a Vec<CollapseCallback>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    receiver_state_debug_collapse_notify(self.0, formatter)
+                }
+            }
+            FormattedField(&self.collapse_callbacks)
+        };
+        builder.field("collapse_callbacks", &arg);
+        builder.finish()
+    }
 }
 
 //---------- other types ----------
@@ -252,7 +317,7 @@ pub trait ChannelSpec: Sealed /* see Correctness, above */ + Sized + 'static {
     // We also insist that everything is Debug.  That means `T: Debug`,
     // as well as the channels.  We could avoid that, but it would involve
     // skipping debug of important fields, or pervasive complex trait bounds
-    // (Eg `#[educe(Debug(bound = "C::Receiver<Entry<T>>: Debug"))]` or worse.)
+    // For example, a Debug implementation might need an associated-type bound.
     //
     // This is a GAT because we need to instantiate it with T=Entry<_>.
     type Sender<T: Debug + Send + 'static>: Sink<T, Error = Self::SendError>
@@ -610,7 +675,7 @@ impl<T: Debug + Send + 'static, C: ChannelSpec> Drop for ReceiverState<T, C> {
     }
 }
 
-/// Method for educe's Debug impl for `ReceiverState.collapse_callbacks`
+/// Format the collapse callbacks in the receiver state.
 fn receiver_state_debug_collapse_notify(
     v: &[CollapseCallback],
     f: &mut fmt::Formatter,

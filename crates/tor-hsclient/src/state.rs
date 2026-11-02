@@ -10,7 +10,7 @@ use futures::FutureExt as _;
 use futures::task::SpawnError;
 
 use async_trait::async_trait;
-use educe::Educe;
+
 use either::Either::{self, *};
 use tor_async_utils::oneshot_broadcast;
 use tracing::{debug, error, instrument, trace};
@@ -166,8 +166,7 @@ type ServiceRecord<D> = isol_map::Record<HsClientSecretKeys, ServiceState<D>>;
 /// `last_used` is used to expire data eventually.
 //
 // TODO unify this with channels and circuits.  See arti#778.
-#[derive(Educe)]
-#[educe(Debug)]
+
 enum ServiceState<D: MockableConnectorData> {
     /// We don't have a circuit
     Closed {
@@ -181,7 +180,6 @@ enum ServiceState<D: MockableConnectorData> {
         /// The state
         data: D,
         /// The circuit
-        #[educe(Debug(ignore))]
         tunnel: Arc<D::DataTunnel>,
         /// Last time we touched this, including reuse
         ///
@@ -211,6 +209,43 @@ enum ServiceState<D: MockableConnectorData> {
     },
     /// Dummy value for use with temporary mem replace
     Dummy,
+}
+
+impl<D: MockableConnectorData> core::fmt::Debug for ServiceState<D> {
+    #[inline]
+    #[allow(clippy::unneeded_field_pattern)]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            ServiceState::Closed { data, last_used } => {
+                let mut builder = formatter.debug_struct("Closed");
+                builder.field("data", data);
+                builder.field("last_used", last_used);
+                return builder.finish();
+            }
+            ServiceState::Open {
+                data,
+                tunnel: _,
+                last_used,
+                circuit_expiry_task,
+            } => {
+                let mut builder = formatter.debug_struct("Open");
+                builder.field("data", data);
+                builder.field("last_used", last_used);
+                builder.field("circuit_expiry_task", circuit_expiry_task);
+                return builder.finish();
+            }
+            ServiceState::Working {
+                barrier_recv,
+                error,
+            } => {
+                let mut builder = formatter.debug_struct("Working");
+                builder.field("barrier_recv", barrier_recv);
+                builder.field("error", error);
+                return builder.finish();
+            }
+            ServiceState::Dummy => formatter.write_str("Dummy"),
+        }
+    }
 }
 
 impl<D: MockableConnectorData> ServiceState<D> {
@@ -773,12 +808,29 @@ pub(crate) mod test {
         give: tor_async_utils::watch::Receiver<MockGive>,
     }
 
-    #[derive(Clone, Educe)]
-    #[educe(Debug)]
+    #[derive(Clone)]
     struct MockTunnel {
-        #[educe(Debug(method = "debug_arc_mutex"))]
         ok: Arc<Mutex<bool>>,
         connect_called: usize,
+    }
+
+    impl core::fmt::Debug for MockTunnel {
+        #[inline]
+        fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+            let mut builder = formatter.debug_struct("MockTunnel");
+            let arg = {
+                struct FormattedField<'a>(&'a Arc<Mutex<bool>>);
+                impl<'a> core::fmt::Debug for FormattedField<'a> {
+                    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                        debug_arc_mutex(self.0, formatter)
+                    }
+                }
+                FormattedField(&self.ok)
+            };
+            builder.field("ok", &arg);
+            builder.field("connect_called", &self.connect_called);
+            builder.finish()
+        }
     }
 
     fn debug_arc_mutex(val: &Arc<Mutex<impl Debug>>, f: &mut fmt::Formatter) -> fmt::Result {

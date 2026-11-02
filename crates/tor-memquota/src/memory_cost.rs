@@ -11,30 +11,73 @@ pub use tor_memquota_cost::memory_cost::HasMemoryCost;
 /// Wrapping a `Participation` in a `TypedParticipation`
 /// helps prevent accidentally passing wrongly calculated costs
 /// to `claim` and `release`.
-#[derive(Deref, Educe)]
-#[educe(Clone)]
-#[educe(Debug(named_field = false))]
+#[derive(Deref)]
 pub struct TypedParticipation<T> {
     /// The actual participation
     #[deref]
     raw: Participation,
     /// Marker
-    #[educe(Debug(ignore))]
     marker: PhantomData<fn(T)>,
 }
 
+impl<T> core::fmt::Debug for TypedParticipation<T> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_tuple("TypedParticipation");
+        builder.field(&self.raw);
+        builder.finish()
+    }
+}
+
+impl<T> core::clone::Clone for TypedParticipation<T> {
+    #[inline]
+    fn clone(&self) -> Self {
+        TypedParticipation {
+            raw: core::clone::Clone::clone(&self.raw),
+            marker: core::clone::Clone::clone(&self.marker),
+        }
+    }
+    #[allow(clippy::incorrect_clone_impl_on_copy_type)]
+    #[inline]
+    fn clone_from(&mut self, _source: &Self) {
+        core::clone::Clone::clone_from(&mut self.raw, &_source.raw);
+        core::clone::Clone::clone_from(&mut self.marker, &_source.marker);
+    }
+}
+
 /// Memory cost obtained from a `T`
-#[derive(Educe, derive_more::Display)]
-#[educe(Copy, Clone)]
-#[educe(Debug(named_field = false))]
+#[derive(derive_more::Display)]
 #[display("{raw}")]
 pub struct TypedMemoryCost<T> {
     /// The actual cost in bytes
     raw: usize,
     /// Marker
-    #[educe(Debug(ignore))]
     marker: PhantomData<fn(T)>,
 }
+
+impl<T> core::fmt::Debug for TypedMemoryCost<T> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_tuple("TypedMemoryCost");
+        builder.field(&self.raw);
+        builder.finish()
+    }
+}
+
+impl<T> core::clone::Clone for TypedMemoryCost<T> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+    #[allow(clippy::incorrect_clone_impl_on_copy_type)]
+    #[inline]
+    fn clone_from(&mut self, _source: &Self) {
+        core::clone::Clone::clone_from(&mut self.raw, &_source.raw);
+        core::clone::Clone::clone_from(&mut self.marker, &_source.marker);
+    }
+}
+
+impl<T> core::marker::Copy for TypedMemoryCost<T> {}
 
 /// Types that can return a memory cost known to be the cost of some value of type `T`
 ///

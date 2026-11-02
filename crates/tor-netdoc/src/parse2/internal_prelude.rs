@@ -16,7 +16,6 @@ pub use std::time::{Duration, SystemTime};
 
 pub use derive_deftly::{Deftly, define_derive_deftly, define_derive_deftly_module};
 pub use digest::Digest;
-pub use educe::Educe;
 pub use itertools::Itertools;
 pub use paste::paste;
 pub use thiserror::Error;

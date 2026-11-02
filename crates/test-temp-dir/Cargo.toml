@@ -19,7 +19,6 @@ full = []
 [dependencies]
 anyhow = "1.0.104"
 derive_more = { version = "2.1.1", features = ["full"] }
-educe = "0.4.23"
 tempfile = "3"
 
 [package.metadata.docs.rs]

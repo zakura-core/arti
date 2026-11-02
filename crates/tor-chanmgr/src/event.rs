@@ -1,7 +1,6 @@
 //! Code for exporting events from the channel manager.
 #![allow(dead_code, unreachable_pub)]
 
-use educe::Educe;
 use futures::{Stream, StreamExt};
 use std::fmt;
 use tor_async_utils::watch;
@@ -151,15 +150,31 @@ impl fmt::Display for ConnStatus {
 /// Note that the bootstrap status is not monotonic: we might become less
 /// bootstrapped than we were before.  (For example, the internet could go
 /// down.)
-#[derive(Clone, Educe)]
-#[educe(Debug)]
+#[derive(Clone)]
 pub struct ConnStatusEvents {
     /// The receiver that implements this stream.
     ///
     /// (We wrap it in a new type here so that we can replace the implementation
     /// later on if we need to.)
-    #[educe(Debug(method = "skip_fmt"))]
     inner: watch::Receiver<ConnStatus>,
+}
+
+impl core::fmt::Debug for ConnStatusEvents {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("ConnStatusEvents");
+        let arg = {
+            struct FormattedField<'a>(&'a watch::Receiver<ConnStatus>);
+            impl<'a> core::fmt::Debug for FormattedField<'a> {
+                fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+                    skip_fmt(self.0, formatter)
+                }
+            }
+            FormattedField(&self.inner)
+        };
+        builder.field("inner", &arg);
+        builder.finish()
+    }
 }
 
 impl Stream for ConnStatusEvents {

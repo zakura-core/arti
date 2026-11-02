@@ -53,7 +53,7 @@ use crate::parse2::{
 
 use derive_deftly::{Deftly, define_derive_deftly, define_derive_deftly_module};
 use digest::Digest as _;
-use educe::Educe;
+
 use std::cmp::{self, Ordering, PartialOrd};
 use std::fmt::{self, Display};
 use std::iter;
@@ -1266,11 +1266,17 @@ impl<T: Copy + FromStr> FromStr for KeywordOrString<T> {
 /// *This* type retains the ordering.
 ///
 /// Implements the [`encode`] and [`parse2`] item multiplicity traits.
-#[derive(Debug, Clone, Hash, Deftly, Eq, PartialEq, Ord, PartialOrd, Educe)]
-#[educe(Default)]
+#[derive(Debug, Clone, Hash, Deftly, Eq, PartialEq, Ord, PartialOrd)]
 #[derive_deftly(Transparent)]
 #[allow(clippy::exhaustive_structs)]
 pub struct RetainedOrderVec<T>(pub Vec<T>);
+
+impl<T> core::default::Default for RetainedOrderVec<T> {
+    #[inline]
+    fn default() -> Self {
+        RetainedOrderVec(<Vec<T> as core::default::Default>::default())
+    }
+}
 
 // ============================================================
 

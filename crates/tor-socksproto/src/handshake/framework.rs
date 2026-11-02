@@ -22,7 +22,6 @@ use std::mem;
 use std::num::{NonZeroUsize, TryFromIntError};
 
 use derive_deftly::define_derive_deftly;
-use educe::Educe;
 
 use tor_bytes::Reader;
 use tor_error::{Bug, internal};
@@ -102,11 +101,9 @@ pub struct PreciseReads;
 //
 // `P` prevents accidentally mixing `Finished.into_output`
 // with reads into the whole buffer, not limited by the deficit.
-#[derive(Educe)]
-#[educe(Debug)]
+
 pub struct Buffer<P: ReadPrecision = ()> {
     /// The actual buffer
-    #[educe(Debug(ignore))]
     buf: Box<[u8]>,
 
     /// `[0..filled]` has data that's been read but not yet drained
@@ -117,6 +114,16 @@ pub struct Buffer<P: ReadPrecision = ()> {
     // We don't need PhantomData, since P is always a Copy unit.
     #[allow(dead_code)]
     precision: P,
+}
+
+impl<P: ReadPrecision> core::fmt::Debug for Buffer<P> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("Buffer");
+        builder.field("filled", &self.filled);
+        builder.field("precision", &self.precision);
+        builder.finish()
+    }
 }
 
 /// Next step to take in the handshake

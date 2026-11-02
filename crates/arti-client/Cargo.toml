@@ -124,7 +124,6 @@ async-trait = "0.1.92"
 cfg-if = "1.0.5"
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_more = { version = "2.1.1", features = ["full"] }
-educe = "0.4.23"
 fs-mistrust = { package = "zakura-fs-mistrust", path = "../fs-mistrust", version = "0.16.0-zakura.1", features = ["serde"] }
 futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }
 hostname-validator = "1.1.1"

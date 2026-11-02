@@ -68,7 +68,6 @@ use futures::StreamExt as _;
 use futures::stream::BoxStream;
 use tor_rtcompat::SpawnExt as _;
 
-use educe::Educe;
 use tracing::{debug, instrument};
 
 use tor_circmgr::ClientOnionServiceDataTunnel;
@@ -101,8 +100,7 @@ use state::{Config, MockableConnectorData, Services};
 ///
 /// This object is handle-like: it is fairly cheap to clone,
 ///  and contains `Arc`s internally.
-#[derive(Educe)]
-#[educe(Clone)]
+
 pub struct HsClientConnector<R: Runtime, D: state::MockableConnectorData = connect::Data> {
     /// The runtime
     runtime: R,
@@ -113,6 +111,26 @@ pub struct HsClientConnector<R: Runtime, D: state::MockableConnectorData = conne
     services: Arc<Mutex<state::Services<D>>>,
     /// For mocking in tests of `state.rs`
     mock_for_state: D::MockGlobalState,
+}
+
+impl<R: Runtime, D: state::MockableConnectorData> core::clone::Clone for HsClientConnector<R, D> {
+    #[inline]
+    fn clone(&self) -> Self {
+        HsClientConnector {
+            runtime: core::clone::Clone::clone(&self.runtime),
+            circpool: core::clone::Clone::clone(&self.circpool),
+            services: core::clone::Clone::clone(&self.services),
+            mock_for_state: core::clone::Clone::clone(&self.mock_for_state),
+        }
+    }
+    #[allow(clippy::incorrect_clone_impl_on_copy_type)]
+    #[inline]
+    fn clone_from(&mut self, _source: &Self) {
+        core::clone::Clone::clone_from(&mut self.runtime, &_source.runtime);
+        core::clone::Clone::clone_from(&mut self.circpool, &_source.circpool);
+        core::clone::Clone::clone_from(&mut self.services, &_source.services);
+        core::clone::Clone::clone_from(&mut self.mock_for_state, &_source.mock_for_state);
+    }
 }
 
 impl<R: Runtime> HsClientConnector<R, connect::Data> {

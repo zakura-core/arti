@@ -59,7 +59,7 @@ use crate::memquota::CircuitAccount;
 use crate::util::skew::ClockSkew;
 use crate::{Error, Result};
 use derive_deftly::Deftly;
-use educe::Educe;
+
 use path::HopDetail;
 use tor_cell::chancell::{
     CircId,
@@ -299,9 +299,17 @@ impl TunnelMutableState {
 }
 
 /// The mutable state of a circuit.
-#[derive(Educe, Default)]
-#[educe(Debug)]
+#[derive(Default)]
 pub(super) struct MutableState(Mutex<CircuitState>);
+
+impl core::fmt::Debug for MutableState {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_tuple("MutableState");
+        builder.field(&self.0);
+        builder.finish()
+    }
+}
 
 impl MutableState {
     /// Add a hop to the path of this circuit.
@@ -357,8 +365,7 @@ impl MutableState {
 }
 
 /// The shared state of a circuit.
-#[derive(Educe, Default)]
-#[educe(Debug)]
+#[derive(Default)]
 pub(super) struct CircuitState {
     /// Information about this circuit's path.
     ///
@@ -374,8 +381,16 @@ pub(super) struct CircuitState {
     /// fair chance that this will change in the future, and I don't want other
     /// code to assume that a `CircuitBinding` _must_ exist, so I'm making this
     /// an `Option`.
-    #[educe(Debug(ignore))]
     binding: Vec<Option<CircuitBinding>>,
+}
+
+impl core::fmt::Debug for CircuitState {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("CircuitState");
+        builder.field("path", &self.path);
+        builder.finish()
+    }
 }
 
 /// A ClientCirc that needs to send a create cell and receive a created* cell.

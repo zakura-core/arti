@@ -51,7 +51,6 @@ async-trait = "0.1.92"
 cfg-if = "1.0.5"
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
 derive_more = { version = "2.1.1", features = ["full"] }
-educe = "0.4.23"
 either = "1"
 futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }
 itertools = "0.15.0"

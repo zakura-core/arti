@@ -49,16 +49,23 @@ macro_rules! slotmap_dec_ref { { $slotmap:expr, $ref_:expr, $refcount:expr } => 
 } } } }
 
 /// A reference count, counting references with id type `K`
-#[derive(Default, Educe, Ord, PartialOrd, Eq, PartialEq, Deref)]
-#[educe(Debug)]
+#[derive(Default, Ord, PartialOrd, Eq, PartialEq, Deref)]
 pub(crate) struct Count<K> {
     /// Actual count of references
     #[deref]
     count: RawCount,
     /// Bind to the specific key type
     // K is generally Send + Sync + 'static so we don't care about variance etc.
-    #[educe(Debug(ignore))]
     marker: PhantomData<K>,
+}
+
+impl<K> core::fmt::Debug for Count<K> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("Count");
+        builder.field("count", &self.count);
+        builder.finish()
+    }
 }
 
 /// An copy of a [`slotmap_careful::Key`] `K`, which is counted by a `RefCount`
@@ -71,24 +78,82 @@ pub(crate) struct Count<K> {
 ///
 /// The `Default` value does *not* contribute to a reference count,
 /// and is fine to drop.
-#[derive(Deref, Educe)]
-#[educe(Debug, Default, Ord, Eq, PartialEq)]
+#[derive(Deref)]
 pub(crate) struct Ref<K: slotmap_careful::Key> {
     /// Actual key (without generics)
     #[deref]
     raw_key: K,
     /// Bind to the specific key type
-    #[educe(Debug(ignore))]
     marker: PhantomData<K>,
     /// Drop bomb
     ///
     /// Also forces `Ref` not to be Clone
-    #[educe(Debug(ignore), Ord(ignore), Eq(ignore), PartialEq(ignore))]
+
     #[allow(dead_code)]
     bomb: DropBombCondition,
 }
 
-// educe's Ord is open-coded and triggers clippy::non_canonical_partial_ord_impl
+impl<K: slotmap_careful::Key> core::fmt::Debug for Ref<K> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("Ref");
+        builder.field("raw_key", &self.raw_key);
+        builder.finish()
+    }
+}
+
+impl<K: slotmap_careful::Key> core::default::Default for Ref<K> {
+    #[inline]
+    fn default() -> Self {
+        Ref {
+            raw_key: <K as core::default::Default>::default(),
+            marker: <PhantomData<K> as core::default::Default>::default(),
+            bomb: <DropBombCondition as core::default::Default>::default(),
+        }
+    }
+}
+
+impl<K: slotmap_careful::Key> core::cmp::PartialEq for Ref<K> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        if core::cmp::PartialEq::ne(&self.raw_key, &other.raw_key) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.marker, &other.marker) {
+            return false;
+        }
+        true
+    }
+}
+
+impl<K: slotmap_careful::Key> core::cmp::Eq for Ref<K> {}
+
+impl<K: slotmap_careful::Key> core::cmp::Ord for Ref<K> {
+    #[inline]
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        match core::cmp::Ord::cmp(&self.raw_key, &other.raw_key) {
+            core::cmp::Ordering::Equal => {}
+            core::cmp::Ordering::Greater => {
+                return core::cmp::Ordering::Greater;
+            }
+            core::cmp::Ordering::Less => {
+                return core::cmp::Ordering::Less;
+            }
+        }
+        match core::cmp::Ord::cmp(&self.marker, &other.marker) {
+            core::cmp::Ordering::Equal => {}
+            core::cmp::Ordering::Greater => {
+                return core::cmp::Ordering::Greater;
+            }
+            core::cmp::Ordering::Less => {
+                return core::cmp::Ordering::Less;
+            }
+        }
+        core::cmp::Ordering::Equal
+    }
+}
+
+// Keep PartialOrd canonical for the ordering of the counted key.
 impl<K: slotmap_careful::Key> PartialOrd for Ref<K> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))

@@ -276,8 +276,7 @@ impl StorageConfig {
 /// Deserializing the builder rejects unknown top-level settings. This includes
 /// removed bridge and pluggable-transport configuration; it cannot silently
 /// fall back to direct Tor connections.
-#[derive(Clone, Deftly, Debug, AsRef, educe::Educe)]
-#[educe(PartialEq, Eq)]
+#[derive(Clone, Deftly, Debug, AsRef)]
 #[derive_deftly(TorConfig)]
 #[deftly(tor_config(attr = { serde(deny_unknown_fields) }))]
 #[non_exhaustive]
@@ -363,9 +362,56 @@ pub struct TorClientConfig {
     // require public API changes.
     #[as_ref]
     #[deftly(tor_config(skip, build = "|_| tor_config_path::arti_client_base_resolver()"))]
-    #[educe(PartialEq(ignore), Eq(ignore))]
     pub(crate) path_resolver: CfgPathResolver,
 }
+
+impl core::cmp::PartialEq for TorClientConfig {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        if core::cmp::PartialEq::ne(&self.tor_network, &other.tor_network) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.storage, &other.storage) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.download_schedule, &other.download_schedule) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.directory_tolerance, &other.directory_tolerance) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.override_net_params, &other.override_net_params) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.channel, &other.channel) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.system, &other.system) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.path_rules, &other.path_rules) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.preemptive_circuits, &other.preemptive_circuits) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.circuit_timing, &other.circuit_timing) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.address_filter, &other.address_filter) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.stream_timeouts, &other.stream_timeouts) {
+            return false;
+        }
+        if core::cmp::PartialEq::ne(&self.vanguards, &other.vanguards) {
+            return false;
+        }
+        true
+    }
+}
+
+impl core::cmp::Eq for TorClientConfig {}
 
 /// Helper to add overrides to a default collection.
 fn default_extend<T: Default + Extend<X>, X>(to_add: impl IntoIterator<Item = X>) -> T {

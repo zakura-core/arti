@@ -364,8 +364,7 @@ impl CircParameters {
 ///
 /// This instructs a circuit reactor to send a RELAY cell to a given target
 /// (a hop, if we are a client, or the client, if we are a relay).
-#[derive(educe::Educe)]
-#[educe(Debug)]
+
 pub(crate) struct SendRelayCell {
     /// The hop number, or `None` if we are a relay.
     pub(crate) hop: Option<HopNum>,
@@ -373,6 +372,17 @@ pub(crate) struct SendRelayCell {
     pub(crate) early: bool,
     /// The cell to send.
     pub(crate) cell: AnyRelayMsgOuter,
+}
+
+impl core::fmt::Debug for SendRelayCell {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let mut builder = formatter.debug_struct("SendRelayCell");
+        builder.field("hop", &self.hop);
+        builder.field("early", &self.early);
+        builder.field("cell", &self.cell);
+        builder.finish()
+    }
 }
 
 /// The inbound state of a hop.

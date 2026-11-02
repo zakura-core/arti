@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::hash::Hash;
 
 use derive_more::{Deref, DerefMut};
-use educe::Educe;
 
 use slotmap_careful::{DenseSlotMap, Key};
 
@@ -41,8 +40,7 @@ use tor_circmgr::isolation::Isolation;
 ///   K2, isol ---------------> | .............. |          | K2, isol, V  /  <vacant> |
 ///             linear search   |________________|          | ...             ....     |
 /// ```                                                     |__________________________|
-#[derive(Debug, Educe)]
-#[educe(Default)]
+#[derive(Debug)]
 pub(crate) struct MultikeyIsolatedMap<I, K1, K2, V>
 where
     I: Key,
@@ -60,6 +58,21 @@ where
     /// each `Vec` element in `index` refers to an (occupied) entry in `table`, and
     /// each (occupied) entry in `table` is referenced precisely once from `index`.
     table: DenseSlotMap<I, Record<K2, V>>,
+}
+
+impl<I, K1, K2, V> core::default::Default for MultikeyIsolatedMap<I, K1, K2, V>
+where
+    I: Key,
+    K1: Hash + Eq,
+    K2: Eq,
+{
+    #[inline]
+    fn default() -> Self {
+        MultikeyIsolatedMap {
+            index: <HashMap<K1, Vec<I>> as core::default::Default>::default(),
+            table: <DenseSlotMap<I, Record<K2, V>> as core::default::Default>::default(),
+        }
+    }
 }
 
 /// Record within a `MultikeyIsolatedMap`
