@@ -40,7 +40,6 @@ full = [
 [dependencies]
 data-encoding = "2.11.1"                                                                                    # want MSVC i686 build fix, data-encoding/issues/33
 derive-deftly = { version = "~1.14.0" }
-derive_more = { version = "2.1.1", features = ["full"] }
 digest = "0.10.7"
 hex = "0.4"
 humantime = "2"

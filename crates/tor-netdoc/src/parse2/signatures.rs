@@ -177,7 +177,7 @@ pub trait NetdocParseableSignatures: Sized {
     /// `SignatureItemParseable::HashAccu`.
     ///
     /// For a signatures section that can contain multiple signatures with different
-    /// hashes, the `AsMut` will normally be derived by [`derive_more::AsMut`].
+    /// hashes, [`AsMut`] can return a mutable reference to that field.
     /// For a document with only one hash type,
     /// `NetdocParseableSignatures::HashesAccu` and `SignatureItemParseable::HashAccu`
     /// can be the same newtype,

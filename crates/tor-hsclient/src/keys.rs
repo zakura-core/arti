@@ -20,7 +20,6 @@ use tor_keymgr::derive_deftly_template_KeySpecifier;
 #[cfg(feature = "keymgr")]
 use derive_deftly::Deftly;
 #[cfg(feature = "keymgr")]
-use derive_more::Constructor;
 #[cfg(feature = "keymgr")]
 use tor_keymgr::KeySpecifier;
 
@@ -154,7 +153,7 @@ impl HsClientSecretKeysBuilder {
 
 #[cfg(feature = "keymgr")]
 #[cfg_attr(docsrs, doc(cfg(feature = "keymgr")))]
-#[derive(Deftly, PartialEq, Debug, Constructor)]
+#[derive(Deftly, PartialEq, Debug)]
 #[derive_deftly(KeySpecifier)]
 #[deftly(prefix = "client")]
 #[deftly(role = "KS_hsc_desc_enc")]
@@ -163,4 +162,13 @@ impl HsClientSecretKeysBuilder {
 pub struct HsClientDescEncKeypairSpecifier {
     /// The hidden service this authorization key is for.
     pub(crate) hs_id: HsId,
+}
+
+#[cfg(feature = "keymgr")]
+impl HsClientDescEncKeypairSpecifier {
+    #[inline]
+    /// Construct a new [`HsClientDescEncKeypairSpecifier`] from its fields.
+    pub const fn new(hs_id: HsId) -> HsClientDescEncKeypairSpecifier {
+        HsClientDescEncKeypairSpecifier { hs_id: hs_id }
+    }
 }

@@ -54,14 +54,12 @@ use tor_rtcompat::{DynTimeProvider, Runtime};
 use tracing::{debug, trace};
 
 /// Everything needed to handle CREATE* messages on channels.
-#[derive(derive_more::Debug)]
 pub struct CreateRequestHandler {
     /// Something that can launch channels. Typically the `ChanMgr`.
     chan_provider: Weak<dyn ChannelProvider<BuildSpec = OwnedChanTarget> + Send + Sync>,
     /// Circuit-related network parameters.
     circ_net_params: RwLock<CircNetParameters>,
     /// The circuit extension keys.
-    #[debug(skip)]
     ntor_keys: RwLock<RelayNtorKeys>,
     /// An [`IncomingStreamRequestFilter`] factory for checking whether the user wants
     /// this request, or wants to reject it immediately.
@@ -72,7 +70,6 @@ pub struct CreateRequestHandler {
     // TODO(relay): it's likely this will end up changing quite a bit once we start
     // figuring out exactly how the config/reconfigure() logic and IncomingStreamRequestFilter
     // should function for relays.
-    #[debug(skip)]
     incoming_filter_factory: Box<dyn IncomingStreamRequestFilterFactory + Send + Sync>,
     /// The allowed incoming stream commands.
     ///
@@ -94,8 +91,29 @@ pub struct CreateRequestHandler {
     ///
     /// Note: because this MPSC is not associated with any particular circuit or channel,
     /// it does not participate in the memquota system (see [crate::memquota]).
-    #[debug(skip)]
     circuit_stream_tx: mpsc::Sender<Box<dyn Stream<Item = IncomingStream> + Send + Sync + Unpin>>,
+}
+
+impl core::fmt::Debug for CreateRequestHandler {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let chan_provider = &self.chan_provider;
+        let circ_net_params = &self.circ_net_params;
+        let allowed_stream_cmds = &self.allowed_stream_cmds;
+        core::fmt::DebugStruct::finish_non_exhaustive(core::fmt::DebugStruct::field(
+            core::fmt::DebugStruct::field(
+                core::fmt::DebugStruct::field(
+                    &mut core::fmt::Formatter::debug_struct(formatter, "CreateRequestHandler"),
+                    "chan_provider",
+                    &chan_provider,
+                ),
+                "circ_net_params",
+                &circ_net_params,
+            ),
+            "allowed_stream_cmds",
+            &allowed_stream_cmds,
+        ))
+    }
 }
 
 // We make the CREATE-handling methods of `CreateRequestHandler` async
@@ -564,12 +582,20 @@ impl CreateRequestHandler {
 }
 
 /// The server's RSA identity and ntor keypair.
-#[derive(derive_more::Constructor)]
 struct NtorSecretKey<'a> {
     /// The server's RSA identity.
     ident: &'a RsaIdentity,
     /// The server's ntor keypair.
     keys: Arc<RelayNtorKeypair>,
+}
+
+impl<'a> NtorSecretKey<'a> {
+    #[inline]
+    /// Construct a new [`NtorSecretKey`] from its fields.
+    #[allow(unreachable_pub)] // Preserve the existing constructor visibility.
+    pub const fn new(ident: &'a RsaIdentity, keys: Arc<RelayNtorKeypair>) -> NtorSecretKey<'a> {
+        NtorSecretKey { ident, keys }
+    }
 }
 
 impl<'a> NtorServerKeys for NtorSecretKey<'a> {
@@ -587,12 +613,23 @@ impl<'a> NtorServerKeys for NtorSecretKey<'a> {
 }
 
 /// The server's Ed25519 identity and ntor keypair.
-#[derive(derive_more::Constructor)]
 struct NtorV3SecretKey<'a> {
     /// The server's Ed25519 identity.
     ident: &'a Ed25519Identity,
     /// The server's ntor keypair.
     keys: Arc<RelayNtorKeypair>,
+}
+
+impl<'a> NtorV3SecretKey<'a> {
+    #[inline]
+    /// Construct a new [`NtorV3SecretKey`] from its fields.
+    #[allow(unreachable_pub)] // Preserve the existing constructor visibility.
+    pub const fn new(
+        ident: &'a Ed25519Identity,
+        keys: Arc<RelayNtorKeypair>,
+    ) -> NtorV3SecretKey<'a> {
+        NtorV3SecretKey { ident, keys }
+    }
 }
 
 impl<'a> NtorV3ServerKeys for NtorV3SecretKey<'a> {

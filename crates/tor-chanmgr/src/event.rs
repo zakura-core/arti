@@ -36,21 +36,32 @@ pub struct ConnStatus {
 }
 
 /// A problem detected while connecting to the Tor network.
-#[derive(Debug, Clone, Eq, PartialEq, derive_more::Display)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum ConnBlockage {
-    #[display("unable to connect to the internet")]
     /// We haven't been able to make successful TCP connections.
     NoTcp,
     /// We've made TCP connections, but our TLS connections either failed, or
     /// got hit by an attempted man-in-the-middle attack.
-    #[display("our internet connection seems to be filtered")]
     NoHandshake,
     /// We've made TCP connections, and our TLS connections mostly succeeded,
     /// but we encountered failures that are well explained by clock skew,
     /// or expired certificates.
-    #[display("relays all seem to be using expired certificates")]
     CertsExpired,
+}
+
+impl core::fmt::Display for ConnBlockage {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::NoTcp => formatter.write_fmt(format_args!("unable to connect to the internet")),
+            Self::NoHandshake => {
+                formatter.write_fmt(format_args!("our internet connection seems to be filtered"))
+            }
+            Self::CertsExpired => formatter.write_fmt(format_args!(
+                "relays all seem to be using expired certificates",
+            )),
+        }
+    }
 }
 
 impl ConnStatus {

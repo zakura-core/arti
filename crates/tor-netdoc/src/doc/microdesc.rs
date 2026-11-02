@@ -108,12 +108,10 @@ pub struct Microdesc {
 /// using the old parser ([`MicrodescAndHash::parse`])
 /// rather than the new one
 /// (`Microdesc as `[`NetdocParseable`](crate::parse2::NetdocParseable)).
-#[derive(Clone, Debug, Deftly, PartialEq, Eq, derive_more::Deref, derive_more::DerefMut)]
+#[derive(Clone, Debug, Deftly, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct MicrodescAndHash {
     /// The microdescriptor
-    #[deref]
-    #[deref_mut]
     pub md: Microdesc,
 
     /// The SHA256 digest of the text of this microdescriptor.
@@ -121,6 +119,21 @@ pub struct MicrodescAndHash {
     /// This value is used to identify the microdescriptor when
     /// downloading it, and when listing it in a consensus document.
     pub sha256: MdDigest,
+}
+
+impl core::ops::Deref for MicrodescAndHash {
+    type Target = Microdesc;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.md
+    }
+}
+
+impl core::ops::DerefMut for MicrodescAndHash {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.md
+    }
 }
 
 impl Microdesc {

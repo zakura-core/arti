@@ -162,13 +162,20 @@ impl NormalItemArgument for RelayFamilyId {}
 /// result to get deduplicated and sorted automatically using
 /// [`RelayFamilyIds::dedup()`] and [`RelayFamilyIds::sort()`], as those calls
 /// are effectively required for a useful use of this type.
-#[derive(Clone, Debug, Default, Eq, PartialEq, Deftly, derive_more::AsRef)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deftly)]
 #[derive_deftly(ItemValueEncodable, ItemValueParseable)]
 pub struct RelayFamilyIds(
     // TODO DIRMIRROR: Replace with BTreeSet at one point.
     // TODO could/should this be a type alias instead?
     Vec<RelayFamilyId>,
 );
+
+impl core::convert::AsRef<Vec<RelayFamilyId>> for RelayFamilyIds {
+    #[inline]
+    fn as_ref(&self) -> &Vec<RelayFamilyId> {
+        &self.0
+    }
+}
 
 impl RelayFamilyIds {
     /// Return a new empty [`RelayFamilyIds`].

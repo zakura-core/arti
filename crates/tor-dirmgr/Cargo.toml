@@ -62,7 +62,6 @@ __is_experimental = []
 [dependencies]
 async-trait = "0.1.92"
 base64ct = "1.8.3"
-derive_more = { version = "2.1.1", features = ["full"] }
 digest = "0.10.7"
 event-listener = "5"
 fs-mistrust = { package = "zakura-fs-mistrust", path = "../fs-mistrust", version = "0.16.0-zakura.1" }

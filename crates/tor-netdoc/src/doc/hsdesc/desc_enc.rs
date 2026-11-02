@@ -55,8 +55,21 @@ pub(crate) const HS_DESC_ENC_NONCE_LEN: usize = 16;
 ///
 /// This is  `N_hs_desc_enc` in the spec, where sometimes we also call it a
 /// "descriptor cookie".
-#[derive(derive_more::AsRef, derive_more::From)]
 pub(super) struct HsDescEncNonce([u8; HS_DESC_ENC_NONCE_LEN]);
+
+impl core::convert::AsRef<[u8; HS_DESC_ENC_NONCE_LEN]> for HsDescEncNonce {
+    #[inline]
+    fn as_ref(&self) -> &[u8; HS_DESC_ENC_NONCE_LEN] {
+        &self.0
+    }
+}
+
+impl core::convert::From<[u8; HS_DESC_ENC_NONCE_LEN]> for HsDescEncNonce {
+    #[inline]
+    fn from(value: [u8; HS_DESC_ENC_NONCE_LEN]) -> Self {
+        HsDescEncNonce(value)
+    }
+}
 
 /// Length of our cryptographic salt.
 const SALT_LEN: usize = 16;

@@ -39,15 +39,34 @@ pub(crate) struct ProtectedWeak<P: ?Sized>(Weak<P>);
 ///
 /// When testing, it has a drop bomb.  You must call `.promise_dropping_is_ok`.
 /// It will panic if it's simply dropped.
-#[derive(Debug, Deref, DerefMut)]
+#[derive(Debug)]
 pub(crate) struct ProtectedArc<P: ?Sized> {
     /// The actual explosive (might be armed or disarmed)
     bomb: DropBomb,
 
     /// The underlying `Arc`
-    #[deref(forward)]
-    #[deref_mut(forward)]
     arc: Arc<P>,
+}
+
+impl<P: ?Sized> core::ops::Deref for ProtectedArc<P>
+where
+    Arc<P>: core::ops::Deref,
+{
+    type Target = <Arc<P> as core::ops::Deref>::Target;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        <Arc<P> as core::ops::Deref>::deref(&self.arc)
+    }
+}
+
+impl<P: ?Sized> core::ops::DerefMut for ProtectedArc<P>
+where
+    Arc<P>: core::ops::DerefMut,
+{
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        <Arc<P> as core::ops::DerefMut>::deref_mut(&mut self.arc)
+    }
 }
 
 impl<P: ?Sized> ProtectedWeak<P> {

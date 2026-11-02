@@ -824,12 +824,26 @@ mod tests {
     }
 
     /// Metadata structure for tracking item operations in tests.
-    #[derive(Clone, Debug, PartialEq, derive_more::From)]
+    #[derive(Clone, Debug, PartialEq)]
     enum ItemMetadata {
         /// Metadata about a key.
         Key(KeyMetadata),
         /// Metadata about a certificate.
         Cert(CertMetadata),
+    }
+
+    impl core::convert::From<KeyMetadata> for ItemMetadata {
+        #[inline]
+        fn from(value: KeyMetadata) -> Self {
+            ItemMetadata::Key(value)
+        }
+    }
+
+    impl core::convert::From<CertMetadata> for ItemMetadata {
+        #[inline]
+        fn from(value: CertMetadata) -> Self {
+            ItemMetadata::Cert(value)
+        }
     }
 
     impl ItemMetadata {

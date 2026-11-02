@@ -75,7 +75,12 @@
 //! # // fake up some things; we do this rather than using real ones
 //! # // since this example will move, with the module, to a lower level crate.
 //! # struct OnionService { }
-//! # #[derive(derive_more::Display)] struct HsNickname(String);
+//! # struct HsNickname(String);
+//! # impl std::fmt::Display for HsNickname {
+//! #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//! #         std::fmt::Display::fmt(&self.0, f)
+//! #     }
+//! # }
 //! # type Error = anyhow::Error;
 //! # mod ipt_mgr { pub mod persist {
 //! #     #[derive(serde::Serialize, serde::Deserialize)] pub struct StateRecord {}
@@ -178,7 +183,7 @@ use std::sync::Arc;
 use web_time_compat::{Duration, SystemTime, SystemTimeExt};
 
 use derive_deftly::{Deftly, define_derive_deftly};
-use derive_more::{AsRef, Deref};
+
 use itertools::chain;
 use serde::{Serialize, de::DeserializeOwned};
 
@@ -336,10 +341,10 @@ pub trait InstancePurgeHandler {
 }
 
 /// Information about an instance, passed to [`InstancePurgeHandler::dispose`]
-#[derive(Debug, Clone, getset::Getters, AsRef)]
+#[derive(Debug, Clone, getset::Getters)]
 pub struct InstancePurgeInfo<'i> {
     /// The instance's identity string
-    #[as_ref]
+
     #[getset(get = "pub")]
     identity: &'i SlugRef,
 
@@ -349,6 +354,13 @@ pub struct InstancePurgeInfo<'i> {
     /// for details of what kinds of events count as modifications.
     #[getset(get = "pub")]
     last_modified: SystemTime,
+}
+
+impl<'i> core::convert::AsRef<&'i SlugRef> for InstancePurgeInfo<'i> {
+    #[inline]
+    fn as_ref(&self) -> &&'i SlugRef {
+        &self.identity
+    }
 }
 
 /// Is an instance still relevant?
@@ -1101,14 +1113,21 @@ impl<T: Serialize + DeserializeOwned> StorageHandle<T> {
 /// If you need to manage the lock, and the directory path, separately,
 /// [`raw_lock_guard`](ContainsInstanceStateGuard::raw_lock_guard)
 ///  will help.
-#[derive(Deref, Clone, Debug, Deftly)]
+#[derive(Clone, Debug, Deftly)]
 #[derive_deftly(ContainsInstanceStateGuard)]
 pub struct InstanceRawSubdir {
     /// The actual directory, as a [`fs_mistrust::CheckedDir`]
-    #[deref]
     dir: CheckedDir,
     /// Clone of the InstanceStateHandle's lock
     flock_guard: Arc<LockFileGuard>,
+}
+
+impl core::ops::Deref for InstanceRawSubdir {
+    type Target = CheckedDir;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.dir
+    }
 }
 
 #[cfg(all(test, not(miri) /* filesystem access */))]

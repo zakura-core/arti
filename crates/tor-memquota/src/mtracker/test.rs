@@ -251,11 +251,19 @@ impl HasCallerInfo for PartnState {
 
 //---------- test participant which is directly the accountholder ----------
 
-#[derive(Debug, Deref)]
+#[derive(Debug)]
 struct UnifiedP {
     acct: Account,
-    #[deref]
+
     state: TestPartn,
+}
+
+impl core::ops::Deref for UnifiedP {
+    type Target = TestPartn;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.state
+    }
 }
 
 type ReclaimedOrOk = Result<(), ()>;

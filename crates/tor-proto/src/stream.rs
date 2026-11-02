@@ -136,13 +136,28 @@ pub(crate) struct StreamTarget {
 }
 
 /// A client or relay tunnel.
-#[derive(Debug, Clone, derive_more::From)]
+#[derive(Debug, Clone)]
 pub(crate) enum Tunnel {
     /// A client tunnel.
     Client(Arc<ClientTunnel>),
     /// A relay tunnel.
     #[cfg(feature = "relay")]
     Relay(Arc<crate::relay::RelayCirc>),
+}
+
+impl core::convert::From<Arc<ClientTunnel>> for Tunnel {
+    #[inline]
+    fn from(value: Arc<ClientTunnel>) -> Self {
+        Tunnel::Client(value)
+    }
+}
+
+#[cfg(feature = "relay")]
+impl core::convert::From<Arc<crate::relay::RelayCirc>> for Tunnel {
+    #[inline]
+    fn from(value: Arc<crate::relay::RelayCirc>) -> Self {
+        Tunnel::Relay(value)
+    }
 }
 
 impl StreamTarget {

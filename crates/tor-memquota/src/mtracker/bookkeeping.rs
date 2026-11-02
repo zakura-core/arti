@@ -138,7 +138,7 @@ impl BookkeepableQty for Qty {
 /// since in that situation we don't want to continue to use memory, unboundedly.)
 //
 // Poisoned is indicated by We setting to `MAX`.
-#[derive(Default, Debug, Deftly, derive_more::Display)]
+#[derive(Default, Debug, Deftly)]
 #[derive_deftly(BookkeptQty)]
 #[deftly(allow_nonzero_drop)] // Dropped only when the whole tracker is dropped
 pub(super) struct TotalQty {
@@ -146,20 +146,34 @@ pub(super) struct TotalQty {
     raw: Qty,
 }
 
+impl core::fmt::Display for TotalQty {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let raw = &self.raw;
+        core::fmt::Display::fmt(raw, formatter)
+    }
+}
+
 /// Qty used by a participant, found in [`PRecord`].`used`.
 ///
 /// The tracker data structure has one of these for each Participant.
 ///
 /// This is the total amount `claim`ed, plus the caches in each `Participation`.
-#[derive(Default, Debug, Deftly, derive_more::Display)]
+#[derive(Default, Debug, Deftly)]
 #[derive_deftly(BookkeptQty)]
-#[display("{raw}")]
 pub(super) struct ParticipQty {
     /// See [`BookkeptQty`]
     raw: Qty,
 
     /// See [`BookkeptQty`]
     bomb: DropBombCondition,
+}
+
+impl core::fmt::Display for ParticipQty {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let _ = &self.bomb;
+        let raw = &self.raw;
+        core::fmt::Display::fmt(raw, formatter)
+    }
 }
 
 /// "Cached" claim, on behalf of a Participant
@@ -171,9 +185,8 @@ pub(super) struct ParticipQty {
 /// When we return to the participant, outside the tracker, we
 /// essentially throw this away, since we don't give the caller any representation
 /// to store.  The participant is supposed to track this separately somehow.
-#[derive(Default, Debug, Deftly, derive_more::Display)]
+#[derive(Default, Debug, Deftly)]
 #[derive_deftly(BookkeptQty)]
-#[display("{raw}")]
 #[must_use]
 pub(super) struct ClaimedQty {
     /// See [`BookkeptQty`]
@@ -181,6 +194,14 @@ pub(super) struct ClaimedQty {
 
     /// See [`BookkeptQty`]
     bomb: DropBombCondition,
+}
+
+impl core::fmt::Display for ClaimedQty {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let _ = &self.bomb;
+        let raw = &self.raw;
+        core::fmt::Display::fmt(raw, formatter)
+    }
 }
 
 impl TotalQty {

@@ -356,12 +356,16 @@ impl Sealed for Path {}
 /// }
 ///
 /// // imagine this in the higher-level module
-/// use derive_more::AsRef;
-/// #[derive(AsRef)]
 /// struct Everything {
-///     #[as_ref] lorem: String,
-///     #[as_ref] ipsum: usize,
+///     lorem: String,
+///     ipsum: usize,
 ///     dolor: Vec<()>,
+/// }
+/// impl AsRef<String> for Everything {
+///     fn as_ref(&self) -> &String { &self.lorem }
+/// }
+/// impl AsRef<usize> for Everything {
+///     fn as_ref(&self) -> &usize { &self.ipsum }
 /// }
 /// impl Supertrait for Everything { }
 /// impl View for Everything {

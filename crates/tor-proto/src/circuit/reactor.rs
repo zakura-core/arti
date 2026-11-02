@@ -264,13 +264,10 @@ use macros::derive_deftly_template_CircuitReactor;
 pub(crate) type ReactorResultChannel<T> = oneshot::Sender<crate::Result<T>>;
 
 /// A handle for interacting with a circuit reactor.
-#[derive(derive_more::Debug)]
 pub(crate) struct CircReactorHandle<F: ForwardHandler, B: BackwardHandler> {
     /// Sender for reactor control messages.
-    #[debug(skip)]
     pub(crate) control: mpsc::UnboundedSender<CtrlMsg<F::CtrlMsg, B::CtrlMsg>>,
     /// Sender for reactor control commands.
-    #[debug(skip)]
     pub(crate) command: mpsc::UnboundedSender<CtrlCmd<F::CtrlCmd, B::CtrlCmd>>,
     /// The time provider.
     #[allow(unused)] // TODO(relay)
@@ -278,6 +275,23 @@ pub(crate) struct CircReactorHandle<F: ForwardHandler, B: BackwardHandler> {
     /// Memory quota account
     #[allow(unused)] // TODO(relay)
     pub(crate) memquota: CircuitAccount,
+}
+
+impl<F: ForwardHandler, B: BackwardHandler> core::fmt::Debug for CircReactorHandle<F, B> {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let time_provider = &self.time_provider;
+        let memquota = &self.memquota;
+        core::fmt::DebugStruct::finish_non_exhaustive(core::fmt::DebugStruct::field(
+            core::fmt::DebugStruct::field(
+                &mut core::fmt::Formatter::debug_struct(formatter, "CircReactorHandle"),
+                "time_provider",
+                &time_provider,
+            ),
+            "memquota",
+            &memquota,
+        ))
+    }
 }
 
 /// A control command.
@@ -297,12 +311,25 @@ pub(crate) enum CtrlCmd<F, B> {
 
 /// A control message.
 #[allow(unused)] // TODO(relay)
-#[derive(derive_more::From)]
 pub(crate) enum CtrlMsg<F, B> {
     /// A control message for the forward reactor.
     Forward(forward::CtrlMsg<F>),
     /// A control message for the backward reactor.
     Backward(backward::CtrlMsg<B>),
+}
+
+impl<F, B> core::convert::From<forward::CtrlMsg<F>> for CtrlMsg<F, B> {
+    #[inline]
+    fn from(value: forward::CtrlMsg<F>) -> Self {
+        CtrlMsg::Forward(value)
+    }
+}
+
+impl<F, B> core::convert::From<backward::CtrlMsg<B>> for CtrlMsg<F, B> {
+    #[inline]
+    fn from(value: backward::CtrlMsg<B>) -> Self {
+        CtrlMsg::Backward(value)
+    }
 }
 
 /// The entry point of the circuit reactor subsystem.

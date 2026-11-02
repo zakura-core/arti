@@ -39,20 +39,30 @@ enum PStatus {
 /// Outcome of a completed reclamation run
 ///
 /// This is used only within `choose_victim`, and only for logging
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug)]
 enum Outcome {
     /// We reached the low water mark
-    #[display("complete")]
     TargetReached,
 
     /// We didn't, but we have so many participants that that's possibly expected
     ///
     /// (Can only happen on 32-bit platforms.)
-    #[display("{} participants, good enough - stopping", n_particips)]
     GoodEnough {
         /// The number of participants
         n_particips: NumParticips,
     },
+}
+
+impl core::fmt::Display for Outcome {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::TargetReached => formatter.write_fmt(format_args!("complete")),
+            Self::GoodEnough { n_particips } => formatter.write_fmt(format_args!(
+                "{0} participants, good enough - stopping",
+                n_particips,
+            )),
+        }
+    }
 }
 
 /// Figure out whether a participant is a candidate victim, and obtain its data age

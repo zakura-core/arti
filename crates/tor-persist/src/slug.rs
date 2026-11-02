@@ -49,21 +49,33 @@ pub use os::ForbiddenOnWindows;
 // We adopt this rule so that eventually we could have AsRef<[std::ascii::Char]>, etc.
 #[derive(Debug, Clone, Serialize, Deserialize)] //
 #[derive(Eq, PartialEq, Ord, PartialOrd, Hash)] //
-#[derive(derive_more::Display)]
 #[serde(try_from = "String", into = "String")]
 // Box<str> since we don't expect to change the size; that makes it 2 words rather than 3
 // (But our public APIs are in terms of String.)
 pub struct Slug(Box<str>);
+
+impl core::fmt::Display for Slug {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
 
 /// A borrwed slug, checked for syntax
 ///
 /// The syntax check can be relied on for safety/soundness.
 #[derive(Debug, Serialize)] //
 #[derive(Eq, PartialEq, Ord, PartialOrd, Hash)] //
-#[derive(derive_more::Display)]
 #[serde(transparent)]
 #[repr(transparent)] // SAFETY: this attribute is needed for unsafe in new_unchecked
 pub struct SlugRef(str);
+
+impl core::fmt::Display for SlugRef {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
 
 /// Characters which are good to use to separate slugs
 ///

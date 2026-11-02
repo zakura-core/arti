@@ -9,7 +9,6 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use std::task::{Context, Poll, Waker};
 use web_time_compat::{Duration, Instant, InstantExt, SystemTime, SystemTimeExt};
 
-use derive_more::AsMut;
 use priority_queue::priority_queue::PriorityQueue;
 use slotmap_careful::DenseSlotMap;
 
@@ -69,7 +68,7 @@ pub struct SleepFuture {
 /// | WAITING     | exists           | present, `Some`  | present, `> now`   |
 /// | READY       | exists           | present, `None`  | absent             |
 /// | DROPPED     | dropped          | absent           | absent             |
-#[derive(Debug, AsMut)]
+#[derive(Debug)]
 struct State {
     /// Current time
     ///
@@ -96,6 +95,27 @@ struct State {
     ///
     /// `PriorityQueue` is a max-heap but we want earliest times, hence `Reverse`
     unready: PriorityQueue<Id, Reverse<Instant>>,
+}
+
+impl core::convert::AsMut<MockTimeCore> for State {
+    #[inline]
+    fn as_mut(&mut self) -> &mut MockTimeCore {
+        &mut self.core
+    }
+}
+
+impl core::convert::AsMut<DenseSlotMap<Id, Option<Waker>>> for State {
+    #[inline]
+    fn as_mut(&mut self) -> &mut DenseSlotMap<Id, Option<Waker>> {
+        &mut self.futures
+    }
+}
+
+impl core::convert::AsMut<PriorityQueue<Id, Reverse<Instant>>> for State {
+    #[inline]
+    fn as_mut(&mut self) -> &mut PriorityQueue<Id, Reverse<Instant>> {
+        &mut self.unready
+    }
 }
 
 /// `Default` makes a `Provider` which starts at whatever the current real time is

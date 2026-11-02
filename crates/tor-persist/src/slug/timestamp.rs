@@ -5,7 +5,6 @@ use crate::slug::{BadSlug, Slug};
 use std::fmt;
 use std::str::FromStr;
 
-use derive_more::{From, Into};
 use thiserror::Error;
 use time::format_description::FormatItem;
 use time::macros::format_description;
@@ -33,8 +32,22 @@ use web_time_compat::SystemTime;
 /// # }
 /// ```
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)] //
-#[derive(Into, From)]
+
 pub struct Iso8601TimeSlug(SystemTime);
+
+impl core::convert::From<Iso8601TimeSlug> for SystemTime {
+    #[inline]
+    fn from(value: Iso8601TimeSlug) -> Self {
+        value.0
+    }
+}
+
+impl core::convert::From<SystemTime> for Iso8601TimeSlug {
+    #[inline]
+    fn from(value: SystemTime) -> Self {
+        Iso8601TimeSlug(value)
+    }
+}
 
 /// The format of a [`Iso8601TimeSlug`].
 const ISO_8601SP_FMT: &[FormatItem] =

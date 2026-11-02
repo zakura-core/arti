@@ -223,20 +223,24 @@ impl Ed25519CertBuilder {
 }
 
 /// One of the data types that can be certified by an Ed25519Cert.
-#[derive(Debug, Clone, PartialEq, Eq, derive_more::From)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum CertifiedKey {
     /// An Ed25519 public key, signed directly.
     Ed25519(ed25519::Ed25519Identity),
     /// The SHA256 digest of a DER-encoded RsaPublicKey
-    #[from(skip)]
     RsaSha256Digest([u8; 32]),
     /// The SHA256 digest of an X.509 certificate.
-    #[from(skip)]
     X509Sha256Digest([u8; 32]),
     /// Some unrecognized key type.
-    #[from(skip)]
     Unrecognized(UnrecognizedKey),
+}
+
+impl core::convert::From<ed25519::Ed25519Identity> for CertifiedKey {
+    #[inline]
+    fn from(value: ed25519::Ed25519Identity) -> Self {
+        CertifiedKey::Ed25519(value)
+    }
 }
 
 /// A key whose type we didn't recognize.

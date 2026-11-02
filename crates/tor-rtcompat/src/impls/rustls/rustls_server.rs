@@ -96,15 +96,34 @@ impl<S: AsyncRead + AsyncWrite + Unpin> CertifiedConn for RustlsServerStream<S> 
 /// A server implementation for Rustls.
 ///
 /// Accepts asynchronous streams (typically over TCP), and performs the server-side TLS handshake.
-#[derive(Clone, derive_more::Debug)]
+#[derive(Clone)]
 pub struct RustlsAcceptor<S> {
     /// The underlying TLS acceptor.
-    #[debug(skip)]
     acceptor: futures_rustls::TlsAcceptor,
     /// The certificate corresponding to our private key.
     cert_der: Arc<[u8]>,
     /// Phantomdata to mark this type as invariant in S.
     _phantom: PhantomData<fn(S) -> S>,
+}
+
+impl<S> core::fmt::Debug for RustlsAcceptor<S>
+where
+    PhantomData<fn(S) -> S>: core::fmt::Debug,
+{
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let cert_der = &self.cert_der;
+        let _phantom = &self._phantom;
+        core::fmt::DebugStruct::finish_non_exhaustive(core::fmt::DebugStruct::field(
+            core::fmt::DebugStruct::field(
+                &mut core::fmt::Formatter::debug_struct(formatter, "RustlsAcceptor"),
+                "cert_der",
+                &cert_der,
+            ),
+            "_phantom",
+            &_phantom,
+        ))
+    }
 }
 
 #[async_trait]

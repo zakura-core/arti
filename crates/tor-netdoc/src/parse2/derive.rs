@@ -1098,10 +1098,16 @@ define_derive_deftly! {
     // but then this macro, invoked in other crates, couldn't impl NetdocParseable for
     // UnverifiedParsedBody<TheirType>, due to trait coherence rules.
     //
-    #[derive(derive_more::From)]
     pub struct $NETDOC_PARSEABLE_TTYPE<$tdefgens> {
         /// The unverified body
         unverified: $ttype,
+    }
+
+    ${impl From<$ttype> for $NETDOC_PARSEABLE_TTYPE<$tgens>} {
+        #[inline]
+        fn from(unverified: $ttype) -> Self {
+            Self { unverified }
+        }
     }
 
     ${impl $P::NetdocParseable for $<$ttype Unverified>} {

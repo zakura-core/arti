@@ -71,8 +71,15 @@ pub fn gen_tls_cert(
 /// set to `IDENTITY_V_SIGNING` (`04`).
 ///
 /// The signing key is the relay identity key (`K_relayid_ed`)`).
-#[derive(Debug, Clone, PartialEq, derive_more::From)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RelaySigningKeyCert(EncodedEd25519Cert);
+
+impl core::convert::From<EncodedEd25519Cert> for RelaySigningKeyCert {
+    #[inline]
+    fn from(value: EncodedEd25519Cert) -> Self {
+        RelaySigningKeyCert(value)
+    }
+}
 
 impl RelaySigningKeyCert {
     /// Return the `CertType` of this cert.
@@ -91,8 +98,15 @@ impl RelaySigningKeyCert {
 /// set to `SIGNING_V_LINK_AUTH` (`06`).
 ///
 /// The signing key is the relay identity key (`K_relayid_ed`)`).
-#[derive(Debug, Clone, PartialEq, derive_more::From)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RelayLinkSigningKeyCert(EncodedEd25519Cert);
+
+impl core::convert::From<EncodedEd25519Cert> for RelayLinkSigningKeyCert {
+    #[inline]
+    fn from(value: EncodedEd25519Cert) -> Self {
+        RelayLinkSigningKeyCert(value)
+    }
+}
 
 impl RelayLinkSigningKeyCert {
     /// Return the `CertType` of this cert.

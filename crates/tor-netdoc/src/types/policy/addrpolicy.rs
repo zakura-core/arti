@@ -269,7 +269,7 @@ impl FromStr for AddrPortPattern {
 impl NormalItemArgument for AddrPortPattern {}
 
 /// A pattern that matches one or more IP addresses.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, derive_more::From)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 // We don't expect to extend this, and users (eg, tor-dirauth)
 // will need to match it exhaustively to make sense of a policy.
 #[allow(clippy::exhaustive_enums)]
@@ -285,7 +285,14 @@ pub enum IpPattern {
     ///
     /// String representation: `n.n.n.n/prefix` or `[IPv6]/prefix`.
     /// If the prefix is maximum it is optional, and omitted by `Display`.
-    Net(#[from] IpNet),
+    Net(IpNet),
+}
+
+impl core::convert::From<IpNet> for IpPattern {
+    #[inline]
+    fn from(value: IpNet) -> Self {
+        IpPattern::Net(value)
+    }
 }
 
 impl IpPattern {

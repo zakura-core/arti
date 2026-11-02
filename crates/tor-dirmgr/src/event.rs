@@ -309,8 +309,7 @@ struct StatusEntry {
 }
 
 /// The status for a single directory.
-#[derive(Clone, Debug, Default, derive_more::Display)]
-#[display("{0}", progress)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct DirStatus {
     /// How much of the directory do we currently have?
     progress: DirProgress,
@@ -322,6 +321,13 @@ pub(crate) struct DirStatus {
     /// How many times has an `update_progress` call not actually moved us
     /// forward since we last advanced the 'progress' on this directory?
     n_stalls: usize,
+}
+
+impl core::fmt::Display for DirStatus {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let progress = &self.progress;
+        core::fmt::Display::fmt(progress, formatter)
+    }
 }
 
 /// How much progress have we made in downloading a given directory?
@@ -391,7 +397,7 @@ impl core::default::Default for DirProgress {
 // information. Probably, however, we should only do that after we get some
 // experience with which problems people encounter in practice, and what
 // diagnostics would be useful for them.
-#[derive(Clone, Debug, derive_more::Display)]
+#[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum DirBlockage {
     /// We've been downloading information without error, but we haven't
@@ -400,7 +406,6 @@ pub enum DirBlockage {
     /// This might indicate that there's a problem with information propagating
     /// through the Tor network, or it might indicate that a bogus consensus or
     /// a bad clock has tricked us into asking for something that nobody has.
-    #[display("Can't make progress.")]
     Stalled,
     /// We've gotten a lot of errors without making forward progress on our
     /// bootstrap attempt.
@@ -409,7 +414,6 @@ pub enum DirBlockage {
     /// there's something buggy with our ability to handle directory responses.
     /// It might also indicate a malfunction on our directory guards, or a bug
     /// on our retry logic.
-    #[display("Too many errors without making progress.")]
     TooManyErrors,
     /// We've reset our bootstrap attempt a lot of times.
     ///
@@ -417,8 +421,21 @@ pub enum DirBlockage {
     /// other reasons above, or that we keep getting served a consensus which
     /// turns out, upon trying to fetch certificates, not to be usable.  It can
     /// also indicate a bug in our retry logic.
-    #[display("Had to reset bootstrapping too many times.")]
     TooManyResets,
+}
+
+impl core::fmt::Display for DirBlockage {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Stalled => formatter.write_fmt(format_args!("Can\'t make progress.")),
+            Self::TooManyErrors => {
+                formatter.write_fmt(format_args!("Too many errors without making progress."))
+            }
+            Self::TooManyResets => {
+                formatter.write_fmt(format_args!("Had to reset bootstrapping too many times."))
+            }
+        }
+    }
 }
 
 impl fmt::Display for DirProgress {

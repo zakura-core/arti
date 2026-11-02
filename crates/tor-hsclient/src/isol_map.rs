@@ -3,8 +3,6 @@
 use std::collections::HashMap;
 use std::hash::Hash;
 
-use derive_more::{Deref, DerefMut};
-
 use slotmap_careful::{DenseSlotMap, Key};
 
 use tor_circmgr::isolation::Isolation;
@@ -81,7 +79,7 @@ where
 /// It derefs to the value, which you may mutate.
 ///
 /// (You can't mutate the key parts; that would be wrong.)
-#[derive(Debug, Deref, DerefMut)]
+#[derive(Debug)]
 pub(crate) struct Record<K2, V>
 where
     K2: Eq,
@@ -91,9 +89,28 @@ where
     /// Circuit isolation (part of the data structure key)
     isolation: Box<dyn Isolation>,
     /// Actual value
-    #[deref]
-    #[deref_mut]
     value: V,
+}
+
+impl<K2, V> core::ops::Deref for Record<K2, V>
+where
+    K2: Eq,
+{
+    type Target = V;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl<K2, V> core::ops::DerefMut for Record<K2, V>
+where
+    K2: Eq,
+{
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.value
+    }
 }
 
 impl<K2, V> Record<K2, V>

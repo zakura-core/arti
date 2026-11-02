@@ -5,7 +5,7 @@
 use super::*;
 
 /// Wrapper for `TotalQty`
-#[derive(Deref, Debug)]
+#[derive(Debug)]
 pub(super) struct TotalQtyNotifier {
     /// Total memory usage
     ///
@@ -14,13 +14,20 @@ pub(super) struct TotalQtyNotifier {
     ///    Σ        Σ         PRecord.used
     ///     ARecord  PRecord
     /// ```
-    #[deref]
     total_used: TotalQty,
 
     /// Condvar to wake up the reclamation task
     ///
     /// The reclamation task has another clone of this
     reclamation_task_wakeup: mpsc::Sender<()>,
+}
+
+impl core::ops::Deref for TotalQtyNotifier {
+    type Target = TotalQty;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.total_used
+    }
 }
 
 impl TotalQtyNotifier {

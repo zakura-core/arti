@@ -142,7 +142,7 @@ use kist::KistParams;
 ///
 /// It is created when a channel is requested for creation which means the subsystem wanting to
 /// open a channel needs to know what type it wants.
-#[derive(Clone, Copy, Debug, derive_more::Display)]
+#[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub enum ChannelType {
     /// Client: Initiated from a client to a relay. Client is unauthenticated and relay is
@@ -161,6 +161,18 @@ pub enum ChannelType {
         /// meaning a relay.
         authenticated: bool,
     },
+}
+
+impl core::fmt::Display for ChannelType {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::ClientInitiator => formatter.write_str("ClientInitiator"),
+            Self::RelayInitiator => formatter.write_str("RelayInitiator"),
+            Self::RelayResponder { authenticated } => {
+                core::fmt::Display::fmt(authenticated, formatter)
+            }
+        }
+    }
 }
 
 impl ChannelType {

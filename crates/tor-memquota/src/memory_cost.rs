@@ -11,10 +11,8 @@ pub use tor_memquota_cost::memory_cost::HasMemoryCost;
 /// Wrapping a `Participation` in a `TypedParticipation`
 /// helps prevent accidentally passing wrongly calculated costs
 /// to `claim` and `release`.
-#[derive(Deref)]
 pub struct TypedParticipation<T> {
     /// The actual participation
-    #[deref]
     raw: Participation,
     /// Marker
     marker: PhantomData<fn(T)>,
@@ -45,9 +43,15 @@ impl<T> core::clone::Clone for TypedParticipation<T> {
     }
 }
 
+impl<T> core::ops::Deref for TypedParticipation<T> {
+    type Target = Participation;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.raw
+    }
+}
+
 /// Memory cost obtained from a `T`
-#[derive(derive_more::Display)]
-#[display("{raw}")]
 pub struct TypedMemoryCost<T> {
     /// The actual cost in bytes
     raw: usize,
@@ -72,6 +76,13 @@ impl<T> core::clone::Clone for TypedMemoryCost<T> {
 }
 
 impl<T> core::marker::Copy for TypedMemoryCost<T> {}
+
+impl<T> core::fmt::Display for TypedMemoryCost<T> {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let raw = &self.raw;
+        core::fmt::Display::fmt(raw, formatter)
+    }
+}
 
 /// Types that can return a memory cost known to be the cost of some value of type `T`
 ///

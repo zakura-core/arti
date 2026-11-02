@@ -47,8 +47,22 @@ use super::binding::CircuitBinding;
 
 /// Type for the body of a relay cell.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-#[derive(Clone, derive_more::From, derive_more::Into)]
+#[derive(Clone)]
 pub(crate) struct RelayCellBody(BoxedCellBody);
+
+impl core::convert::From<BoxedCellBody> for RelayCellBody {
+    #[inline]
+    fn from(value: BoxedCellBody) -> Self {
+        RelayCellBody(value)
+    }
+}
+
+impl core::convert::From<RelayCellBody> for BoxedCellBody {
+    #[inline]
+    fn from(value: RelayCellBody) -> Self {
+        value.0
+    }
+}
 
 impl AsRef<[u8]> for RelayCellBody {
     fn as_ref(&self) -> &[u8] {

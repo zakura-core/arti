@@ -3,7 +3,6 @@
 use std::fmt::{self, Display};
 use std::str::FromStr;
 
-use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -23,9 +22,30 @@ use crate::slug::Slug;
 // should return an error if the specified string is a valid Slug, but not a valid
 // HsNickname).
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)] //
-#[derive(derive_more::Display, From, Into, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(try_from = "String", into = "String")]
 pub struct HsNickname(Slug);
+
+impl core::fmt::Display for HsNickname {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
+
+impl core::convert::From<Slug> for HsNickname {
+    #[inline]
+    fn from(value: Slug) -> Self {
+        HsNickname(value)
+    }
+}
+
+impl core::convert::From<HsNickname> for Slug {
+    #[inline]
+    fn from(value: HsNickname) -> Self {
+        value.0
+    }
+}
 
 impl FromStr for HsNickname {
     type Err = InvalidNickname;
