@@ -19,7 +19,6 @@ anon_home = ["dirs"]
 
 [dependencies]
 dirs = { package = "dirs-sys", version = "0.5", optional = true }
-extend = "1.2.0"
 serde = { version = "1.0.229", features = ["derive"], optional = true }
 thiserror = "2"
 void = "1"

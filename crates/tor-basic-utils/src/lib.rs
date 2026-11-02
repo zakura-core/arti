@@ -75,7 +75,6 @@ pub use paste::paste;
 #[doc(hidden)]
 pub use derive_deftly;
 
-use extend::ext;
 use rand::Rng;
 
 /// Sealed
@@ -168,8 +167,14 @@ pub fn iter_join(
 // ----------------------------------------------------------------------
 
 /// Extension trait to provide `.strip_suffix_ignore_ascii_case()` etc.
-#[ext(name = StrExt)]
-pub impl str {
+pub trait StrExt {
+    /// Like `str.strip_suffix()` but ASCII-case-insensitive
+    fn strip_suffix_ignore_ascii_case(&self, suffix: &str) -> Option<&str>;
+    /// Like `str.ends_with()` but ASCII-case-insensitive
+    fn ends_with_ignore_ascii_case(&self, suffix: &str) -> bool;
+}
+
+impl StrExt for str {
     /// Like `str.strip_suffix()` but ASCII-case-insensitive
     fn strip_suffix_ignore_ascii_case(&self, suffix: &str) -> Option<&str> {
         let whole = self;
@@ -344,8 +349,24 @@ impl GenRangeInfallible for Duration {
 // ----------------------------------------------------------------------
 
 /// Renaming of `Path::display` as `display_lossy`
-#[ext(supertraits = Sealed)]
-pub impl Path {
+pub trait PathExt: Sealed {
+    /// Display this `Path` as an approximate string, for human consumption in
+    /// messages
+    ///
+    /// Operating system paths cannot always be faithfully represented as Rust
+    /// strings, because they might not be valid Unicode.
+    ///
+    /// This helper method provides a way to display a string for human users.
+    /// **This may lose information** so should only be used for error messages
+    /// etc.
+    ///
+    /// This method is exactly the same as [`std::path::Path::display`],
+    /// but with a different and more discouraging name.
+    #[allow(clippy::disallowed_methods)]
+    fn display_lossy(&self) -> std::path::Display<'_>;
+}
+
+impl PathExt for Path {
     /// Display this `Path` as an approximate string, for human consumption in messages
     ///
     /// Operating system paths cannot always be faithfully represented as Rust strings,

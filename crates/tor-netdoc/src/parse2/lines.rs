@@ -1,7 +1,5 @@
 //! Version of `std::str::Lines` that tracks line numbers and has `remainder()`
 
-use extend::ext;
-
 /// Version of `std::str::Lines` that tracks line numbers and has `remainder()`
 ///
 /// Implements `Iterator`, returning one `str` for each line, with the `'\n'` removed.
@@ -16,8 +14,17 @@ pub struct Lines<'s> {
 }
 
 /// Extension trait adding a method to `str`
-#[ext(name = StrExt)]
-pub impl str {
+pub trait StrExt {
+    /// Remove `count` bytes from the end of `self`
+    ///
+    /// # Panics
+    ///
+    /// Panics if `count > self.len()`.
+    #[allow(clippy::string_slice)]
+    fn strip_end_counted(&self, count: usize) -> &str;
+}
+
+impl StrExt for str {
     /// Remove `count` bytes from the end of `self`
     ///
     /// # Panics

@@ -11,8 +11,14 @@ use crate::anon_home::PathExt as _;
 /// Define a local-only version of anonymize_home so that we can define our errors
 /// unconditionally.
 #[cfg(not(feature = "anon_home"))]
-#[extend::ext]
-impl Path {
+trait PathExt {
+    /// A do-nothing extension function.
+    #[allow(clippy::disallowed_methods)]
+    fn anonymize_home(&self) -> impl std::fmt::Display + '_;
+}
+
+#[cfg(not(feature = "anon_home"))]
+impl PathExt for Path {
     /// A do-nothing extension function.
     #[allow(clippy::disallowed_methods)] // lossiness is expected
     fn anonymize_home(&self) -> impl std::fmt::Display + '_ {
