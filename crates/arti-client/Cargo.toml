@@ -180,7 +180,7 @@ tor-relay-selection = { package = "zakura-tor-relay-selection", path = "../tor-r
 tor-rtcompat = { package = "zakura-tor-rtcompat", path = "../tor-rtcompat", version = "0.47.0-zakura.1", features = ["tokio", "rustls"] }
 tracing-test = "0.2.6"
 
-[target.'cfg(not(all(target_arch="wasm32", target_os="unknown")))'.dependencies]
+[target.'cfg(not(all(target_arch="wasm32", target_os="unknown")))'.dev-dependencies]
 tempfile = "3.27"
 
 [lib]
