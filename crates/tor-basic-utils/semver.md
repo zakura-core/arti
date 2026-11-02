@@ -35,3 +35,16 @@ ADDED: `is_valid_hostname(&str) -> bool` checks ASCII hostname syntax without
 normalization or resolution. Client-address parsing and network-document
 hostname parsing share this helper while retaining their existing numeric-name
 policies. No existing signature, trait implementation or feature changes.
+
+CHANGED: The `test_rng` module now requires the existing `full` feature outside
+this crate's unit tests. This affects its `TestingRng` reexport, `testing_rng`
+function, and `Config` enum, including the `Random`, `Deterministic`, and
+`Seeded` variants, `from_env` and `into_rng` methods, and derived `Debug`,
+`Clone`, `Copy`, `Eq`, and `PartialEq` implementations. Their signatures,
+provider types, deterministic streams, and environment handling are unchanged.
+Existing `full` builds retain all of this testing API.
+
+The test RNG's `rand_chacha` dependency is now optional, enabled by `full` or
+this crate's dev dependency. No new named or implicit Cargo features, public
+or `pub(crate)` items, constructors, signatures, or trait implementations are
+introduced. Production random number generation is unchanged.

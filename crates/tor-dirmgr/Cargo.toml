@@ -110,6 +110,7 @@ void = "1"
 web-time-compat = { package = "zakura-web-time-compat", path = "../web-time-compat", version = "0.3.0-zakura.1" }
 
 [dev-dependencies]
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["full"] }
 anyhow = "1.0.104"
 filetime = "0.2"
 float_eq = "1.0.1"

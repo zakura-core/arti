@@ -31,6 +31,7 @@ void = "1"
 web-time-compat = { package = "zakura-web-time-compat", version = "0.3.0-zakura.1", path = "../web-time-compat" }
 
 [dev-dependencies]
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["full"] }
 futures-await-test = "0.3.0"
 rand = "0.10.3"
 tor-rtcompat = { package = "zakura-tor-rtcompat", path = "../tor-rtcompat", version = "0.47.0-zakura.1", features = ["tokio", "rustls"] }

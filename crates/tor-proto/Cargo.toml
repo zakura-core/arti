@@ -141,6 +141,7 @@ web-time-compat = { package = "zakura-web-time-compat", path = "../web-time-comp
 zeroize = "1"
 
 [dev-dependencies]
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["full"] }
 assert_matches = "1.5.0"
 criterion = "0.8.2"
 futures = { version = "0.3.34", default-features = false, features = ["executor"] }

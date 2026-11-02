@@ -100,6 +100,7 @@ weak-table = "0.4.0"
 web-time-compat = { package = "zakura-web-time-compat", path = "../web-time-compat", version = "0.3.0-zakura.1" }
 
 [dev-dependencies]
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["full"] }
 futures-await-test = "0.3.0"
 hex = "0.4"
 tor-guardmgr = { package = "zakura-tor-guardmgr", path = "../tor-guardmgr", version = "0.47.0-zakura.1", features = ["testing", "vanguards"] }

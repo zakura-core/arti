@@ -69,6 +69,7 @@ tor-units = { package = "zakura-tor-units", path = "../tor-units", version = "0.
 void = "1"
 
 [dev-dependencies]
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["full"] }
 hex = "0.4"
 hex-literal = "1.1"
 [package.metadata.docs.rs]
