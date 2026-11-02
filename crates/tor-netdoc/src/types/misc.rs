@@ -2617,7 +2617,7 @@ mod hostname {
     impl TryFrom<String> for Hostname {
         type Error = InvalidHostname;
         fn try_from(s: String) -> Result<Self, InvalidHostname> {
-            if hostname_validator::is_valid(&s) &&
+            if tor_basic_utils::is_valid_hostname(&s) &&
                 // Reject hostnames that consist only of decimal digits and full stops.
                 // Some of those are accepted by some old IPv4 address parsers.
                 // If any fool makes a TLD that is only digits, they deserve everything they get.
@@ -3226,6 +3226,7 @@ mod test {
         chk_name("localhost");
         chk_name("tor.invalid");
         chk_name("example.com");
+        chk_name("a.123");
 
         // Unarguably invalid.
         chk_bad("");

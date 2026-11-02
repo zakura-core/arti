@@ -184,6 +184,41 @@ pub impl str {
     }
 }
 
+/// Longest hostname accepted without a trailing root label.
+const MAX_HOSTNAME_BYTES: usize = 253;
+/// Longest individual hostname label.
+const MAX_HOSTNAME_LABEL_BYTES: usize = 63;
+
+/// Whether `hostname` matches Arti's ASCII hostname syntax.
+///
+/// Each nonempty label contains ASCII letters, digits or internal hyphens,
+/// and is at most 63 bytes. The entire name is at most 253 bytes and has no
+/// trailing dot. Numeric-only names are accepted; callers may apply stricter
+/// policies. This function neither normalizes the name nor resolves it.
+///
+/// ```
+/// use tor_basic_utils::is_valid_hostname;
+///
+/// assert!(is_valid_hostname("Tor-Project.org"));
+/// assert!(is_valid_hostname("123.456"));
+/// assert!(!is_valid_hostname("example.org."));
+/// ```
+pub fn is_valid_hostname(hostname: &str) -> bool {
+    !hostname.is_empty()
+        && hostname.len() <= MAX_HOSTNAME_BYTES
+        && hostname
+            .as_bytes()
+            .split(|byte| *byte == b'.')
+            .all(|label| {
+                label.len() <= MAX_HOSTNAME_LABEL_BYTES
+                    && label.first().is_some_and(u8::is_ascii_alphanumeric)
+                    && label.last().is_some_and(u8::is_ascii_alphanumeric)
+                    && label
+                        .iter()
+                        .all(|byte| byte.is_ascii_alphanumeric() || *byte == b'-')
+            })
+}
+
 // ----------------------------------------------------------------------
 
 /// Extension trait to provide `.gen_range_checked()`
@@ -753,5 +788,55 @@ mod test {
         assert_eq!("hi here".strip_suffix_ignore_ascii_case("THERE"), None);
         assert_eq!("THERE".strip_suffix_ignore_ascii_case("there"), Some(""));
         assert_eq!("hi".strip_suffix_ignore_ascii_case("THERE"), None);
+    }
+
+    #[test]
+    fn hostname_syntax() {
+        for hostname in [
+            "localhost",
+            "Tor-Project.org",
+            "some.example.onion",
+            "50-name",
+            "235235",
+            "123.456",
+            "a.123",
+        ] {
+            assert!(is_valid_hostname(hostname), "{hostname:?}");
+        }
+        for hostname in [
+            "",
+            ".example.org",
+            "example.org.",
+            "empty..label",
+            "-example.org",
+            "example-.org",
+            "example.-org",
+            "example.org-",
+            "ex_ample.org",
+            "example.org/",
+            "example.org\0",
+            " example.org",
+            "example.org ",
+            "éxample.org",
+            "한글.example",
+            "[::1]",
+        ] {
+            assert!(!is_valid_hostname(hostname), "{hostname:?}");
+        }
+    }
+
+    #[test]
+    fn hostname_length_boundaries() {
+        assert!(is_valid_hostname(&"a".repeat(MAX_HOSTNAME_LABEL_BYTES)));
+        assert!(!is_valid_hostname(
+            &"a".repeat(MAX_HOSTNAME_LABEL_BYTES + 1)
+        ));
+
+        let mut labels = vec!["a".repeat(MAX_HOSTNAME_LABEL_BYTES); 3];
+        labels.push("a".repeat(MAX_HOSTNAME_BYTES - 3 * MAX_HOSTNAME_LABEL_BYTES - 3));
+        let longest = labels.join(".");
+        assert_eq!(longest.len(), MAX_HOSTNAME_BYTES);
+        assert!(is_valid_hostname(&longest));
+        assert!(!is_valid_hostname(&format!("{longest}a")));
     }
 }
