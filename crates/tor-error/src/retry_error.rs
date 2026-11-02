@@ -520,7 +520,6 @@ mod test {
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
     #![allow(clippy::disallowed_methods)]
     use super::*;
-    use derive_more::From;
 
     #[test]
     fn bad_parse1() {
@@ -583,8 +582,15 @@ Attempt 3: invalid IP address syntax"
     fn operations() {
         use std::num::ParseIntError;
 
-        #[derive(From, Clone, Debug, Eq, PartialEq)]
+        #[derive(Clone, Debug, Eq, PartialEq)]
         struct Wrapper(ParseIntError);
+
+        impl core::convert::From<ParseIntError> for Wrapper {
+            #[inline]
+            fn from(value: ParseIntError) -> Self {
+                Wrapper(value)
+            }
+        }
 
         impl AsRef<dyn Error + 'static> for Wrapper {
             fn as_ref(&self) -> &(dyn Error + 'static) {

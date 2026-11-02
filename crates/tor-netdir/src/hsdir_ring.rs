@@ -16,7 +16,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use derive_more::{AsRef, From, Into};
 use digest::Digest;
 
 use tor_basic_utils::impl_debug_hex;
@@ -40,8 +39,15 @@ use crate::{NetDir, RouterStatusIdx};
 ///
 /// Note that this is _not_ an index into any array; it is instead an index into
 /// a space of possible values in a (virtual!) ring of 2^256 elements.
-#[derive(Copy, Clone, Eq, Hash, PartialEq, Ord, PartialOrd, AsRef)]
-pub(crate) struct HsDirIndex(#[as_ref] [u8; 32]);
+#[derive(Copy, Clone, Eq, Hash, PartialEq, Ord, PartialOrd)]
+pub(crate) struct HsDirIndex([u8; 32]);
+
+impl core::convert::AsRef<[u8; 32]> for HsDirIndex {
+    #[inline]
+    fn as_ref(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
 
 impl_debug_hex! { HsDirIndex .0 }
 
@@ -50,8 +56,22 @@ impl_debug_hex! { HsDirIndex .0 }
 /// This an "index" in the sense that you can use it to index `HsDirRing.ring`,
 /// but in the spec, in the context of the hsdir,
 /// "index" is used to the sort key - here, [`HsDirIndex`].
-#[derive(Debug, From, Into, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct HsDirPos(usize);
+
+impl core::convert::From<usize> for HsDirPos {
+    #[inline]
+    fn from(value: usize) -> Self {
+        HsDirPos(value)
+    }
+}
+
+impl core::convert::From<HsDirPos> for usize {
+    #[inline]
+    fn from(value: HsDirPos) -> Self {
+        <usize as core::convert::From<_>>::from(value.0)
+    }
+}
 
 /// One relay's ring key and its position in the consensus relay list.
 type HsDirEntry = (HsDirIndex, RouterStatusIdx);

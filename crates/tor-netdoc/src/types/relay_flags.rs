@@ -37,13 +37,12 @@ pub type RelayFlagsBits = u16;
 /// The inputs flags are then deduplicated, and no ordering checks are done.
 ///
 /// So the `FromIterator` impl should not be used for parsing.
-#[derive(Debug, Clone, derive_more::Deref, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub struct DocRelayFlags {
     /// Known flags
     ///
     /// Invariant: contains no unknown set bits.
-    #[deref]
     pub known: RelayFlags,
 
     /// Unknown flags, if they were parsed
@@ -53,6 +52,14 @@ pub struct DocRelayFlags {
     /// It is a semantic error to include known flags here.
     /// The parsing routines will not do so.
     pub unknown: Unknown<HashSet<String>>,
+}
+
+impl core::ops::Deref for DocRelayFlags {
+    type Target = RelayFlags;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.known
+    }
 }
 
 /// Additional options for the representation of relay flags in network documents

@@ -22,7 +22,7 @@ pub(crate) const ED25519_EXPANDED_ALGORITHM_NAME: &str = "ed25519-expanded@spec.
 //
 // Note: this contains all the types supported by ssh_key, plus variants representing
 // x25519 and expanded ed25519 keys.
-#[derive(Clone, Debug, PartialEq, derive_more::Display)]
+#[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum SshKeyAlgorithm {
     /// Digital Signature Algorithm
@@ -43,6 +43,22 @@ pub enum SshKeyAlgorithm {
     SkEd25519,
     /// An unrecognized [`ssh_key::Algorithm`].
     Unknown(ssh_key::Algorithm),
+}
+
+impl core::fmt::Display for SshKeyAlgorithm {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Dsa => formatter.write_str("Dsa"),
+            Self::Ecdsa => formatter.write_str("Ecdsa"),
+            Self::Ed25519 => formatter.write_str("Ed25519"),
+            Self::Ed25519Expanded => formatter.write_str("Ed25519Expanded"),
+            Self::X25519 => formatter.write_str("X25519"),
+            Self::Rsa => formatter.write_str("Rsa"),
+            Self::SkEcdsaSha2NistP256 => formatter.write_str("SkEcdsaSha2NistP256"),
+            Self::SkEd25519 => formatter.write_str("SkEd25519"),
+            Self::Unknown(_0) => core::fmt::Display::fmt(_0, formatter),
+        }
+    }
 }
 
 impl From<Algorithm> for SshKeyAlgorithm {

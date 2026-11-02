@@ -70,8 +70,7 @@ impl<Field> Default for MultiplicitySelector<Field> {
 ///
 /// Returned by [`ItemSetMethods::item_set_debug`] etc.,
 /// using information from [`ItemSetMethods::debug_core`] etc.
-#[derive(derive_more::Debug)]
-#[debug("{}={}", self.0, self.1)]
+
 #[allow(dead_code)] // yes, they are only read by the Debug impl - that's what they're for!
 struct DebugHelper(
     /// scope, eg `items`
@@ -79,6 +78,13 @@ struct DebugHelper(
     /// multiplicity type pattern, eg `Vec<_>` or `1`
     &'static str,
 );
+
+impl core::fmt::Debug for DebugHelper {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        formatter.write_fmt(format_args!("{0}={1}", self.0, self.1))
+    }
+}
 
 /// Methods for handling some multiplicity of Items, during parsing
 ///

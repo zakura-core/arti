@@ -27,8 +27,15 @@ pub fn hs_mac(key: &[u8], msg: &[u8]) -> CtByteArray<HS_MAC_LEN> {
 }
 
 /// Reference to a slice of bytes usable to compute the [`hs_mac`] function.
-#[derive(Copy, Clone, derive_more::From)]
+#[derive(Copy, Clone)]
 pub struct HsMacKey<'a>(&'a [u8]);
+
+impl<'a> core::convert::From<&'a [u8]> for HsMacKey<'a> {
+    #[inline]
+    fn from(value: &'a [u8]) -> Self {
+        HsMacKey(value)
+    }
+}
 
 impl<'a> tor_llcrypto::traits::ShortMac<HS_MAC_LEN> for HsMacKey<'a> {
     fn mac(&self, input: &[u8]) -> CtByteArray<HS_MAC_LEN> {

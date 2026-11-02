@@ -377,7 +377,7 @@ impl Readable for Created2 {
 ///
 /// A different protocol is defined over the relay cells; it is implemented
 /// in the [crate::relaycell] module.
-#[derive(Clone, derive_more::From, Deftly)]
+#[derive(Clone, Deftly)]
 #[derive_deftly(HasMemoryCost)]
 pub struct Relay {
     /// The contents of the relay cell as encoded for transfer.
@@ -407,6 +407,14 @@ impl core::fmt::Debug for Relay {
         builder.finish()
     }
 }
+
+impl core::convert::From<BoxedCellBody> for Relay {
+    #[inline]
+    fn from(value: BoxedCellBody) -> Self {
+        Relay { body: value }
+    }
+}
+
 impl Relay {
     /// Construct a Relay message from a slice containing its contents.
     pub fn new<P>(body: P) -> Self
@@ -453,9 +461,24 @@ impl Readable for Relay {
 /// A Relay cell that is allowed to contain a CREATE message.
 ///
 /// Only a limited number of these may be sent on each circuit.
-#[derive(Clone, Debug, derive_more::Deref, derive_more::From, Deftly)]
+#[derive(Clone, Debug, Deftly)]
 #[derive_deftly(HasMemoryCost)]
 pub struct RelayEarly(Relay);
+
+impl core::ops::Deref for RelayEarly {
+    type Target = Relay;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl core::convert::From<Relay> for RelayEarly {
+    #[inline]
+    fn from(value: Relay) -> Self {
+        RelayEarly(value)
+    }
+}
 impl Readable for RelayEarly {
     fn take_from(r: &mut Reader<'_>) -> Result<Self> {
         Ok(RelayEarly(Relay::take_from(r)?))

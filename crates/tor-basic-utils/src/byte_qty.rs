@@ -8,7 +8,6 @@
 
 #![allow(clippy::comparison_to_empty)] // unit == "" etc. is much clearer
 
-use derive_more::{Deref, DerefMut, From, Into};
 use itertools::Itertools;
 use thiserror::Error;
 
@@ -34,7 +33,6 @@ use InvalidByteQty as IBQ;
 /// preferring binary (1024-based) multipliers.
 /// (There is no facility for adjusting the format.)
 #[derive(Debug, Clone, Copy, Hash, Default, Eq, PartialEq, Ord, PartialOrd)] //
-#[derive(From, Into, Deref, DerefMut)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -42,6 +40,35 @@ use InvalidByteQty as IBQ;
 )]
 #[allow(clippy::exhaustive_structs)] // this is a behavioural newtype wrapper
 pub struct ByteQty(pub usize);
+
+impl core::convert::From<usize> for ByteQty {
+    #[inline]
+    fn from(value: usize) -> Self {
+        ByteQty(value)
+    }
+}
+
+impl core::convert::From<ByteQty> for usize {
+    #[inline]
+    fn from(value: ByteQty) -> Self {
+        <usize as core::convert::From<_>>::from(value.0)
+    }
+}
+
+impl core::ops::Deref for ByteQty {
+    type Target = usize;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl core::ops::DerefMut for ByteQty {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 /// Error parsing (or deserialising) a [`ByteQty`]
 #[derive(Error, Copy, Clone, Debug, Eq, PartialEq, Hash)]

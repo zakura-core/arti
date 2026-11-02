@@ -1,6 +1,5 @@
 //! Declare the `RetryTime` enumeration and related code.
 
-use derive_more::{From, Into};
 use std::{cmp::Ordering, time::Duration};
 use strum::EnumDiscriminants;
 use web_time_compat::Instant;
@@ -114,8 +113,22 @@ pub enum RetryTime {
 }
 
 /// A `RetryTime` wrapped so that it compares according to [`RetryTime::loose_cmp`]
-#[derive(From, Into, Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct LooseCmpRetryTime(RetryTime);
+
+impl core::convert::From<RetryTime> for LooseCmpRetryTime {
+    #[inline]
+    fn from(value: RetryTime) -> Self {
+        LooseCmpRetryTime(value)
+    }
+}
+
+impl core::convert::From<LooseCmpRetryTime> for RetryTime {
+    #[inline]
+    fn from(value: LooseCmpRetryTime) -> Self {
+        <RetryTime as core::convert::From<_>>::from(value.0)
+    }
+}
 
 /// Trait for an error object that can tell us when the operation which
 /// generated it can be retried.

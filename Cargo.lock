@@ -445,15 +445,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
 
 [[package]]
-name = "convert_case"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "633458d4ef8c78b72454de2d54fd6ab2e60f9e02be22f3c6104cdc8a4e0fceb9"
-dependencies = [
- "unicode-segmentation",
-]
-
-[[package]]
 name = "cpubits"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -721,29 +712,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.9",
-]
-
-[[package]]
-name = "derive_more"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d751e9e49156b02b44f9c1815bcb94b984cdcc4396ecc32521c739452808b134"
-dependencies = [
- "derive_more-impl",
-]
-
-[[package]]
-name = "derive_more-impl"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "799a97264921d8623a957f6c3b9011f3b5492f557bbb7a5a19b7fa6d06ba8dcb"
-dependencies = [
- "convert_case",
- "proc-macro2",
- "quote",
- "rustc_version",
- "syn 2.0.119",
- "unicode-xid",
 ]
 
 [[package]]
@@ -3330,18 +3298,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
 
 [[package]]
-name = "unicode-segmentation"
-version = "1.13.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
-
-[[package]]
-name = "unicode-xid"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
-
-[[package]]
 name = "universal-hash"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3871,7 +3827,6 @@ dependencies = [
  "async-trait",
  "cfg-if",
  "derive-deftly",
- "derive_more",
  "futures",
  "futures-rustls",
  "hostname-validator",
@@ -3946,7 +3901,6 @@ dependencies = [
 name = "zakura-safelog"
 version = "0.10.0-zakura.1"
 dependencies = [
- "derive_more",
  "either",
  "fluid-let",
  "serde",
@@ -3971,7 +3925,6 @@ name = "zakura-test-temp-dir"
 version = "0.9.0-zakura.1"
 dependencies = [
  "anyhow",
- "derive_more",
  "tempfile",
 ]
 
@@ -4007,7 +3960,6 @@ name = "zakura-tor-basic-utils"
 version = "0.47.0-zakura.1"
 dependencies = [
  "derive-deftly",
- "derive_more",
  "extend",
  "futures",
  "getrandom 0.4.3",
@@ -4051,7 +4003,6 @@ dependencies = [
  "bitflags",
  "bytes",
  "derive-deftly",
- "derive_more",
  "getset",
  "hex",
  "hex-literal",
@@ -4079,7 +4030,6 @@ name = "zakura-tor-cert"
 version = "0.47.0-zakura.1"
 dependencies = [
  "base64ct",
- "derive_more",
  "digest 0.10.7",
  "hex-literal",
  "humantime",
@@ -4121,7 +4071,6 @@ dependencies = [
  "base64ct",
  "cfg-if",
  "derive-deftly",
- "derive_more",
  "float_eq",
  "futures",
  "futures-await-test",
@@ -4175,7 +4124,6 @@ dependencies = [
  "async-trait",
  "cfg-if",
  "derive-deftly",
- "derive_more",
  "dyn-clone",
  "futures",
  "futures-await-test",
@@ -4280,7 +4228,6 @@ version = "0.47.0-zakura.1"
 dependencies = [
  "async-compression",
  "base64ct",
- "derive_more",
  "futures",
  "futures-await-test",
  "hex",
@@ -4332,7 +4279,6 @@ dependencies = [
  "anyhow",
  "async-trait",
  "base64ct",
- "derive_more",
  "digest 0.10.7",
  "event-listener",
  "filetime",
@@ -4389,7 +4335,6 @@ name = "zakura-tor-error"
 version = "0.47.0-zakura.1"
 dependencies = [
  "anyhow",
- "derive_more",
  "futures",
  "http",
  "humantime",
@@ -4409,7 +4354,6 @@ name = "zakura-tor-guardmgr"
 version = "0.47.0-zakura.1"
 dependencies = [
  "derive-deftly",
- "derive_more",
  "float_eq",
  "futures",
  "getset",
@@ -4452,7 +4396,6 @@ dependencies = [
  "async-trait",
  "cfg-if",
  "derive-deftly",
- "derive_more",
  "either",
  "futures",
  "humantime",
@@ -4497,7 +4440,6 @@ version = "0.47.0-zakura.1"
 dependencies = [
  "data-encoding",
  "derive-deftly",
- "derive_more",
  "digest 0.10.7",
  "hex",
  "hex-literal",
@@ -4526,7 +4468,6 @@ name = "zakura-tor-key-forge"
 version = "0.47.0-zakura.1"
 dependencies = [
  "derive-deftly",
- "derive_more",
  "paste",
  "rand 0.10.3",
  "rsa",
@@ -4549,7 +4490,6 @@ dependencies = [
  "cfg-if",
  "data-encoding",
  "derive-deftly",
- "derive_more",
  "dyn-clone",
  "getset",
  "glob-match",
@@ -4590,7 +4530,6 @@ dependencies = [
  "base64ct",
  "by_address",
  "derive-deftly",
- "derive_more",
  "hex",
  "hex-literal",
  "itertools 0.15.0",
@@ -4603,6 +4542,7 @@ dependencies = [
  "zakura-tor-basic-utils",
  "zakura-tor-bytes",
  "zakura-tor-config",
+ "zakura-tor-error",
  "zakura-tor-llcrypto",
  "zakura-tor-memquota",
  "zakura-tor-protover",
@@ -4618,7 +4558,6 @@ dependencies = [
  "ctr",
  "curve25519-dalek",
  "derive-deftly",
- "derive_more",
  "digest 0.10.7",
  "ed25519-dalek",
  "getrandom 0.2.17",
@@ -4670,7 +4609,6 @@ version = "0.47.0-zakura.1"
 dependencies = [
  "cfg-if",
  "derive-deftly",
- "derive_more",
  "dyn-clone",
  "extend",
  "futures",
@@ -4719,7 +4657,6 @@ version = "0.47.0-zakura.1"
 dependencies = [
  "async-trait",
  "bitflags",
- "derive_more",
  "digest 0.10.7",
  "float_eq",
  "futures",
@@ -4756,7 +4693,6 @@ dependencies = [
  "base64ct",
  "cipher 0.5.2",
  "derive-deftly",
- "derive_more",
  "digest 0.10.7",
  "extend",
  "getset",
@@ -4807,7 +4743,6 @@ version = "0.47.0-zakura.1"
 dependencies = [
  "anyhow",
  "derive-deftly",
- "derive_more",
  "extend",
  "filetime",
  "futures",
@@ -4849,7 +4784,6 @@ dependencies = [
  "criterion-cycles-per-byte",
  "ctr",
  "derive-deftly",
- "derive_more",
  "digest 0.10.7",
  "futures",
  "futures-util",
@@ -4912,7 +4846,6 @@ name = "zakura-tor-protover"
 version = "0.47.0-zakura.1"
 dependencies = [
  "derive-deftly",
- "derive_more",
  "itertools 0.15.0",
  "paste",
  "serde_core",
@@ -4928,7 +4861,6 @@ name = "zakura-tor-relay-crypto"
 version = "0.47.0-zakura.1"
 dependencies = [
  "derive-deftly",
- "derive_more",
  "humantime",
  "zakura-tor-cert",
  "zakura-tor-checkable",
@@ -4962,7 +4894,6 @@ dependencies = [
  "asynchronous-codec",
  "cfg-if",
  "coarsetime",
- "derive_more",
  "dyn-clone",
  "futures",
  "futures-rustls",
@@ -4994,7 +4925,6 @@ dependencies = [
  "assert_matches",
  "async-trait",
  "derive-deftly",
- "derive_more",
  "futures",
  "futures-await-test",
  "humantime",
@@ -5035,7 +4965,6 @@ name = "zakura-tor-units"
 version = "0.47.0-zakura.1"
 dependencies = [
  "derive-deftly",
- "derive_more",
  "float-cmp",
  "serde",
  "thiserror 2.0.21",

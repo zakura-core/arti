@@ -77,7 +77,6 @@ use tor_netdoc::doc::netstatus::{self, MdConsensus, MdRouterStatus};
 #[cfg(feature = "hs-common")]
 use {hsdir_params::HsDirParams, hsdir_ring::HsDirRing};
 
-use derive_more::{From, Into};
 use futures::{StreamExt, stream::BoxStream};
 use rand::seq::{IndexedRandom as _, SliceRandom as _, WeightError};
 use serde::Deserialize;
@@ -121,8 +120,22 @@ use params::NetParameters;
 ///
 /// If you are in a part of the code which needs to work with multiple consensuses,
 /// the typechecking cannot tell if you try to index into the wrong consensus.
-#[derive(Debug, From, Into, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub(crate) struct RouterStatusIdx(usize);
+
+impl core::convert::From<usize> for RouterStatusIdx {
+    #[inline]
+    fn from(value: usize) -> Self {
+        RouterStatusIdx(value)
+    }
+}
+
+impl core::convert::From<RouterStatusIdx> for usize {
+    #[inline]
+    fn from(value: RouterStatusIdx) -> Self {
+        <usize as core::convert::From<_>>::from(value.0)
+    }
+}
 
 /// Borrowed consensus relays, indexed only by [`RouterStatusIdx`].
 #[derive(Clone, Copy)]
@@ -388,19 +401,41 @@ impl FamilyRules {
 /// relays will be selected for a given role.
 ///
 /// Most users should ignore this type, and just use pick_relay instead.
-#[derive(
-    Copy,
-    Clone,
-    Debug,
-    derive_more::Add,
-    derive_more::Sum,
-    derive_more::AddAssign,
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct RelayWeight(u64);
+
+impl core::ops::Add for RelayWeight {
+    type Output = Self;
+    #[inline]
+    #[track_caller]
+    fn add(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Self(__self_0), Self(rhs_0)) => Self(core::ops::Add::add(__self_0, rhs_0)),
+        }
+    }
+}
+
+impl core::iter::Sum for RelayWeight {
+    #[inline]
+    fn sum<I: core::iter::Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(
+            RelayWeight(core::iter::Sum::sum(core::iter::empty::<u64>())),
+            core::ops::Add::add,
+        )
+    }
+}
+
+impl core::ops::AddAssign for RelayWeight {
+    #[inline]
+    #[track_caller]
+    fn add_assign(&mut self, rhs: Self) {
+        match (self, rhs) {
+            (Self(__self_0), Self(rhs_0)) => {
+                core::ops::AddAssign::add_assign(__self_0, rhs_0);
+            }
+        }
+    }
+}
 
 impl RelayWeight {
     /// Try to divide this weight by `rhs`.

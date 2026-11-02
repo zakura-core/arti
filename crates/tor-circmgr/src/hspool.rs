@@ -168,21 +168,28 @@ impl<C: AbstractTunnel> HsCircStem<C> {
 ///         NAIVE    = G -> L2 -> L3
 ///         GUARDED = G -> L2 -> L3 -> M
 ///      ```
-#[derive(Copy, Clone, Debug, PartialEq, derive_more::Display)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub(crate) enum HsCircStemKind {
     /// A naive circuit stem.
     ///
     /// Used for building circuits to a final hop that an adversary cannot easily control,
     /// for example if the final hop is is randomly chosen by us.
-    #[display("NAIVE")]
     Naive,
     /// An guarded circuit stem.
     ///
     /// Used for building circuits to a final hop that an adversary can easily control,
     /// for example if the final hop is not chosen by us.
-    #[display("GUARDED")]
     Guarded,
+}
+
+impl core::fmt::Display for HsCircStemKind {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Naive => formatter.write_fmt(format_args!("NAIVE")),
+            Self::Guarded => formatter.write_fmt(format_args!("GUARDED")),
+        }
+    }
 }
 
 impl HsCircStemKind {

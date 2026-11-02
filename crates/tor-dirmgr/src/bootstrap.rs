@@ -58,11 +58,18 @@ macro_rules! propagate_fatal_errors {
 /// having one_, counts as a new attempt.
 ///
 /// These are used to track the progress of each attempt independently.
-#[derive(Copy, Clone, Debug, derive_more::Display, Eq, PartialEq, Ord, PartialOrd)]
-#[display("{0}", id)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+
 pub(crate) struct AttemptId {
     /// Which attempt at downloading a directory is this?
     id: NonZeroUsize,
+}
+
+impl core::fmt::Display for AttemptId {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let id = &self.id;
+        core::fmt::Display::fmt(id, formatter)
+    }
 }
 
 impl AttemptId {

@@ -577,15 +577,22 @@ impl VanguardMgr<MockRuntime> {
 
 /// The vanguard layer.
 #[derive(Debug, Clone, Copy, PartialEq)] //
-#[derive(derive_more::Display)] //
+//
 #[non_exhaustive]
 pub enum Layer {
     /// L2 vanguard.
-    #[display("layer 2")]
     Layer2,
     /// L3 vanguard.
-    #[display("layer 3")]
     Layer3,
+}
+
+impl core::fmt::Display for Layer {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Layer2 => formatter.write_fmt(format_args!("layer 2")),
+            Self::Layer3 => formatter.write_fmt(format_args!("layer 3")),
+        }
+    }
 }
 
 #[cfg(test)]

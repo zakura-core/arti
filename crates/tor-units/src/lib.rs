@@ -49,8 +49,6 @@
 #![allow(recursion_depth_exceeding_limit)] // arti#2715, rust/issues/159228
 //! <!-- @@ end lint list maintained by maint/add_warning @@ -->
 
-use derive_more::{Add, Display, Div, From, FromStr, Mul};
-
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use thiserror::Error;
@@ -342,15 +340,89 @@ impl<const H: i32, const L: i32> TryFrom<i32> for Percentage<BoundedInt32<H, L>>
 // TODO: There is a bunch of code duplication among these "IntegerTimeUnits"
 // section.
 
-#[derive(
-    Add, Copy, Clone, Mul, Div, From, FromStr, Display, Debug, PartialEq, Eq, Ord, PartialOrd, Hash,
-)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 /// This type represents an integer number of milliseconds.
 ///
 /// The underlying type should usually implement `TryInto<u64>`.
 pub struct IntegerMilliseconds<T> {
     /// Interior Value. Should implement `TryInto<u64>` to be useful.
     value: T,
+}
+
+impl<T> core::ops::Add for IntegerMilliseconds<T>
+where
+    T: core::ops::Add<Output = T>,
+{
+    type Output = Self;
+    #[inline]
+    #[track_caller]
+    fn add(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Self { value: __self_0 }, Self { value: rhs_0 }) => Self {
+                value: core::ops::Add::add(__self_0, rhs_0),
+            },
+        }
+    }
+}
+
+impl<T, Rhs> core::ops::Mul<Rhs> for IntegerMilliseconds<T>
+where
+    T: core::ops::Mul<Rhs, Output = T>,
+{
+    type Output = Self;
+    #[inline]
+    #[track_caller]
+    fn mul(self, rhs: Rhs) -> Self::Output {
+        match self {
+            Self { value: __self_0 } => Self {
+                value: core::ops::Mul::mul(__self_0, rhs),
+            },
+        }
+    }
+}
+
+impl<T, Rhs> core::ops::Div<Rhs> for IntegerMilliseconds<T>
+where
+    T: core::ops::Div<Rhs, Output = T>,
+{
+    type Output = Self;
+    #[inline]
+    #[track_caller]
+    fn div(self, rhs: Rhs) -> Self::Output {
+        match self {
+            Self { value: __self_0 } => Self {
+                value: core::ops::Div::div(__self_0, rhs),
+            },
+        }
+    }
+}
+
+impl<T> core::convert::From<T> for IntegerMilliseconds<T> {
+    #[inline]
+    fn from(value: T) -> Self {
+        IntegerMilliseconds { value: value }
+    }
+}
+
+impl<T> core::str::FromStr for IntegerMilliseconds<T>
+where
+    T: core::str::FromStr,
+{
+    type Err = <T as core::str::FromStr>::Err;
+    #[inline]
+    fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
+        core::str::FromStr::from_str(s).map(|v| Self { value: v })
+    }
+}
+
+impl<T> core::fmt::Display for IntegerMilliseconds<T>
+where
+    T: core::fmt::Display,
+{
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let value = &self.value;
+        core::fmt::Display::fmt(value, formatter)
+    }
 }
 
 impl<T> IntegerMilliseconds<T> {
@@ -400,15 +472,89 @@ impl<const H: i32, const L: i32> TryFrom<i32> for IntegerMilliseconds<BoundedInt
     }
 }
 
-#[derive(
-    Add, Copy, Clone, Mul, Div, From, FromStr, Display, Debug, PartialEq, Eq, Ord, PartialOrd, Hash,
-)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 /// This type represents an integer number of seconds.
 ///
 /// The underlying type should usually implement `TryInto<u64>`.
 pub struct IntegerSeconds<T> {
     /// Interior Value. Should implement `TryInto<u64>` to be useful.
     value: T,
+}
+
+impl<T> core::ops::Add for IntegerSeconds<T>
+where
+    T: core::ops::Add<Output = T>,
+{
+    type Output = Self;
+    #[inline]
+    #[track_caller]
+    fn add(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Self { value: __self_0 }, Self { value: rhs_0 }) => Self {
+                value: core::ops::Add::add(__self_0, rhs_0),
+            },
+        }
+    }
+}
+
+impl<T, Rhs> core::ops::Mul<Rhs> for IntegerSeconds<T>
+where
+    T: core::ops::Mul<Rhs, Output = T>,
+{
+    type Output = Self;
+    #[inline]
+    #[track_caller]
+    fn mul(self, rhs: Rhs) -> Self::Output {
+        match self {
+            Self { value: __self_0 } => Self {
+                value: core::ops::Mul::mul(__self_0, rhs),
+            },
+        }
+    }
+}
+
+impl<T, Rhs> core::ops::Div<Rhs> for IntegerSeconds<T>
+where
+    T: core::ops::Div<Rhs, Output = T>,
+{
+    type Output = Self;
+    #[inline]
+    #[track_caller]
+    fn div(self, rhs: Rhs) -> Self::Output {
+        match self {
+            Self { value: __self_0 } => Self {
+                value: core::ops::Div::div(__self_0, rhs),
+            },
+        }
+    }
+}
+
+impl<T> core::convert::From<T> for IntegerSeconds<T> {
+    #[inline]
+    fn from(value: T) -> Self {
+        IntegerSeconds { value: value }
+    }
+}
+
+impl<T> core::str::FromStr for IntegerSeconds<T>
+where
+    T: core::str::FromStr,
+{
+    type Err = <T as core::str::FromStr>::Err;
+    #[inline]
+    fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
+        core::str::FromStr::from_str(s).map(|v| Self { value: v })
+    }
+}
+
+impl<T> core::fmt::Display for IntegerSeconds<T>
+where
+    T: core::fmt::Display,
+{
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let value = &self.value;
+        core::fmt::Display::fmt(value, formatter)
+    }
 }
 
 impl<T> IntegerSeconds<T> {
@@ -457,13 +603,41 @@ impl<const H: i32, const L: i32> TryFrom<i32> for IntegerSeconds<BoundedInt32<H,
 }
 
 #[derive(Deserialize, Serialize)] //
-#[derive(Copy, Clone, From, FromStr, Display, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 /// This type represents an integer number of minutes.
 ///
 /// The underlying type should usually implement `TryInto<u64>`.
 pub struct IntegerMinutes<T> {
     /// Interior Value. Should Implement `TryInto<u64>` to be useful.
     value: T,
+}
+
+impl<T> core::convert::From<T> for IntegerMinutes<T> {
+    #[inline]
+    fn from(value: T) -> Self {
+        IntegerMinutes { value: value }
+    }
+}
+
+impl<T> core::str::FromStr for IntegerMinutes<T>
+where
+    T: core::str::FromStr,
+{
+    type Err = <T as core::str::FromStr>::Err;
+    #[inline]
+    fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
+        core::str::FromStr::from_str(s).map(|v| Self { value: v })
+    }
+}
+
+impl<T> core::fmt::Display for IntegerMinutes<T>
+where
+    T: core::fmt::Display,
+{
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let value = &self.value;
+        core::fmt::Display::fmt(value, formatter)
+    }
 }
 
 impl<T> IntegerMinutes<T> {
@@ -517,13 +691,41 @@ impl<const H: i32, const L: i32> TryFrom<i32> for IntegerMinutes<BoundedInt32<H,
     }
 }
 
-#[derive(Copy, Clone, From, FromStr, Display, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 /// This type represents an integer number of days.
 ///
 /// The underlying type should usually implement `TryInto<u64>`.
 pub struct IntegerDays<T> {
     /// Interior Value. Should Implement `TryInto<u64>` to be useful.
     value: T,
+}
+
+impl<T> core::convert::From<T> for IntegerDays<T> {
+    #[inline]
+    fn from(value: T) -> Self {
+        IntegerDays { value: value }
+    }
+}
+
+impl<T> core::str::FromStr for IntegerDays<T>
+where
+    T: core::str::FromStr,
+{
+    type Err = <T as core::str::FromStr>::Err;
+    #[inline]
+    fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
+        core::str::FromStr::from_str(s).map(|v| Self { value: v })
+    }
+}
+
+impl<T> core::fmt::Display for IntegerDays<T>
+where
+    T: core::fmt::Display,
+{
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let value = &self.value;
+        core::fmt::Display::fmt(value, formatter)
+    }
 }
 
 impl<T> IntegerDays<T> {
@@ -578,8 +780,30 @@ impl<const H: i32, const L: i32> TryFrom<i32> for IntegerDays<BoundedInt32<H, L>
 /// A SendMe Version
 ///
 /// DOCDOC: Explain why this needs to have its own type, or remove it.
-#[derive(Clone, Copy, From, FromStr, Display, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct SendMeVersion(u8);
+
+impl core::convert::From<u8> for SendMeVersion {
+    #[inline]
+    fn from(value: u8) -> Self {
+        SendMeVersion(value)
+    }
+}
+
+impl core::str::FromStr for SendMeVersion {
+    type Err = <u8 as core::str::FromStr>::Err;
+    #[inline]
+    fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
+        core::str::FromStr::from_str(s).map(|v| Self(v))
+    }
+}
+
+impl core::fmt::Display for SendMeVersion {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let _0 = &self.0;
+        core::fmt::Display::fmt(_0, formatter)
+    }
+}
 
 impl SendMeVersion {
     /// Public Constructor

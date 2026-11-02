@@ -2,7 +2,6 @@
 
 use web_time_compat::SystemTime;
 
-use derive_more::{AsRef, Deref, Into};
 use tor_bytes::Writer as _;
 use tor_llcrypto::pk::{ed25519, rsa};
 
@@ -20,8 +19,30 @@ use crate::{CertEncodeError, EncodedCert, ExpiryHours};
 /// in Tor's [certificate specification](https://spec.torproject.org/cert-spec.html#rsa-cross-cert)
 ///
 /// This certificate has already been validated.
-#[derive(Clone, Debug, PartialEq, Into, AsRef, Deref)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EncodedRsaCrosscert(Vec<u8>);
+
+impl core::convert::From<EncodedRsaCrosscert> for Vec<u8> {
+    #[inline]
+    fn from(value: EncodedRsaCrosscert) -> Self {
+        <Vec<u8> as core::convert::From<_>>::from(value.0)
+    }
+}
+
+impl core::convert::AsRef<Vec<u8>> for EncodedRsaCrosscert {
+    #[inline]
+    fn as_ref(&self) -> &Vec<u8> {
+        &self.0
+    }
+}
+
+impl core::ops::Deref for EncodedRsaCrosscert {
+    type Target = Vec<u8>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl EncodedRsaCrosscert {
     /// Create a new [`EncodedRsaCrosscert`] certifying `ed_identity` as

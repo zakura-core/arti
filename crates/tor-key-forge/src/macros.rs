@@ -84,9 +84,22 @@ define_derive_deftly! {
     /// Public key component of this keypair. Useful if we move the public key around,
     /// it then keeps it semantic with the name and less prone to errors.
     #[derive(Clone, Debug, PartialEq, Eq)]
-    #[derive($crate::macro_deps::derive_more::From, $crate::macro_deps::derive_more::Into)]
     #[non_exhaustive]
     $tvis struct $PK_NAME ($tvis $crate::macro_deps::ed25519::PublicKey);
+
+    impl core::convert::From<$crate::macro_deps::ed25519::PublicKey> for $PK_NAME {
+        #[inline]
+        fn from(value: $crate::macro_deps::ed25519::PublicKey) -> Self {
+            Self(value)
+        }
+    }
+
+    impl core::convert::From<$PK_NAME> for $crate::macro_deps::ed25519::PublicKey {
+        #[inline]
+        fn from(value: $PK_NAME) -> Self {
+            value.0
+        }
+    }
 
     impl $PK_NAME {
         /// Verify the signature of a given message.
@@ -261,9 +274,22 @@ define_derive_deftly! {
     /// Public key component of this keypair. Useful if we move the public key around,
     /// it then keeps it semantic with the name and less prone to errors.
     #[derive(Clone, Debug, PartialEq, Eq)]
-    #[derive($crate::macro_deps::derive_more::From, $crate::macro_deps::derive_more::Into)]
     #[non_exhaustive]
     $tvis struct $PK_NAME ($crate::macro_deps::curve25519::PublicKey);
+
+    impl core::convert::From<$crate::macro_deps::curve25519::PublicKey> for $PK_NAME {
+        #[inline]
+        fn from(value: $crate::macro_deps::curve25519::PublicKey) -> Self {
+            Self(value)
+        }
+    }
+
+    impl core::convert::From<$PK_NAME> for $crate::macro_deps::curve25519::PublicKey {
+        #[inline]
+        fn from(value: $PK_NAME) -> Self {
+            value.0
+        }
+    }
 
     impl std::borrow::Borrow<$crate::macro_deps::curve25519::PublicKey> for $PK_NAME {
         #[inline]
@@ -450,9 +476,22 @@ define_derive_deftly! {
     /// Public key component of this keypair. Useful if we move the public key around,
     /// it then keeps it semantic with the name and less prone to errors.
     #[derive(Clone, Debug, PartialEq, Eq)]
-    #[derive($crate::macro_deps::derive_more::From, $crate::macro_deps::derive_more::Into)]
     #[non_exhaustive]
     $tvis struct $PK_NAME ($tvis $crate::macro_deps::rsa::PublicKey);
+
+    impl core::convert::From<$crate::macro_deps::rsa::PublicKey> for $PK_NAME {
+        #[inline]
+        fn from(value: $crate::macro_deps::rsa::PublicKey) -> Self {
+            Self(value)
+        }
+    }
+
+    impl core::convert::From<$PK_NAME> for $crate::macro_deps::rsa::PublicKey {
+        #[inline]
+        fn from(value: $PK_NAME) -> Self {
+            value.0
+        }
+    }
 
     impl $PK_NAME {
         /// Verify the signature of a given message.
@@ -544,7 +583,6 @@ pub mod deps {
     pub use derive_deftly_template_Curve25519Keypair;
     pub use derive_deftly_template_Ed25519Keypair;
     pub use derive_deftly_template_RsaKeypair;
-    pub use derive_more;
     pub use paste::paste;
     pub use signature;
     pub use tor_llcrypto::pk::{ValidatableSignature, curve25519, ed25519, rsa};

@@ -195,7 +195,7 @@ define_derive_deftly! {
     ///
     ///  * derive `Hash` and write `#[allow(clippy::derived_hash_with_manual_eq)]`
     ///  * impl `FromStr` and `Display` (if required, which they usually will be)
-    ///  * derive `derive_more::Debug` eg with `#[debug(r#"B64("{self}")"#)]`
+    ///  * implement [`Debug`] with a representation such as `B64("...")`
     ///  * `impl NormalItemArgument` if appropriate (ie the representation has no spaces)
     BytesTransparent for struct, beta_deftly:
 
@@ -299,10 +299,15 @@ mod b64impl {
     #[derive(Clone, Hash, Deftly)]
     #[derive_deftly(BytesTransparent)]
     #[allow(clippy::derived_hash_with_manual_eq)]
-    #[derive(derive_more::Debug)]
-    #[debug(r#"B64("{self}")"#)]
     #[allow(clippy::exhaustive_structs)]
     pub struct B64(pub Vec<u8>);
+
+    impl core::fmt::Debug for B64 {
+        #[inline]
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            formatter.write_fmt(format_args!("B64(\"{0}\")", self))
+        }
+    }
 
     impl FromStr for B64 {
         type Err = Error;
@@ -361,10 +366,15 @@ mod b64impl {
     #[derive(Clone, Hash, Deftly)]
     #[derive_deftly(BytesTransparent, FixedBytes)]
     #[allow(clippy::derived_hash_with_manual_eq)]
-    #[derive(derive_more::Debug)]
-    #[debug(r#"FixedB64::<{N}>("{self}")"#)]
     #[allow(clippy::exhaustive_structs)]
     pub struct FixedB64<const N: usize>(pub [u8; N]);
+
+    impl<const N: usize> core::fmt::Debug for FixedB64<N> {
+        #[inline]
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            formatter.write_fmt(format_args!("FixedB64::<{0}>(\"{1}\")", N, self))
+        }
+    }
 
     impl<const N: usize> Display for FixedB64<N> {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -399,10 +409,15 @@ mod b16impl {
     #[derive(Clone, Hash, Deftly)]
     #[derive_deftly(BytesTransparent)]
     #[allow(clippy::derived_hash_with_manual_eq)]
-    #[derive(derive_more::Debug)]
-    #[debug(r#"B16("{self}")"#)]
     #[allow(clippy::exhaustive_structs)]
     pub struct B16(pub Vec<u8>);
+
+    impl core::fmt::Debug for B16 {
+        #[inline]
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            formatter.write_fmt(format_args!("B16(\"{0}\")", self))
+        }
+    }
 
     /// A byte array encoded in hexadecimal; prints in uppercase
     ///
@@ -410,19 +425,29 @@ mod b16impl {
     #[derive(Clone, Hash, Deftly)]
     #[derive_deftly(BytesTransparent)]
     #[allow(clippy::derived_hash_with_manual_eq)]
-    #[derive(derive_more::Debug)]
-    #[debug(r#"B16U("{self}")"#)]
     #[allow(clippy::exhaustive_structs)]
     pub struct B16U(pub Vec<u8>);
+
+    impl core::fmt::Debug for B16U {
+        #[inline]
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            formatter.write_fmt(format_args!("B16U(\"{0}\")", self))
+        }
+    }
 
     /// A fixed-length version of [`B16U`].
     #[derive(Clone, Hash, Deftly)]
     #[derive_deftly(BytesTransparent, FixedBytes)]
     #[allow(clippy::derived_hash_with_manual_eq)]
-    #[derive(derive_more::Debug)]
-    #[debug(r#"FixedB16U("{self}")"#)]
     #[allow(clippy::exhaustive_structs)]
     pub struct FixedB16U<const N: usize>(pub [u8; N]);
+
+    impl<const N: usize> core::fmt::Debug for FixedB16U<N> {
+        #[inline]
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            formatter.write_fmt(format_args!("FixedB16U(\"{0}\")", self))
+        }
+    }
 
     impl FromStr for B16 {
         type Err = Error;
@@ -561,13 +586,32 @@ mod ed25519impl {
 
     /// Helper that checks for the presence of `ed25519`.
     #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)] //
-    #[derive(derive_more::Display, derive_more::FromStr)]
-    #[display(rename_all = "lowercase")]
-    #[from_str(rename_all = "lowercase")]
     #[allow(clippy::exhaustive_enums)]
     pub enum Ed25519AlgorithmString {
         /// Ed25519 encoded as `ed25519`.
         Ed25519,
+    }
+
+    impl core::fmt::Display for Ed25519AlgorithmString {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            match self {
+                Self::Ed25519 => formatter.write_str("ed25519"),
+            }
+        }
+    }
+
+    impl core::str::FromStr for Ed25519AlgorithmString {
+        type Err = tor_error::FromStrError;
+        fn from_str(s: &str) -> core::result::Result<Self, <Self as core::str::FromStr>::Err> {
+            core::result::Result::Ok(match s {
+                "ed25519" => Self::Ed25519,
+                _ => {
+                    return core::result::Result::Err(tor_error::FromStrError::new(
+                        "Ed25519AlgorithmString",
+                    ));
+                }
+            })
+        }
     }
 
     impl NormalItemArgument for Ed25519AlgorithmString {}
@@ -785,15 +829,44 @@ mod ignored_impl {
     // a type in a downstream crate, but that level of indirection feels wrong.
     #[derive(Debug, Copy, Clone, Default, Ord, PartialOrd, Eq, PartialEq, Hash)]
     //
-    #[derive(
-        derive_more::From,
-        derive_more::Deref,
-        derive_more::DerefMut,
-        derive_more::AsRef,
-        derive_more::AsMut,
-    )]
     #[allow(clippy::exhaustive_structs)]
     pub struct ItemPresent<T: Default>(pub T);
+
+    impl<T: Default> core::convert::From<T> for ItemPresent<T> {
+        #[inline]
+        fn from(value: T) -> Self {
+            ItemPresent(value)
+        }
+    }
+
+    impl<T: Default> core::ops::Deref for ItemPresent<T> {
+        type Target = T;
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl<T: Default> core::ops::DerefMut for ItemPresent<T> {
+        #[inline]
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl<T: Default> core::convert::AsRef<T> for ItemPresent<T> {
+        #[inline]
+        fn as_ref(&self) -> &T {
+            &self.0
+        }
+    }
+
+    impl<T: Default> core::convert::AsMut<T> for ItemPresent<T> {
+        #[inline]
+        fn as_mut(&mut self) -> &mut T {
+            &mut self.0
+        }
+    }
 
     impl ItemSetMethods for P2MultiplicitySelector<NotPresent> {
         type Each = NotPresentEachValue;
@@ -1150,8 +1223,30 @@ impl<T: PartialOrd> PartialOrd for Unknown<T> {
 //
 // This type is here rather than in rs.rs, in case similar things appears in other documents.
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)] //
-#[derive(derive_more::Deref, derive_more::Into, derive_more::Display)]
+
 pub struct F64Finite(f64);
+
+impl core::ops::Deref for F64Finite {
+    type Target = f64;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl core::convert::From<F64Finite> for f64 {
+    #[inline]
+    fn from(value: F64Finite) -> Self {
+        <f64 as core::convert::From<_>>::from(value.0)
+    }
+}
+
+impl core::fmt::Display for F64Finite {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let _0 = &self.0;
+        core::fmt::Display::fmt(_0, formatter)
+    }
+}
 
 /// Error converting an [`F64Finite`] from an `f64`: the value wasn't finite
 #[derive(Clone, Debug, Eq, PartialEq, thiserror::Error, getset::Getters)]
@@ -2022,7 +2117,7 @@ mod identified_digest {
         // for mismatches between FromStr, Display, and the variant name.
         //
         // TODO consider putting this in tor-basic-utils (maybe with a better name),
-        // or possibly asking if derive_more want their FromStr to have this.
+        // or sharing this parsing helper with the other string wrappers.
         StringReprUnitsOrUnknown for enum, expect items, beta_deftly:
 
         ${define STRING_REPR {
@@ -2084,8 +2179,7 @@ mod identified_digest {
     }
 
     /// A single digest made with a nominated digest algorithm, `ALGORITHM=DIGEST`
-    #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, derive_more::Display)]
-    #[display("{alg}={value}")]
+    #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
     #[allow(clippy::exhaustive_structs)] // Seems very unlikely to grow
     pub struct IdentifiedDigest {
         /// The algorithm name.
@@ -2095,6 +2189,14 @@ mod identified_digest {
         ///
         /// Invariant: length is correct for `alg`, assuming `alg` is known.
         pub value: B64,
+    }
+
+    impl core::fmt::Display for IdentifiedDigest {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let alg = &self.alg;
+            let value = &self.value;
+            formatter.write_fmt(format_args!("{0}={1}", alg, value))
+        }
     }
 
     impl NormalItemArgument for DigestName {}
@@ -2422,8 +2524,37 @@ mod hostname {
     /// And of course, hostnames reference to the DNS.
     /// A single host may have multiple names and it may change its address.
     #[derive(Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)] //
-    #[derive(derive_more::Into, derive_more::Deref, derive_more::AsRef, derive_more::Display)]
+
     pub struct Hostname(String);
+
+    impl core::convert::From<Hostname> for String {
+        #[inline]
+        fn from(value: Hostname) -> Self {
+            <String as core::convert::From<_>>::from(value.0)
+        }
+    }
+
+    impl core::ops::Deref for Hostname {
+        type Target = String;
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl core::convert::AsRef<String> for Hostname {
+        #[inline]
+        fn as_ref(&self) -> &String {
+            &self.0
+        }
+    }
+
+    impl core::fmt::Display for Hostname {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let _0 = &self.0;
+            core::fmt::Display::fmt(_0, formatter)
+        }
+    }
 
     /// Hostname, or IP address (v4 or v6)
     ///
@@ -2440,16 +2571,22 @@ mod hostname {
     // hosts on the public internet and, unlike arti-client's `Host`,
     // has special handling of `.onion` addresses.
     #[derive(Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)] //
-    #[derive(derive_more::Display)]
     #[allow(clippy::exhaustive_enums)]
     // TODO derive .as_hostname(), .as_ip_addr(), From<Hostname>, From<IpAddr>
     pub enum InternetHost {
         /// Hostname
-        #[display("{_0}")]
         Name(Hostname),
         /// IP address (v4 or v6)
-        #[display("{_0}")]
         IpAddr(IpAddr),
+    }
+
+    impl core::fmt::Display for InternetHost {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            match self {
+                Self::Name(_0) => core::fmt::Display::fmt(_0, formatter),
+                Self::IpAddr(_0) => core::fmt::Display::fmt(_0, formatter),
+            }
+        }
     }
 
     /// Invalid hostname
@@ -2530,10 +2667,38 @@ mod contact_info {
     ///
     /// Also used for authority entries in netstatus documents.
     #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Deftly)] //
-    #[derive(derive_more::Into, derive_more::AsRef, derive_more::Deref, derive_more::Display)]
     #[derive_deftly(ItemValueEncodable)]
     #[non_exhaustive]
     pub struct ContactInfo(#[deftly(netdoc(rest))] String);
+
+    impl core::convert::From<ContactInfo> for String {
+        #[inline]
+        fn from(value: ContactInfo) -> Self {
+            <String as core::convert::From<_>>::from(value.0)
+        }
+    }
+
+    impl core::convert::AsRef<String> for ContactInfo {
+        #[inline]
+        fn as_ref(&self) -> &String {
+            &self.0
+        }
+    }
+
+    impl core::ops::Deref for ContactInfo {
+        type Target = String;
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl core::fmt::Display for ContactInfo {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let _0 = &self.0;
+            core::fmt::Display::fmt(_0, formatter)
+        }
+    }
 
     impl_serde_via_string!(ContactInfo);
 

@@ -212,23 +212,37 @@ impl tor_bytes::Writeable for NumberedSubver {
 /// This does not include the "version" part of a capability;
 /// in a capability like `Relay=7` or `Wombat=42`,
 /// this only represents the `Relay` or `Wombat` part.
-#[derive(Eq, PartialEq, Clone, Debug, Hash, Ord, PartialOrd, derive_more::Display)]
-#[display("{_0}")]
+#[derive(Eq, PartialEq, Clone, Debug, Hash, Ord, PartialOrd)]
+
 pub struct Protocol(ProtocolInner<'static>);
 
+impl core::fmt::Display for Protocol {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let _0 = &self.0;
+        core::fmt::Display::fmt(_0, formatter)
+    }
+}
+
 /// Representation for a known or unknown protocol.
-#[derive(Eq, PartialEq, Clone, Debug, Hash, Ord, PartialOrd, derive_more::Display)]
+#[derive(Eq, PartialEq, Clone, Debug, Hash, Ord, PartialOrd)]
 enum ProtocolInner<'s> {
     /// A known protocol; represented by one of ProtoKind.
     ///
     /// ProtoKind must always be in the range 0..N_RECOGNIZED.
-    #[display("{_0}")]
     Proto(ProtoKind),
     /// An unknown protocol; represented by its name.
     ///
     /// Invariant: is legal syntax, is not a recognized name
-    #[display("{_0}")]
     Unrecognized(Cow<'s, str>),
+}
+
+impl<'s> core::fmt::Display for ProtocolInner<'s> {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Proto(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::Unrecognized(_0) => core::fmt::Display::fmt(_0, formatter),
+        }
+    }
 }
 
 impl Protocol {

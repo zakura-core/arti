@@ -60,7 +60,7 @@ use crate::channel::Channel;
 use crate::conflux::msghandler::RemoveLegReason;
 use crate::crypto::handshake::ntor::{NtorClient, NtorPublicKey};
 use circuit::CircuitCmd;
-use derive_more::From;
+
 use smallvec::smallvec;
 use tor_cell::chancell::CircId;
 use tor_llcrypto::pk;
@@ -119,7 +119,7 @@ pub(crate) enum CircuitHandshake {
 // and coming up with more intuitive names.
 
 /// One or more [`RunOnceCmdInner`] to run inside [`Reactor::run_once`].
-#[derive(From, Debug)]
+#[derive(Debug)]
 #[allow(clippy::large_enum_variant)] // TODO #2003: resolve this
 enum RunOnceCmd {
     /// Run a single `RunOnceCmdInner` command.
@@ -131,6 +131,20 @@ enum RunOnceCmd {
     // to run per run_once() loop. The enum enables us avoid the extra heap
     // allocation for the `RunOnceCmd::Single` case.
     Multiple(Vec<RunOnceCmdInner>),
+}
+
+impl core::convert::From<RunOnceCmdInner> for RunOnceCmd {
+    #[inline]
+    fn from(value: RunOnceCmdInner) -> Self {
+        RunOnceCmd::Single(value)
+    }
+}
+
+impl core::convert::From<Vec<RunOnceCmdInner>> for RunOnceCmd {
+    #[inline]
+    fn from(value: Vec<RunOnceCmdInner>) -> Self {
+        RunOnceCmd::Multiple(value)
+    }
 }
 
 /// Instructions for running something in the reactor loop.
@@ -443,7 +457,7 @@ impl RunOnceCmdInner {
 }
 
 /// A command to execute at the end of [`Reactor::run_once`].
-#[derive(From, Debug)]
+#[derive(Debug)]
 #[allow(clippy::large_enum_variant)] // TODO #2003: should we resolve this?
 enum CircuitEvent {
     /// Run a single `CircuitCmd` command.
@@ -499,6 +513,60 @@ enum CircuitEvent {
         /// The error that causes this protocol violation.
         err: crate::Error,
     },
+}
+
+impl core::convert::From<(UniqId, CircuitCmd)> for CircuitEvent {
+    #[inline]
+    fn from(value: (UniqId, CircuitCmd)) -> Self {
+        CircuitEvent::RunCmd {
+            leg: value.0,
+            cmd: value.1,
+        }
+    }
+}
+
+impl core::convert::From<CtrlMsg> for CircuitEvent {
+    #[inline]
+    fn from(value: CtrlMsg) -> Self {
+        CircuitEvent::HandleControl(value)
+    }
+}
+
+impl core::convert::From<(UniqId, ClientCircChanMsg)> for CircuitEvent {
+    #[inline]
+    fn from(value: (UniqId, ClientCircChanMsg)) -> Self {
+        CircuitEvent::HandleCell {
+            leg: value.0,
+            cell: value.1,
+        }
+    }
+}
+
+impl core::convert::From<(UniqId, RemoveLegReason)> for CircuitEvent {
+    #[inline]
+    fn from(value: (UniqId, RemoveLegReason)) -> Self {
+        CircuitEvent::RemoveLeg {
+            leg: value.0,
+            reason: value.1,
+        }
+    }
+}
+
+impl core::convert::From<(UniqId, PaddingEvent)> for CircuitEvent {
+    #[inline]
+    fn from(value: (UniqId, PaddingEvent)) -> Self {
+        CircuitEvent::PaddingAction {
+            leg: value.0,
+            padding_event: value.1,
+        }
+    }
+}
+
+impl core::convert::From<crate::Error> for CircuitEvent {
+    #[inline]
+    fn from(value: crate::Error) -> Self {
+        CircuitEvent::ProtoViolation { err: value }
+    }
 }
 
 impl CircuitEvent {

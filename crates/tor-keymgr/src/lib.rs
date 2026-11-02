@@ -120,7 +120,6 @@ pub(crate) type BoxedKeystore = Box<dyn Keystore>;
 #[doc(hidden)]
 pub use derive_deftly;
 
-use derive_more::{AsRef, Display, From};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
@@ -130,12 +129,24 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// An identifier for a particular [`Keystore`] instance.
 //
 // TODO (#1193): restrict the charset of this ID
-#[derive(
-    Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Display, AsRef,
-)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 #[non_exhaustive]
 pub struct KeystoreId(String);
+
+impl core::fmt::Display for KeystoreId {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let _0 = &self.0;
+        core::fmt::Display::fmt(_0, formatter)
+    }
+}
+
+impl core::convert::AsRef<String> for KeystoreId {
+    #[inline]
+    fn as_ref(&self) -> &String {
+        &self.0
+    }
+}
 
 impl FromStr for KeystoreId {
     type Err = Error;
@@ -146,7 +157,7 @@ impl FromStr for KeystoreId {
 }
 
 /// Specifies which keystores a [`KeyMgr`] operation should apply to.
-#[derive(Copy, Clone, Default, Debug, PartialEq, Eq, Hash, From)]
+#[derive(Copy, Clone, Default, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum KeystoreSelector<'a> {
     /// Try to use the keystore with the specified ID.
@@ -154,4 +165,11 @@ pub enum KeystoreSelector<'a> {
     /// Use the primary key store.
     #[default]
     Primary,
+}
+
+impl<'a> core::convert::From<&'a KeystoreId> for KeystoreSelector<'a> {
+    #[inline]
+    fn from(value: &'a KeystoreId) -> Self {
+        KeystoreSelector::Id(value)
+    }
 }

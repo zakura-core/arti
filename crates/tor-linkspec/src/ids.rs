@@ -8,7 +8,7 @@
 use std::fmt;
 
 use derive_deftly::{Deftly, define_derive_deftly};
-use derive_more::{Display, From};
+
 use safelog::Redactable;
 use tor_llcrypto::pk::{
     ed25519::{ED25519_ID_LEN, Ed25519Identity},
@@ -21,7 +21,7 @@ pub(crate) mod set;
 /// The type of a relay identity.
 ///
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)] //
-#[derive(Display, strum::EnumIter, strum::EnumCount, Deftly)]
+#[derive(strum::EnumIter, strum::EnumCount, Deftly)]
 #[derive_deftly_adhoc]
 #[derive_deftly(RelayId)]
 #[non_exhaustive]
@@ -30,7 +30,7 @@ pub enum RelayIdType {
     ///
     /// Every relay (currently) has one of these identities. It is the same
     /// as the encoding of the relay's public Ed25519 identity key.
-    #[display("Ed25519")] // Display of this enum variant, ie of just the id type
+    // Display of this enum variant, ie of just the id type
     #[deftly(display_id = "ed25519:{}")] // Display of a relay id value of this type
     Ed25519,
     /// An RSA identity.
@@ -39,14 +39,32 @@ pub enum RelayIdType {
     /// a SHA-1 digest of the DER encoding of the relay's public RSA 1024-bit
     /// identity key.  Because of short key length, this type of identity should
     /// not be considered secure on its own.
-    #[display("RSA (legacy)")]
+
     #[deftly(display_id = "{}")]
     Rsa,
+}
+
+impl core::fmt::Display for RelayIdType {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Ed25519 => formatter.write_fmt(format_args!("Ed25519")),
+            Self::Rsa => formatter.write_fmt(format_args!("RSA (legacy)")),
+        }
+    }
 }
 
 impl fmt::Display for RelayId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(&self.as_ref(), f)
+    }
+}
+
+impl fmt::Display for RelayIdRef<'_> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Ed25519(identity) => write!(formatter, "ed25519:{}", identity),
+            Self::Rsa(identity) => fmt::Display::fmt(identity, formatter),
+        }
     }
 }
 
@@ -57,7 +75,7 @@ define_derive_deftly! {
     ${define IDENTITY $<$vname Identity>}
 
     /// A single relay identity.
-    #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, From, Hash)]
+    #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
     #[non_exhaustive]
     pub enum RelayId {
         $(
@@ -68,15 +86,45 @@ define_derive_deftly! {
 
     /// A reference to a single relay identity.
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)] //
-    #[derive(Display, From, derive_more::TryInto)]
     #[non_exhaustive]
     pub enum RelayIdRef<'a> {
         $(
             ${vattrs doc}
-            #[display(${vmeta(display_id) as str}, _0)]
             $vname(&'a $IDENTITY),
         )
     }
+
+    $(
+        impl From<$IDENTITY> for RelayId {
+            #[inline]
+            fn from(value: $IDENTITY) -> Self {
+                Self::$vname(value)
+            }
+        }
+
+        impl<'a> From<&'a $IDENTITY> for RelayIdRef<'a> {
+            #[inline]
+            fn from(value: &'a $IDENTITY) -> Self {
+                Self::$vname(value)
+            }
+        }
+
+        impl<'a> TryFrom<RelayIdRef<'a>> for &'a $IDENTITY {
+            type Error = tor_error::TryIntoError<RelayIdRef<'a>>;
+
+            #[inline]
+            fn try_from(value: RelayIdRef<'a>) -> Result<Self, Self::Error> {
+                match value {
+                    RelayIdRef::$vname(identity) => Ok(identity),
+                    other => Err(tor_error::TryIntoError::new(
+                        other,
+                        stringify!($vname),
+                        concat!("& 'a ", stringify!($IDENTITY)),
+                    )),
+                }
+            }
+        }
+    )
 
     impl RelayIdType {
         /// The number of distinct types currently implemented.

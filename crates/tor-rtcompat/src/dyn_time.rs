@@ -306,9 +306,15 @@ mod test {
 
     #[test]
     fn check_downcast_dropcount() {
-        #[derive(Debug, derive_more::Display)]
-        #[display("{self:?}")]
+        #[derive(Debug)]
+
         struct DropCounter(u32);
+
+        impl core::fmt::Display for DropCounter {
+            fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                core::fmt::Debug::fmt(&(self), formatter)
+            }
+        }
 
         fn try_downcast_dc(x: impl Debug + 'static) -> Result<DropCounter, impl Debug + 'static> {
             black_box(downcast_value(black_box(x)))

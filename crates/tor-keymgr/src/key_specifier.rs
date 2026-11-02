@@ -5,7 +5,6 @@ use std::ops::Range;
 use std::result::Result as StdResult;
 use std::str::FromStr;
 
-use derive_more::From;
 use safelog::DisplayRedacted as _;
 use thiserror::Error;
 use tor_error::{Bug, internal, into_internal};
@@ -21,7 +20,7 @@ use crate::{ArtiPath, ArtiPathSyntaxError};
 pub mod derive;
 
 /// The identifier of a key.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, From, derive_more::Display)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum KeyPath {
     /// An Arti key path.
@@ -30,9 +29,39 @@ pub enum KeyPath {
     CTor(CTorPath),
 }
 
+impl core::convert::From<ArtiPath> for KeyPath {
+    #[inline]
+    fn from(value: ArtiPath) -> Self {
+        KeyPath::Arti(value)
+    }
+}
+
+impl core::convert::From<CTorPath> for KeyPath {
+    #[inline]
+    fn from(value: CTorPath) -> Self {
+        KeyPath::CTor(value)
+    }
+}
+
+impl core::fmt::Display for KeyPath {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Arti(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::CTor(_0) => core::fmt::Display::fmt(_0, formatter),
+        }
+    }
+}
+
 /// A range specifying a substring of a [`KeyPath`].
-#[derive(Clone, Debug, PartialEq, Eq, Hash, From)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ArtiPathRange(pub(crate) Range<usize>);
+
+impl core::convert::From<Range<usize>> for ArtiPathRange {
+    #[inline]
+    fn from(value: Range<usize>) -> Self {
+        ArtiPathRange(value)
+    }
+}
 
 impl ArtiPath {
     /// Check whether this `ArtiPath` matches the specified [`KeyPathPattern`].
@@ -297,7 +326,7 @@ pub enum KeyPathPattern {
 }
 
 /// The path of a key in the C Tor key store.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, derive_more::Display)] //
+#[derive(Clone, Debug, PartialEq, Eq, Hash)] //
 #[non_exhaustive]
 pub enum CTorPath {
     /// A client descriptor encryption key, to be looked up in ClientOnionAuthDir.
@@ -308,23 +337,37 @@ pub enum CTorPath {
     /// (we'd need to read and parse each file from `ClientOnionAuthDir` to find out).
     //
     // TODO: Perhaps we should redact this sometimes.
-    #[display("HsClientDescEncKeypair({})", hs_id.display_unredacted())]
     HsClientDescEncKeypair {
         /// The hidden service this restricted discovery keypair is for.
         hs_id: HsId,
     },
     /// C Tor's `HiddenServiceDirectory/hs_ed25519_public_key`.
-    #[display("hs_ed25519_public_key")]
     HsIdPublicKey {
         /// The nickname of the service,
         nickname: HsNickname,
     },
     /// C Tor's `HiddenServiceDirectory/hs_ed25519_secret_key`.
-    #[display("hs_ed25519_secret_key")]
     HsIdKeypair {
         /// The nickname of the service,
         nickname: HsNickname,
     },
+}
+
+impl core::fmt::Display for CTorPath {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::HsClientDescEncKeypair { hs_id } => formatter.write_fmt(format_args!(
+                "HsClientDescEncKeypair({0})",
+                hs_id.display_unredacted(),
+            )),
+            Self::HsIdPublicKey { nickname: _ } => {
+                formatter.write_fmt(format_args!("hs_ed25519_public_key"))
+            }
+            Self::HsIdKeypair { nickname: _ } => {
+                formatter.write_fmt(format_args!("hs_ed25519_secret_key"))
+            }
+        }
+    }
 }
 
 /// The "specifier" of a key, which identifies an instance of a key.

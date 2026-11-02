@@ -5,7 +5,6 @@ use std::hash::Hash;
 use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
 
 use derive_deftly::define_derive_deftly;
-use derive_more::{Deref, Display, Into};
 
 /// Alias to force use of RandomState, regardless of features enabled in `weak_tables`.
 ///
@@ -29,7 +28,7 @@ type WeakHashSet<T> = weak_table::WeakHashSet<T, std::hash::RandomState>;
 //
 // Right now, this is the bare minimum of derives; it may need more in the
 // future.  If so, just add them.
-#[derive(Debug, Default, PartialEq, Eq, Hash, Display, Into, Deref)]
+#[derive(Debug, Default, PartialEq, Eq, Hash)]
 pub struct Intern<T: ?Sized>(Arc<T>);
 
 impl<T: ?Sized> core::clone::Clone for Intern<T> {
@@ -41,6 +40,31 @@ impl<T: ?Sized> core::clone::Clone for Intern<T> {
     #[inline]
     fn clone_from(&mut self, _source: &Self) {
         core::clone::Clone::clone_from(&mut self.0, &_source.0);
+    }
+}
+
+impl<T: ?Sized> core::fmt::Display for Intern<T>
+where
+    Arc<T>: core::fmt::Display,
+{
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
+
+impl<T: ?Sized> core::convert::From<Intern<T>> for Arc<T> {
+    #[inline]
+    fn from(value: Intern<T>) -> Self {
+        value.0
+    }
+}
+
+impl<T: ?Sized> core::ops::Deref for Intern<T> {
+    type Target = Arc<T>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 

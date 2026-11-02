@@ -120,7 +120,7 @@ pub(crate) enum FilesystemError {
 }
 
 /// The action that caused a [`FilesystemError`].
-#[derive(Copy, Clone, Debug, derive_more::Display)]
+#[derive(Copy, Clone, Debug)]
 pub(crate) enum FilesystemAction {
     /// Filesystem key store initialization.
     Init,
@@ -130,6 +130,17 @@ pub(crate) enum FilesystemAction {
     Write,
     /// Filesystem remove
     Remove,
+}
+
+impl core::fmt::Display for FilesystemAction {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Init => formatter.write_str("Init"),
+            Self::Read => formatter.write_str("Read"),
+            Self::Write => formatter.write_str("Write"),
+            Self::Remove => formatter.write_str("Remove"),
+        }
+    }
 }
 
 impl HasKind for FilesystemError {

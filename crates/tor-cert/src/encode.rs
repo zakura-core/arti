@@ -10,8 +10,6 @@ use std::time::SystemTime;
 use tor_bytes::{EncodeResult, Writeable, Writer};
 use tor_llcrypto::pk::ed25519::{self, Ed25519PublicKey, Ed25519SigningKey};
 
-use derive_more::{AsRef, Deref, Into};
-
 /// An encoded ed25519 certificate,
 /// created using [`Ed25519CertBuilder::encode_and_sign`].
 ///
@@ -19,8 +17,30 @@ use derive_more::{AsRef, Deref, Into};
 /// in Tor's cert-spec.txt.
 ///
 /// This certificate has already been validated.
-#[derive(Clone, Debug, PartialEq, Into, AsRef, Deref)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EncodedEd25519Cert(Vec<u8>);
+
+impl core::convert::From<EncodedEd25519Cert> for Vec<u8> {
+    #[inline]
+    fn from(value: EncodedEd25519Cert) -> Self {
+        <Vec<u8> as core::convert::From<_>>::from(value.0)
+    }
+}
+
+impl core::convert::AsRef<Vec<u8>> for EncodedEd25519Cert {
+    #[inline]
+    fn as_ref(&self) -> &Vec<u8> {
+        &self.0
+    }
+}
+
+impl core::ops::Deref for EncodedEd25519Cert {
+    type Target = Vec<u8>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl Ed25519Cert {
     /// Return a new `Ed25519CertBuilder` to create and return a new signed

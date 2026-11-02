@@ -153,7 +153,7 @@ pub(crate) struct Circuit {
 /// of the circuit the `CircuitCmd` came from.
 ///
 /// This type gets mapped to a `RunOnceCmdInner` in the circuit reactor.
-#[derive(Debug, derive_more::From)]
+#[derive(Debug)]
 pub(super) enum CircuitCmd {
     /// Send a RELAY cell on the circuit leg this command originates from.
     Send(SendRelayCell),
@@ -183,6 +183,65 @@ pub(super) enum CircuitCmd {
     /// Enqueue an out-of-order cell in the reactor.
     #[cfg(feature = "conflux")]
     Enqueue(OooRelayMsg),
+}
+
+impl core::convert::From<SendRelayCell> for CircuitCmd {
+    #[inline]
+    fn from(value: SendRelayCell) -> Self {
+        CircuitCmd::Send(value)
+    }
+}
+
+impl core::convert::From<(HopNum, Sendme)> for CircuitCmd {
+    #[inline]
+    fn from(value: (HopNum, Sendme)) -> Self {
+        CircuitCmd::HandleSendMe {
+            hop: value.0,
+            sendme: value.1,
+        }
+    }
+}
+
+impl
+    core::convert::From<(
+        HopNum,
+        StreamId,
+        CloseStreamBehavior,
+        streammap::TerminateReason,
+    )> for CircuitCmd
+{
+    #[inline]
+    fn from(
+        value: (
+            HopNum,
+            StreamId,
+            CloseStreamBehavior,
+            streammap::TerminateReason,
+        ),
+    ) -> Self {
+        CircuitCmd::CloseStream {
+            hop: value.0,
+            sid: value.1,
+            behav: value.2,
+            reason: value.3,
+        }
+    }
+}
+
+#[cfg(feature = "conflux")]
+impl core::convert::From<ConfluxCmd> for CircuitCmd {
+    #[inline]
+    fn from(value: ConfluxCmd) -> Self {
+        CircuitCmd::Conflux(value)
+    }
+}
+
+#[cfg(feature = "conflux")]
+impl core::convert::From<OooRelayMsg> for CircuitCmd {
+    #[inline]
+    fn from(value: OooRelayMsg) -> Self {
+        CircuitCmd::Enqueue(value)
+    }
 }
 
 /// Return a `CircProto` error for the specified unsupported cell.

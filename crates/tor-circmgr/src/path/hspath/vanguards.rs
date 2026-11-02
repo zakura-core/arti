@@ -36,7 +36,7 @@ pub(super) struct PathBuilder<'n, 'a, RT: Runtime, R: Rng> {
 }
 
 /// The type of a `PathBuilder` hop.
-#[derive(Copy, Clone, Debug, PartialEq, derive_more::Display)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum HopKind {
     /// The L1 guard.
     Guard,
@@ -44,6 +44,16 @@ enum HopKind {
     Vanguard(Layer),
     /// A middle relay.
     Middle,
+}
+
+impl core::fmt::Display for HopKind {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Guard => formatter.write_str("Guard"),
+            Self::Vanguard(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::Middle => formatter.write_str("Middle"),
+        }
+    }
 }
 
 impl<'n, 'a, RT: Runtime, R: Rng> PathBuilder<'n, 'a, RT, R> {

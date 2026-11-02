@@ -265,8 +265,18 @@ impl_display_traits! {
 /// An object that may or may not be sensitive.
 ///
 /// See [`Sensitive`] for the guarantees it provides for the sensitive case.
-#[derive(Clone, derive_more::Display)]
+#[derive(Clone)]
 pub struct MaybeSensitive<T>(either::Either<T, Sensitive<T>>);
+
+impl<T> core::fmt::Display for MaybeSensitive<T>
+where
+    either::Either<T, Sensitive<T>>: core::fmt::Display,
+{
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
 
 impl<T> MaybeSensitive<T> {
     /// Build a sensitive container.
@@ -379,7 +389,7 @@ impl<'a, T: Redactable + ?Sized> Redactable for &'a T {
 }
 
 /// A wrapper around a `Redactable` that displays it in redacted format.
-#[derive(Clone, Copy, derive_more::From)]
+#[derive(Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Redacted<T: Redactable>(T);
@@ -451,6 +461,13 @@ where
     }
 }
 
+impl<T: Redactable> core::convert::From<T> for Redacted<T> {
+    #[inline]
+    fn from(value: T) -> Self {
+        Redacted(value)
+    }
+}
+
 impl<T: Redactable> Redacted<T> {
     /// Create a new `Redacted`.
     pub fn new(value: T) -> Self {
@@ -499,8 +516,18 @@ impl<T: Redactable> std::fmt::Debug for Redacted<T> {
 /// An object that may or may not be redacted.
 ///
 /// Used to implement conditional redaction
-#[derive(Clone, derive_more::Display)]
+#[derive(Clone)]
 pub struct MaybeRedacted<T: Redactable>(either::Either<T, Redacted<T>>);
+
+impl<T: Redactable> core::fmt::Display for MaybeRedacted<T>
+where
+    either::Either<T, Redacted<T>>: core::fmt::Display,
+{
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
+    }
+}
 
 impl<T: Redactable> std::fmt::Debug for MaybeRedacted<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -572,14 +599,26 @@ where
 ///
 /// (If safe-logging is not enabled, it will de displayed in its unredacted form.)
 #[allow(clippy::exhaustive_structs)]
-#[derive(derive_more::AsRef)]
 pub struct DispRedacted<T: ?Sized>(pub T);
+
+impl<T: ?Sized> core::convert::AsRef<T> for DispRedacted<T> {
+    #[inline]
+    fn as_ref(&self) -> &T {
+        &self.0
+    }
+}
 
 /// A wrapper around a [`DisplayRedacted`] that implements [`Display`](std::fmt::Display)
 /// by displaying the object in its un-redacted form.
 #[allow(clippy::exhaustive_structs)]
-#[derive(derive_more::AsRef)]
 pub struct DispUnredacted<T: ?Sized>(pub T);
+
+impl<T: ?Sized> core::convert::AsRef<T> for DispUnredacted<T> {
+    #[inline]
+    fn as_ref(&self) -> &T {
+        &self.0
+    }
+}
 
 impl<T> std::fmt::Display for DispRedacted<T>
 where

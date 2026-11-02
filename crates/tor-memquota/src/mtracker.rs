@@ -397,19 +397,32 @@ slotmap_careful::new_key_type! {
 /// With `#[cfg(test)]`, several of our types have "drop bombs":
 /// they cause a panic if dropped inappropriately.
 /// This is intended to detect bad code paths during testing.
-#[derive(Debug, Deref, DerefMut)]
+#[derive(Debug)]
 struct State {
     /// Global parts of state
     ///
     /// Broken out to allow passing both
     /// `&mut Global` and `&mut ARecord`/`&mut PRecord`
     /// to some function(s).
-    #[deref]
-    #[deref_mut]
     global: Global,
 
     /// Accounts
     accounts: SlotMap<AId, ARecord>,
+}
+
+impl core::ops::Deref for State {
+    type Target = Global;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.global
+    }
+}
+
+impl core::ops::DerefMut for State {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.global
+    }
 }
 
 /// Global parts of `State`

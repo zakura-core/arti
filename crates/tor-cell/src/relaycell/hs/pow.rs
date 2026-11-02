@@ -65,9 +65,7 @@ caret_int! {
 /// This is similar to [`super::UnrecognizedExt`], but specific to an unrecognized scheme
 /// within a known type of extension.
 ///
-#[derive(
-    Debug, Clone, Eq, PartialEq, getset::Getters, getset::CopyGetters, derive_more::Constructor,
-)]
+#[derive(Debug, Clone, Eq, PartialEq, getset::Getters, getset::CopyGetters)]
 pub struct UnrecognizedProofOfWork {
     /// The `scheme` byte
     ///
@@ -80,6 +78,14 @@ pub struct UnrecognizedProofOfWork {
     /// Arbitrary contents with an unknown format
     #[getset(get = "pub")]
     data: Vec<u8>,
+}
+
+impl UnrecognizedProofOfWork {
+    #[inline]
+    /// Construct a new [`UnrecognizedProofOfWork`] from its fields.
+    pub const fn new(scheme: u8, data: Vec<u8>) -> UnrecognizedProofOfWork {
+        UnrecognizedProofOfWork { scheme, data }
+    }
 }
 
 impl UnrecognizedProofOfWork {

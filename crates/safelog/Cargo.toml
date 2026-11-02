@@ -17,7 +17,6 @@ default = []
 full = []
 
 [dependencies]
-derive_more = { version = "2.1.1", features = ["full"] }
 either = "1"
 fluid-let = "1"
 serde = { version = "1.0.229", optional = true, features = ["derive"] }

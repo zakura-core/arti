@@ -49,10 +49,9 @@ macro_rules! slotmap_dec_ref { { $slotmap:expr, $ref_:expr, $refcount:expr } => 
 } } } }
 
 /// A reference count, counting references with id type `K`
-#[derive(Default, Ord, PartialOrd, Eq, PartialEq, Deref)]
+#[derive(Default, Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct Count<K> {
     /// Actual count of references
-    #[deref]
     count: RawCount,
     /// Bind to the specific key type
     // K is generally Send + Sync + 'static so we don't care about variance etc.
@@ -68,6 +67,14 @@ impl<K> core::fmt::Debug for Count<K> {
     }
 }
 
+impl<K> core::ops::Deref for Count<K> {
+    type Target = RawCount;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.count
+    }
+}
+
 /// An copy of a [`slotmap_careful::Key`] `K`, which is counted by a `RefCount`
 ///
 /// Ie, a key of type `K` with the property that it
@@ -78,10 +85,8 @@ impl<K> core::fmt::Debug for Count<K> {
 ///
 /// The `Default` value does *not* contribute to a reference count,
 /// and is fine to drop.
-#[derive(Deref)]
 pub(crate) struct Ref<K: slotmap_careful::Key> {
     /// Actual key (without generics)
-    #[deref]
     raw_key: K,
     /// Bind to the specific key type
     marker: PhantomData<K>,
@@ -149,6 +154,14 @@ impl<K: slotmap_careful::Key> core::cmp::Ord for Ref<K> {
             }
         }
         core::cmp::Ordering::Equal
+    }
+}
+
+impl<K: slotmap_careful::Key> core::ops::Deref for Ref<K> {
+    type Target = K;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.raw_key
     }
 }
 

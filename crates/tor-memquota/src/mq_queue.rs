@@ -384,11 +384,19 @@ pub trait ChannelSpec: Sealed /* see Correctness, above */ + Sized + 'static {
 ///
 /// (The [`new`](MpscUnboundedSpec::new) method is provided for convenience;
 /// you may also construct the value directly.)
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Constructor)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[allow(clippy::exhaustive_structs)] // This is precisely the arguments to mpsc::channel
 pub struct MpscSpec {
     /// Buffer size; see [`futures::channel::mpsc::channel`].
     pub buffer: usize,
+}
+
+impl MpscSpec {
+    #[inline]
+    /// Construct a new [`MpscSpec`] from its fields.
+    pub const fn new(buffer: usize) -> MpscSpec {
+        MpscSpec { buffer: buffer }
+    }
 }
 
 /// Specification for an unbounded MPSC channel
@@ -398,9 +406,17 @@ pub struct MpscSpec {
 /// Call [`new_mq`](ChannelSpec::new_mq) on a value of this unit type.
 ///
 /// (The [`new`](MpscUnboundedSpec::new) method is provided for orthogonality.)
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Constructor, Default)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 #[allow(clippy::exhaustive_structs)] // This is precisely the arguments to mpsc::unbounded
 pub struct MpscUnboundedSpec;
+
+impl MpscUnboundedSpec {
+    #[inline]
+    /// Construct a new [`MpscUnboundedSpec`] from its fields.
+    pub const fn new() -> MpscUnboundedSpec {
+        MpscUnboundedSpec {}
+    }
+}
 
 impl Sealed for MpscSpec {}
 impl Sealed for MpscUnboundedSpec {}

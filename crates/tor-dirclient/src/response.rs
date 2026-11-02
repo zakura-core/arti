@@ -31,13 +31,21 @@ pub struct DirResponse {
 ///
 /// We use this to remember when a request has failed, so we can
 /// abandon the circuit.
-#[derive(Debug, Clone, derive_more::Display)]
-#[display("{} via {}", cache_id, tunnel)]
+#[derive(Debug, Clone)]
+
 pub struct SourceInfo {
     /// Unique identifier for the circuit we're using
     tunnel: UniqId,
     /// Identity of the directory cache that provided us this information.
     cache_id: LoggedChanTarget,
+}
+
+impl core::fmt::Display for SourceInfo {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let tunnel = &self.tunnel;
+        let cache_id = &self.cache_id;
+        formatter.write_fmt(format_args!("{0} via {1}", cache_id, tunnel))
+    }
 }
 
 impl DirResponse {

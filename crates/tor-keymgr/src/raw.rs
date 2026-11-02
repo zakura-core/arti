@@ -15,12 +15,11 @@ use crate::ArtiPath;
 /// (for example, an on-disk keystore will identify its entries by [`Path`](RawEntryId::Path)).
 #[cfg_attr(feature = "experimental-api", visibility::make(pub))]
 #[non_exhaustive]
-#[derive(Debug, Clone, PartialEq, derive_more::Display)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) enum RawEntryId {
     /// An entry identified by path inside an on-disk keystore.
     // NOTE: this will only be used by on-disk keystores like
     // [`ArtiNativeKeystore`](crate::ArtiNativeKeystore)
-    #[display("{}", _0.display_lossy())]
     Path(PathBuf),
 
     /// An entry of an in-memory ephemeral key storage
@@ -36,9 +35,19 @@ pub(crate) enum RawEntryId {
     //
     // We might want to remove this variant entirely,
     // and make `RawEntryId` optional in e.g. `KeystoreEntry`.
-    #[display("{} {:?}", _0.0, _0.1)]
+
     #[cfg(feature = "key-encoding")]
     Ephemeral((ArtiPath, KeystoreItemType)),
     // TODO: when/if we add support for non on-disk keystores,
     // new variants will be added
+}
+
+impl core::fmt::Display for RawEntryId {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Path(_0) => core::fmt::Display::fmt(&(_0.display_lossy()), formatter),
+            #[cfg(feature = "key-encoding")]
+            Self::Ephemeral(_0) => formatter.write_fmt(format_args!("{0} {1:?}", _0.0, _0.1)),
+        }
+    }
 }

@@ -97,7 +97,7 @@ use std::os::linux::net::SocketAddrExt as _;
 ///
 /// TODO: We should try to get Rust's stdlib specify these formats, so we don't have to.
 /// There is an open PR at <https://github.com/rust-lang/rust/pull/131790>.
-#[derive(Clone, Debug, derive_more::From, derive_more::TryInto)]
+#[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum SocketAddr {
     /// An IPv4 or IPv6 address on the internet.
@@ -106,6 +106,54 @@ pub enum SocketAddr {
     ///
     /// (Note that [`unix::SocketAddr`] is unconstructable on platforms where it is not supported.)
     Unix(unix::SocketAddr),
+}
+
+impl core::convert::From<net::SocketAddr> for SocketAddr {
+    #[inline]
+    fn from(value: net::SocketAddr) -> Self {
+        SocketAddr::Inet(value)
+    }
+}
+
+impl core::convert::From<unix::SocketAddr> for SocketAddr {
+    #[inline]
+    fn from(value: unix::SocketAddr) -> Self {
+        SocketAddr::Unix(value)
+    }
+}
+
+impl core::convert::TryFrom<SocketAddr> for unix::SocketAddr {
+    type Error = tor_error::TryIntoError<SocketAddr>;
+    #[inline]
+    fn try_from(
+        value: SocketAddr,
+    ) -> core::result::Result<Self, tor_error::TryIntoError<SocketAddr>> {
+        match value {
+            SocketAddr::Unix(__0) => core::result::Result::Ok(__0),
+            _ => core::result::Result::Err(tor_error::TryIntoError::new(
+                value,
+                "Unix",
+                "unix :: SocketAddr",
+            )),
+        }
+    }
+}
+
+impl core::convert::TryFrom<SocketAddr> for net::SocketAddr {
+    type Error = tor_error::TryIntoError<SocketAddr>;
+    #[inline]
+    fn try_from(
+        value: SocketAddr,
+    ) -> core::result::Result<Self, tor_error::TryIntoError<SocketAddr>> {
+        match value {
+            SocketAddr::Inet(__0) => core::result::Result::Ok(__0),
+            _ => core::result::Result::Err(tor_error::TryIntoError::new(
+                value,
+                "Inet",
+                "net :: SocketAddr",
+            )),
+        }
+    }
 }
 
 impl SocketAddr {

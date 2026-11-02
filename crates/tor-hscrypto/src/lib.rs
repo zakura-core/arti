@@ -80,19 +80,30 @@ pub struct Subcredential([u8; 32]);
 ///
 /// There can be gaps in this numbering. A descriptor with a higher-valued
 /// revision counter supersedes one with a lower revision counter.
-#[derive(
-    Copy,
-    Clone,
-    Debug,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    derive_more::Deref,
-    derive_more::From,
-    derive_more::Into,
-)]
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct RevisionCounter(u64);
+
+impl core::ops::Deref for RevisionCounter {
+    type Target = u64;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl core::convert::From<u64> for RevisionCounter {
+    #[inline]
+    fn from(value: u64) -> Self {
+        RevisionCounter(value)
+    }
+}
+
+impl core::convert::From<RevisionCounter> for u64 {
+    #[inline]
+    fn from(value: RevisionCounter) -> Self {
+        <u64 as core::convert::From<_>>::from(value.0)
+    }
+}
 
 /// Default number of introduction points a service should establish
 ///

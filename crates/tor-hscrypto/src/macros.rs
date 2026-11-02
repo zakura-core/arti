@@ -14,13 +14,63 @@ macro_rules! define_pk_keypair {
     } => {
         paste::paste!{
             $(#[$meta])*
-            #[derive(Clone,Debug,derive_more::From,derive_more::Deref,derive_more::Into,derive_more::AsRef)]
+            #[derive(Clone, Debug)]
             pub struct $pk ($pkt);
+
+            impl From<$pkt> for $pk {
+                #[inline]
+                fn from(value: $pkt) -> Self {
+                    Self(value)
+                }
+            }
+
+            impl From<$pk> for $pkt {
+                #[inline]
+                fn from(value: $pk) -> Self {
+                    value.0
+                }
+            }
+
+            impl std::ops::Deref for $pk {
+                type Target = $pkt;
+
+                #[inline]
+                fn deref(&self) -> &Self::Target {
+                    &self.0
+                }
+            }
+
+            impl AsRef<$pkt> for $pk {
+                #[inline]
+                fn as_ref(&self) -> &$pkt {
+                    &self.0
+                }
+            }
 
             #[doc = concat!("The private counterpart of a [`", stringify!($pk), "`].")]
             $(#[$sk_meta])*
-            #[derive(derive_more::From, derive_more::Into, derive_more::AsRef)]
             pub struct $sk ($skt);
+
+            impl From<$skt> for $sk {
+                #[inline]
+                fn from(value: $skt) -> Self {
+                    Self(value)
+                }
+            }
+
+            impl From<$sk> for $skt {
+                #[inline]
+                fn from(value: $sk) -> Self {
+                    value.0
+                }
+            }
+
+            impl AsRef<$skt> for $sk {
+                #[inline]
+                fn as_ref(&self) -> &$skt {
+                    &self.0
+                }
+            }
 
             impl std::fmt::Debug for $sk
             {

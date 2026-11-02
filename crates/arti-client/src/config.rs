@@ -4,7 +4,7 @@
 
 use crate::err::ErrorDetail;
 use derive_deftly::Deftly;
-use derive_more::AsRef;
+
 use fs_mistrust::{Mistrust, MistrustBuilder};
 use std::collections::HashMap;
 use std::path::Path;
@@ -276,7 +276,7 @@ impl StorageConfig {
 /// Deserializing the builder rejects unknown top-level settings. This includes
 /// removed bridge and pluggable-transport configuration; it cannot silently
 /// fall back to direct Tor connections.
-#[derive(Clone, Deftly, Debug, AsRef)]
+#[derive(Clone, Deftly, Debug)]
 #[derive_deftly(TorConfig)]
 #[deftly(tor_config(attr = { serde(deny_unknown_fields) }))]
 #[non_exhaustive]
@@ -325,17 +325,17 @@ pub struct TorClientConfig {
     pub(crate) system: SystemConfig,
 
     /// Information about how to build paths through the network.
-    #[as_ref]
+
     #[deftly(tor_config(sub_builder))]
     path_rules: circ::PathConfig,
 
     /// Information about preemptive circuits.
-    #[as_ref]
+
     #[deftly(tor_config(sub_builder))]
     preemptive_circuits: circ::PreemptiveCircuitConfig,
 
     /// Information about how to retry and expire circuits and request for circuits.
-    #[as_ref]
+
     #[deftly(tor_config(sub_builder))]
     circuit_timing: circ::CircuitTiming,
 
@@ -348,8 +348,7 @@ pub struct TorClientConfig {
     pub(crate) stream_timeouts: StreamTimeoutConfig,
 
     /// Information about vanguards.
-    // NOTE: Don't use `#[as_ref]` below, since we provide our own AsRef impl to handle when
-    // vanguards are disabled.
+    // The vanguard AsRef implementation also handles disabled vanguards.
     #[deftly(tor_config(sub_builder))]
     pub(crate) vanguards: vanguards::VanguardConfig,
 
@@ -360,7 +359,7 @@ pub struct TorClientConfig {
     // This should be considered as ancillary data rather than a configuration option.
     // TorClientConfig maybe isn't the best place for this, but this is where it needs to go to not
     // require public API changes.
-    #[as_ref]
+
     #[deftly(tor_config(skip, build = "|_| tor_config_path::arti_client_base_resolver()"))]
     pub(crate) path_resolver: CfgPathResolver,
 }
@@ -412,6 +411,34 @@ impl core::cmp::PartialEq for TorClientConfig {
 }
 
 impl core::cmp::Eq for TorClientConfig {}
+
+impl core::convert::AsRef<circ::PathConfig> for TorClientConfig {
+    #[inline]
+    fn as_ref(&self) -> &circ::PathConfig {
+        &self.path_rules
+    }
+}
+
+impl core::convert::AsRef<circ::PreemptiveCircuitConfig> for TorClientConfig {
+    #[inline]
+    fn as_ref(&self) -> &circ::PreemptiveCircuitConfig {
+        &self.preemptive_circuits
+    }
+}
+
+impl core::convert::AsRef<circ::CircuitTiming> for TorClientConfig {
+    #[inline]
+    fn as_ref(&self) -> &circ::CircuitTiming {
+        &self.circuit_timing
+    }
+}
+
+impl core::convert::AsRef<CfgPathResolver> for TorClientConfig {
+    #[inline]
+    fn as_ref(&self) -> &CfgPathResolver {
+        &self.path_resolver
+    }
+}
 
 /// Helper to add overrides to a default collection.
 fn default_extend<T: Default + Extend<X>, X>(to_add: impl IntoIterator<Item = X>) -> T {

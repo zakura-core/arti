@@ -31,13 +31,19 @@ impl CertData {
 // the `EncodedEd25519Cert` without having to encode + sign the certificate)
 
 /// A parsed `EncodedEd25519Cert`.
-#[derive(Debug, Clone, derive_more::AsRef)]
+#[derive(Debug, Clone)]
 pub struct ParsedEd25519Cert {
     /// The parsed cert.
-    #[as_ref]
     parsed_cert: KeyUnknownCert,
     /// The raw, unparsed cert.
     raw: Vec<u8>,
+}
+
+impl core::convert::AsRef<KeyUnknownCert> for ParsedEd25519Cert {
+    #[inline]
+    fn as_ref(&self) -> &KeyUnknownCert {
+        &self.parsed_cert
+    }
 }
 
 impl ParsedEd25519Cert {
@@ -109,13 +115,19 @@ impl tor_checkable::TimeBound for SigCheckedEd25519Cert {
 }
 
 /// A well-signed and timely `EncodedEd25519Cert`.
-#[derive(Debug, Clone, derive_more::AsRef)]
+#[derive(Debug, Clone)]
 pub struct ValidatedEd25519Cert {
     /// The parsed, validated cert.
-    #[as_ref]
     cert: Ed25519Cert,
     /// The raw, unparsed cert.
     raw: Vec<u8>,
+}
+
+impl core::convert::AsRef<Ed25519Cert> for ValidatedEd25519Cert {
+    #[inline]
+    fn as_ref(&self) -> &Ed25519Cert {
+        &self.cert
+    }
 }
 
 impl ValidatedEd25519Cert {

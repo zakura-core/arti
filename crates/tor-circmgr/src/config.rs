@@ -337,7 +337,7 @@ pub(crate) mod test_config {
     use tor_guardmgr::VanguardConfig;
 
     /// Testing configuration, with public fields
-    #[derive(Default, derive_more::AsRef)]
+    #[derive(Default)]
     #[allow(clippy::exhaustive_structs)]
     #[allow(missing_docs)]
     #[cfg_attr(docsrs, doc(cfg(feature = "testing")))]
@@ -347,6 +347,41 @@ pub(crate) mod test_config {
         pub preemptive_circuits: PreemptiveCircuitConfig,
         pub guardmgr: tor_guardmgr::TestConfig,
         pub vanguard_config: VanguardConfig,
+    }
+
+    impl core::convert::AsRef<PathConfig> for TestConfig {
+        #[inline]
+        fn as_ref(&self) -> &PathConfig {
+            &self.path_rules
+        }
+    }
+
+    impl core::convert::AsRef<CircuitTiming> for TestConfig {
+        #[inline]
+        fn as_ref(&self) -> &CircuitTiming {
+            &self.circuit_timing
+        }
+    }
+
+    impl core::convert::AsRef<PreemptiveCircuitConfig> for TestConfig {
+        #[inline]
+        fn as_ref(&self) -> &PreemptiveCircuitConfig {
+            &self.preemptive_circuits
+        }
+    }
+
+    impl core::convert::AsRef<tor_guardmgr::TestConfig> for TestConfig {
+        #[inline]
+        fn as_ref(&self) -> &tor_guardmgr::TestConfig {
+            &self.guardmgr
+        }
+    }
+
+    impl core::convert::AsRef<VanguardConfig> for TestConfig {
+        #[inline]
+        fn as_ref(&self) -> &VanguardConfig {
+            &self.vanguard_config
+        }
     }
     impl AsRef<FallbackList> for TestConfig {
         fn as_ref(&self) -> &FallbackList {

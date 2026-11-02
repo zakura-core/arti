@@ -12,8 +12,15 @@ use super::*;
 ///   * there are no nul bytes
 //
 // (These are not currently relied on but may become safety invariants in the future.)
-#[derive(Debug, Clone, Copy, Eq, PartialEq, derive_more::Display)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct KeywordRef<'s>(&'s str);
+
+impl<'s> core::fmt::Display for KeywordRef<'s> {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let _0 = &self.0;
+        core::fmt::Display::fmt(_0, formatter)
+    }
+}
 
 /// Invalid keyword
 #[derive(Error, Clone, Copy, Debug, Eq, PartialEq)]

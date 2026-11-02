@@ -34,15 +34,20 @@ pub(crate) mod testing {
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
 
     use super::*;
-    use derive_more::AsRef;
 
     /// A dummy test configuration, with transparent fields for testing
-    #[derive(Default, Debug, AsRef)]
+    #[derive(Default, Debug)]
     #[allow(clippy::exhaustive_structs)]
     #[allow(missing_docs)]
     pub struct TestConfig {
-        #[as_ref]
         pub fallbacks: FallbackList,
+    }
+
+    impl core::convert::AsRef<FallbackList> for TestConfig {
+        #[inline]
+        fn as_ref(&self) -> &FallbackList {
+            &self.fallbacks
+        }
     }
     impl GuardMgrConfig for TestConfig {}
 }

@@ -1,7 +1,6 @@
 //! Errors relating to being a hidden service client
 use std::sync::Arc;
 
-use derive_more::{From, Into};
 use futures::task::SpawnError;
 
 use thiserror::Error;
@@ -29,11 +28,30 @@ pub(crate) fn rend_pt_identity_for_error(relay: &Relay<'_>) -> RendPtIdentityFor
 /// Principally used in error reporting.
 ///
 /// Formats as `#<n+1>`.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, From, Into)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 #[allow(clippy::exhaustive_structs)]
-#[derive(derive_more::Display)]
-#[display("#{}", self.0 + 1)]
+
 pub struct IntroPtIndex(pub usize);
+
+impl core::fmt::Display for IntroPtIndex {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        formatter.write_fmt(format_args!("#{0}", self.0 + 1))
+    }
+}
+
+impl core::convert::From<usize> for IntroPtIndex {
+    #[inline]
+    fn from(value: usize) -> Self {
+        IntroPtIndex(value)
+    }
+}
+
+impl core::convert::From<IntroPtIndex> for usize {
+    #[inline]
+    fn from(value: IntroPtIndex) -> Self {
+        <usize as core::convert::From<_>>::from(value.0)
+    }
+}
 
 /// Error that occurred attempting to reach a hidden service
 #[derive(Error, Clone, Debug)]

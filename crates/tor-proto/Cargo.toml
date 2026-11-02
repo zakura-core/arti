@@ -93,7 +93,6 @@ cipher = { version = "0.5.2", features = ["zeroize"] }
 coarsetime = "0.1.38"
 ctr = { version = "0.10", features = ["zeroize"] }
 derive-deftly = "~1.14.0"
-derive_more = { version = "2.1.1", features = ["full"] }
 digest = "0.10.7"
 futures = { version = "0.3.34", default-features = false, features = ["std", "async-await"] }
 futures-util = "0.3.34"

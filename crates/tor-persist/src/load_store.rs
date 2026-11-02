@@ -20,8 +20,7 @@ use tracing::trace;
 use crate::err::ErrorSource;
 
 /// Common arguments to load/store operations
-#[derive(derive_more::Display)]
-#[display("{:?}", dir.as_path().join(rel_fname).as_path().display_lossy())]
+
 pub(crate) struct Target<'r> {
     /// Directory
     pub(crate) dir: &'r CheckedDir,
@@ -31,6 +30,17 @@ pub(crate) struct Target<'r> {
     /// Might be a leafname; must be relative
     /// Should include the `.json` extension.
     pub(crate) rel_fname: &'r Path,
+}
+
+impl<'r> core::fmt::Display for Target<'r> {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let dir = &self.dir;
+        let rel_fname = &self.rel_fname;
+        core::fmt::Debug::fmt(
+            &(dir.as_path().join(rel_fname).as_path().display_lossy()),
+            formatter,
+        )
+    }
 }
 
 impl Target<'_> {

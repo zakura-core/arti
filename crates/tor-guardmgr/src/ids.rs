@@ -1,6 +1,5 @@
 //! Identifier objects used to specify guards and/or fallbacks.
 
-use derive_more::AsRef;
 use serde::{Deserialize, Serialize};
 use tor_linkspec::{HasRelayIds, RelayIds};
 #[cfg(test)]
@@ -12,8 +11,15 @@ use crate::GuardSetSelector;
 ///
 /// This is a separate type from GuardId and FirstHopId to avoid confusion
 /// about what kind of object we're identifying.
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd, AsRef)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub(crate) struct FallbackId(pub(crate) RelayIds);
+
+impl core::convert::AsRef<RelayIds> for FallbackId {
+    #[inline]
+    fn as_ref(&self) -> &RelayIds {
+        &self.0
+    }
+}
 
 impl FallbackId {
     /// Return a new, manually constructed `FallbackId`
@@ -39,9 +45,16 @@ impl HasRelayIds for FallbackId {
 ///
 /// This is a separate type from GuardId and FirstHopId to avoid confusion
 /// about what kind of object we're identifying.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Ord, PartialOrd, AsRef)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Ord, PartialOrd)]
 #[serde(transparent)]
 pub(crate) struct GuardId(pub(crate) RelayIds);
+
+impl core::convert::AsRef<RelayIds> for GuardId {
+    #[inline]
+    fn as_ref(&self) -> &RelayIds {
+        &self.0
+    }
+}
 
 impl GuardId {
     /// Return a new, manually constructed `GuardId`

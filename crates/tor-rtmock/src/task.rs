@@ -141,20 +141,17 @@ use task_id::Ti as TaskId;
 /// So we cannot store that future in `Data` because `Data` is `'static`.
 /// Instead, this main task future is passed as an argument down the call stack.
 /// In the data structure we simply store a placeholder, `TaskFutureInfo::Main`.
-#[derive(derive_more::Debug)]
 struct Data {
     /// Tasks
     ///
     /// Includes tasks spawned with `spawn`,
     /// and also the future passed to `block_on`.
-    #[debug("{:?}", DebugTasks(self, || tasks.keys()))]
     tasks: DenseSlotMap<TaskId, Task>,
 
     /// `awake` lists precisely: tasks that are `Awake`, plus maybe stale `TaskId`s
     ///
     /// Tasks are pushed onto the *back* when woken,
     /// so back is the most recently woken.
-    #[debug("{:?}", DebugTasks(self, || awake.iter().cloned()))]
     awake: VecDeque<TaskId>,
 
     /// If a future from `progress_until_stalled` exists
@@ -188,6 +185,38 @@ impl core::default::Default for Data {
             scheduling: <SchedulingPolicy as core::default::Default>::default(),
             thread_to_run: ThreadDescriptor::Executor,
         }
+    }
+}
+
+impl core::fmt::Debug for Data {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let tasks = &self.tasks;
+        let awake = &self.awake;
+        let progressing_until_stalled = &self.progressing_until_stalled;
+        let scheduling = &self.scheduling;
+        let thread_to_run = &self.thread_to_run;
+        core::fmt::DebugStruct::finish(core::fmt::DebugStruct::field(
+            core::fmt::DebugStruct::field(
+                core::fmt::DebugStruct::field(
+                    core::fmt::DebugStruct::field(
+                        core::fmt::DebugStruct::field(
+                            &mut core::fmt::Formatter::debug_struct(formatter, "Data"),
+                            "tasks",
+                            &format_args!("{0:?}", DebugTasks(self, || tasks.keys())),
+                        ),
+                        "awake",
+                        &format_args!("{0:?}", DebugTasks(self, || awake.iter().cloned())),
+                    ),
+                    "progressing_until_stalled",
+                    &progressing_until_stalled,
+                ),
+                "scheduling",
+                &scheduling,
+            ),
+            "thread_to_run",
+            &thread_to_run,
+        ))
     }
 }
 
@@ -355,17 +384,25 @@ impl core::fmt::Debug for ProgressUntilStalledFuture {
 /// This being a thread-local and not scoped by which `MockExecutor` we're talking about
 /// means that we can't cope if there are multiple `MockExecutor`s involved in the same thread.
 /// That's OK (and documented).
-#[derive(Copy, Clone, Eq, PartialEq, derive_more::Debug)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 enum ThreadDescriptor {
     /// Foreign - neither the (running) executor, nor a Subthread
-    #[debug("FOREIGN")]
     Foreign,
     /// The executor.
-    #[debug("Exe")]
     Executor,
     /// This task, which is a Subthread.
-    #[debug("{_0:?}")]
     Subthread(TaskId),
+}
+
+impl core::fmt::Debug for ThreadDescriptor {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Foreign => formatter.write_fmt(format_args!("FOREIGN")),
+            Self::Executor => formatter.write_fmt(format_args!("Exe")),
+            Self::Subthread(inner) => core::fmt::Debug::fmt(inner, formatter),
+        }
+    }
 }
 
 /// Marker indicating that this task is a Subthread, not an async task.
@@ -1522,8 +1559,7 @@ impl Debug for Task {
 //
 // rustc doesn't think automatically-derived Debug impls count for whether a thing is used.
 // This has caused quite some fallout.  https://github.com/rust-lang/rust/pull/85200
-// I think derive_more emits #[automatically_derived], so that even though we use this
-// in our Debug impl, that construction is unused.
+// This helper is used only while formatting diagnostic task dumps.
 #[allow(dead_code)]
 struct DebugTasks<'d, F>(&'d Data, F);
 
@@ -1551,9 +1587,14 @@ where
 /// See also the not-miri `type SleepLocation`, alias above.
 #[cfg(miri)]
 mod miri_sleep_location {
-    #[derive(Debug, derive_more::Display)]
-    #[display("<SleepLocation>")]
+    #[derive(Debug)]
     pub(super) struct SleepLocation {}
+
+    impl std::fmt::Display for SleepLocation {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str("<SleepLocation>")
+        }
+    }
 
     impl SleepLocation {
         pub(super) fn force_capture() -> Self {

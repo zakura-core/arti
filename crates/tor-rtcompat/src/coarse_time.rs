@@ -43,7 +43,6 @@
 
 use std::time;
 
-use derive_more::{Add, AddAssign, Sub, SubAssign};
 use paste::paste;
 
 use crate::traits::CoarseTimeProvider;
@@ -72,8 +71,54 @@ use crate::traits::CoarseTimeProvider;
 // If that turns out to be annoying, we might want to add
 // methods like `from_secs`, `as_secs` etc.
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)] //
-#[derive(Add, Sub, AddAssign, SubAssign)]
+
 pub struct CoarseDuration(coarsetime::Duration);
+
+impl core::ops::Add for CoarseDuration {
+    type Output = Self;
+    #[inline]
+    #[track_caller]
+    fn add(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Self(__self_0), Self(rhs_0)) => Self(core::ops::Add::add(__self_0, rhs_0)),
+        }
+    }
+}
+
+impl core::ops::Sub for CoarseDuration {
+    type Output = Self;
+    #[inline]
+    #[track_caller]
+    fn sub(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Self(__self_0), Self(rhs_0)) => Self(core::ops::Sub::sub(__self_0, rhs_0)),
+        }
+    }
+}
+
+impl core::ops::AddAssign for CoarseDuration {
+    #[inline]
+    #[track_caller]
+    fn add_assign(&mut self, rhs: Self) {
+        match (self, rhs) {
+            (Self(__self_0), Self(rhs_0)) => {
+                core::ops::AddAssign::add_assign(__self_0, rhs_0);
+            }
+        }
+    }
+}
+
+impl core::ops::SubAssign for CoarseDuration {
+    #[inline]
+    #[track_caller]
+    fn sub_assign(&mut self, rhs: Self) {
+        match (self, rhs) {
+            (Self(__self_0), Self(rhs_0)) => {
+                core::ops::SubAssign::sub_assign(__self_0, rhs_0);
+            }
+        }
+    }
+}
 
 /// A monotonic timestamp with reduced precision, and, in the future, saturating arithmetic
 ///

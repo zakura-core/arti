@@ -59,7 +59,6 @@ use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, anyhow};
-use derive_more::{Deref, DerefMut};
 
 /// The env var the user should set to control test temp dir handling
 const RETAIN_VAR: &str = "TEST_TEMP_RETAIN";
@@ -83,11 +82,9 @@ pub enum TestTempDir {
 /// Using this type means that the `T` won't outlive the temporary directory.
 /// (Typically, if it were to, things would malfunction.
 /// There might even be security hazards!)
-#[derive(Clone, Copy, Deref, DerefMut)]
+#[derive(Clone, Copy)]
 pub struct TestTempDirGuard<'d, T> {
     /// The thing
-    #[deref]
-    #[deref_mut]
     thing: T,
 
     /// Placate the compiler
@@ -105,6 +102,21 @@ where
         let mut builder = formatter.debug_struct("TestTempDirGuard");
         builder.field("thing", &self.thing);
         builder.finish()
+    }
+}
+
+impl<'d, T> core::ops::Deref for TestTempDirGuard<'d, T> {
+    type Target = T;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.thing
+    }
+}
+
+impl<'d, T> core::ops::DerefMut for TestTempDirGuard<'d, T> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.thing
     }
 }
 

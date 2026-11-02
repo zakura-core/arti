@@ -3,7 +3,7 @@
 use std::str::FromStr;
 
 use derive_deftly::{Deftly, define_derive_deftly};
-use derive_more::{Deref, Display, Into};
+
 use serde::{Deserialize, Serialize};
 use tor_persist::slug::{self, BadSlug};
 
@@ -98,12 +98,34 @@ define_derive_deftly! {
 /// NOTE: There is a 1:1 mapping between a value that implements `KeySpecifier` and its
 /// corresponding `ArtiPath`. A `KeySpecifier` can be converted to an `ArtiPath`, but the reverse
 /// conversion is not supported.
-#[derive(Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Deref, Into, Display)] //
+#[derive(Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)] //
 #[derive(Serialize, Deserialize)]
 #[serde(try_from = "String", into = "String")]
 #[derive(Deftly)]
 #[derive_deftly(ValidatedString)]
 pub struct ArtiPath(String);
+
+impl core::ops::Deref for ArtiPath {
+    type Target = String;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl core::convert::From<ArtiPath> for String {
+    #[inline]
+    fn from(value: ArtiPath) -> Self {
+        <String as core::convert::From<_>>::from(value.0)
+    }
+}
+
+impl core::fmt::Display for ArtiPath {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let _0 = &self.0;
+        core::fmt::Display::fmt(_0, formatter)
+    }
+}
 
 /// A separator for `ArtiPath`s.
 pub(crate) const PATH_SEP: char = '/';
@@ -190,9 +212,18 @@ impl ArtiPath {
     /// #    ArtiPath, ArtiPathRange, ArtiPathSyntaxError, KeySpecifierComponent,
     /// #    KeySpecifierComponentViaDisplayFromStr,
     /// # };
-    /// # use derive_more::{Display, FromStr};
-    /// # #[derive(Display, FromStr)]
     /// # struct Denotator(String);
+    /// # impl std::fmt::Display for Denotator {
+    /// #     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    /// #         std::fmt::Display::fmt(&self.0, f)
+    /// #     }
+    /// # }
+    /// # impl std::str::FromStr for Denotator {
+    /// #     type Err = std::convert::Infallible;
+    /// #     fn from_str(s: &str) -> Result<Self, Self::Err> {
+    /// #         Ok(Self(s.to_owned()))
+    /// #     }
+    /// # }
     /// # impl KeySpecifierComponentViaDisplayFromStr for Denotator {}
     /// # fn demo() -> Result<(), ArtiPathSyntaxError> {
     /// let path = ArtiPath::new("my_key_path".into())?;
@@ -285,7 +316,6 @@ mod tests {
     //! <!-- @@ end test lint list maintained by maint/add_warning @@ -->
     use super::*;
 
-    use derive_more::{Display, FromStr};
     use itertools::chain;
 
     use crate::KeySpecifierComponentViaDisplayFromStr;
@@ -324,8 +354,22 @@ mod tests {
         assert_eq!(path_anew, path_tryfrom);
     }
 
-    #[derive(Display, FromStr)]
     struct Denotator(String);
+
+    impl core::fmt::Display for Denotator {
+        fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let _0 = &self.0;
+            core::fmt::Display::fmt(_0, formatter)
+        }
+    }
+
+    impl core::str::FromStr for Denotator {
+        type Err = <String as core::str::FromStr>::Err;
+        #[inline]
+        fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
+            core::str::FromStr::from_str(s).map(|v| Self(v))
+        }
+    }
 
     impl KeySpecifierComponentViaDisplayFromStr for Denotator {}
 
