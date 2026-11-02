@@ -657,7 +657,7 @@ impl DangerouslyIntoTorAddr for SocketAddrV6 {
 ///
 /// (Note that IPv6 addresses don't follow these rules.)
 fn is_valid_hostname(hostname: &str) -> bool {
-    hostname_validator::is_valid(hostname)
+    tor_basic_utils::is_valid_hostname(hostname)
 }
 
 #[cfg(test)]
@@ -711,6 +711,8 @@ mod test {
         assert!(is_valid_hostname("Tor-Project.org"));
         assert!(is_valid_hostname("example.onion"));
         assert!(is_valid_hostname("some.example.onion"));
+        assert!(is_valid_hostname("235235"));
+        assert!(is_valid_hostname("123.456"));
 
         // Invalid hostname tests
         assert!(!is_valid_hostname("-torproject.org"));

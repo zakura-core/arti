@@ -30,3 +30,8 @@ or executor feature is required here. `tor-rtmock` promotes its existing
 `tor-basic-utils` dev edge to a normal edge and forwards its `full` selector.
 Other consumers already depended on these basic utilities normally. There is
 no dependency cycle or replacement compatibility crate.
+
+ADDED: `is_valid_hostname(&str) -> bool` checks ASCII hostname syntax without
+normalization or resolution. Client-address parsing and network-document
+hostname parsing share this helper while retaining their existing numeric-name
+policies. No existing signature, trait implementation or feature changes.
