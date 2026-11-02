@@ -119,7 +119,7 @@ define_derive_deftly! {
                     other => Err(tor_error::TryIntoError::new(
                         other,
                         stringify!($vname),
-                        concat!("& 'a ", stringify!($IDENTITY)),
+                        stringify!(& 'a $IDENTITY),
                     )),
                 }
             }

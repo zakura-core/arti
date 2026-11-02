@@ -116,14 +116,14 @@ impl core::ops::Deref for ArtiPath {
 impl core::convert::From<ArtiPath> for String {
     #[inline]
     fn from(value: ArtiPath) -> Self {
-        <String as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 
 impl core::fmt::Display for ArtiPath {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 
@@ -358,8 +358,8 @@ mod tests {
 
     impl core::fmt::Display for Denotator {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-            let _0 = &self.0;
-            core::fmt::Display::fmt(_0, formatter)
+            let inner = &self.0;
+            core::fmt::Display::fmt(inner, formatter)
         }
     }
 
@@ -367,7 +367,7 @@ mod tests {
         type Err = <String as core::str::FromStr>::Err;
         #[inline]
         fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
-            core::str::FromStr::from_str(s).map(|v| Self(v))
+            core::str::FromStr::from_str(s).map(Self)
         }
     }
 

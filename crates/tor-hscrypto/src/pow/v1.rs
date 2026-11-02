@@ -8,8 +8,8 @@ pub struct RuntimeErrorV1(Void);
 
 impl core::fmt::Display for RuntimeErrorV1 {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 
@@ -25,8 +25,8 @@ pub struct SolutionErrorV1(Void);
 
 impl core::fmt::Display for SolutionErrorV1 {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 

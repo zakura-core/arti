@@ -20,7 +20,6 @@ use tracing::trace;
 use crate::err::ErrorSource;
 
 /// Common arguments to load/store operations
-
 pub(crate) struct Target<'r> {
     /// Directory
     pub(crate) dir: &'r CheckedDir,

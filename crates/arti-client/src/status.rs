@@ -140,7 +140,6 @@ impl BootstrapStatus {
 
 /// A reason why a client believes it is stuck.
 #[derive(Clone, Debug)]
-
 pub struct Blockage {
     /// Why do we think we're blocked?
     kind: BlockageKind,

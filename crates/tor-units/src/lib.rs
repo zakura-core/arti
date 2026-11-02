@@ -400,7 +400,7 @@ where
 impl<T> core::convert::From<T> for IntegerMilliseconds<T> {
     #[inline]
     fn from(value: T) -> Self {
-        IntegerMilliseconds { value: value }
+        IntegerMilliseconds { value }
     }
 }
 
@@ -532,7 +532,7 @@ where
 impl<T> core::convert::From<T> for IntegerSeconds<T> {
     #[inline]
     fn from(value: T) -> Self {
-        IntegerSeconds { value: value }
+        IntegerSeconds { value }
     }
 }
 
@@ -615,7 +615,7 @@ pub struct IntegerMinutes<T> {
 impl<T> core::convert::From<T> for IntegerMinutes<T> {
     #[inline]
     fn from(value: T) -> Self {
-        IntegerMinutes { value: value }
+        IntegerMinutes { value }
     }
 }
 
@@ -703,7 +703,7 @@ pub struct IntegerDays<T> {
 impl<T> core::convert::From<T> for IntegerDays<T> {
     #[inline]
     fn from(value: T) -> Self {
-        IntegerDays { value: value }
+        IntegerDays { value }
     }
 }
 
@@ -794,14 +794,14 @@ impl core::str::FromStr for SendMeVersion {
     type Err = <u8 as core::str::FromStr>::Err;
     #[inline]
     fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
-        core::str::FromStr::from_str(s).map(|v| Self(v))
+        core::str::FromStr::from_str(s).map(Self)
     }
 }
 
 impl core::fmt::Display for SendMeVersion {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 

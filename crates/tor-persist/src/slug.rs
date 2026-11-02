@@ -56,8 +56,8 @@ pub struct Slug(Box<str>);
 
 impl core::fmt::Display for Slug {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 
@@ -72,8 +72,8 @@ pub struct SlugRef(str);
 
 impl core::fmt::Display for SlugRef {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 

@@ -17,14 +17,14 @@ pub struct Value(u8);
 impl core::convert::From<Value> for u8 {
     #[inline]
     fn from(value: Value) -> Self {
-        <u8 as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 
 impl core::fmt::Display for Value {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 
@@ -39,7 +39,7 @@ pub struct ValueOutOfRange {
 impl core::convert::From<ValueOutOfRange> for u8 {
     #[inline]
     fn from(value: ValueOutOfRange) -> Self {
-        <u8 as core::convert::From<_>>::from(value.v)
+        value.v
     }
 }
 

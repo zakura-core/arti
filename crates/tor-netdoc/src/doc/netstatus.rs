@@ -297,14 +297,14 @@ impl core::convert::From<u32> for ConsensusMethod {
 impl core::convert::From<ConsensusMethod> for u32 {
     #[inline]
     fn from(value: ConsensusMethod) -> Self {
-        <u32 as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 
 impl core::fmt::Display for ConsensusMethod {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 
@@ -312,7 +312,7 @@ impl core::str::FromStr for ConsensusMethod {
     type Err = <u32 as core::str::FromStr>::Err;
     #[inline]
     fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
-        core::str::FromStr::from_str(s).map(|v| Self(v))
+        core::str::FromStr::from_str(s).map(Self)
     }
 }
 impl NormalItemArgument for ConsensusMethod {}
@@ -623,7 +623,7 @@ impl core::ops::Deref for RecommendedTorVersions {
 impl core::convert::From<RecommendedTorVersions> for BTreeSet<String> {
     #[inline]
     fn from(value: RecommendedTorVersions) -> Self {
-        <BTreeSet<String> as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 
@@ -1074,7 +1074,7 @@ impl core::convert::From<[u8; 32]> for SharedRandVal {
 impl core::convert::From<SharedRandVal> for [u8; 32] {
     #[inline]
     fn from(value: SharedRandVal) -> Self {
-        <[u8; 32] as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

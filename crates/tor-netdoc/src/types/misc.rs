@@ -1237,14 +1237,14 @@ impl core::ops::Deref for F64Finite {
 impl core::convert::From<F64Finite> for f64 {
     #[inline]
     fn from(value: F64Finite) -> Self {
-        <f64 as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 
 impl core::fmt::Display for F64Finite {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 
@@ -2530,7 +2530,7 @@ mod hostname {
     impl core::convert::From<Hostname> for String {
         #[inline]
         fn from(value: Hostname) -> Self {
-            <String as core::convert::From<_>>::from(value.0)
+            value.0
         }
     }
 
@@ -2551,8 +2551,8 @@ mod hostname {
 
     impl core::fmt::Display for Hostname {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-            let _0 = &self.0;
-            core::fmt::Display::fmt(_0, formatter)
+            let inner = &self.0;
+            core::fmt::Display::fmt(inner, formatter)
         }
     }
 
@@ -2583,8 +2583,8 @@ mod hostname {
     impl core::fmt::Display for InternetHost {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             match self {
-                Self::Name(_0) => core::fmt::Display::fmt(_0, formatter),
-                Self::IpAddr(_0) => core::fmt::Display::fmt(_0, formatter),
+                Self::Name(inner) => core::fmt::Display::fmt(inner, formatter),
+                Self::IpAddr(inner) => core::fmt::Display::fmt(inner, formatter),
             }
         }
     }
@@ -2674,7 +2674,7 @@ mod contact_info {
     impl core::convert::From<ContactInfo> for String {
         #[inline]
         fn from(value: ContactInfo) -> Self {
-            <String as core::convert::From<_>>::from(value.0)
+            value.0
         }
     }
 
@@ -2695,8 +2695,8 @@ mod contact_info {
 
     impl core::fmt::Display for ContactInfo {
         fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-            let _0 = &self.0;
-            core::fmt::Display::fmt(_0, formatter)
+            let inner = &self.0;
+            core::fmt::Display::fmt(inner, formatter)
         }
     }
 

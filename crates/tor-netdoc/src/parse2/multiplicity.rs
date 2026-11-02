@@ -70,7 +70,6 @@ impl<Field> Default for MultiplicitySelector<Field> {
 ///
 /// Returned by [`ItemSetMethods::item_set_debug`] etc.,
 /// using information from [`ItemSetMethods::debug_core`] etc.
-
 #[allow(dead_code)] // yes, they are only read by the Debug impl - that's what they're for!
 struct DebugHelper(
     /// scope, eg `items`

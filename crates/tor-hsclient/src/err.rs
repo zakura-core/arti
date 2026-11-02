@@ -30,7 +30,6 @@ pub(crate) fn rend_pt_identity_for_error(relay: &Relay<'_>) -> RendPtIdentityFor
 /// Formats as `#<n+1>`.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 #[allow(clippy::exhaustive_structs)]
-
 pub struct IntroPtIndex(pub usize);
 
 impl core::fmt::Display for IntroPtIndex {
@@ -49,7 +48,7 @@ impl core::convert::From<usize> for IntroPtIndex {
 impl core::convert::From<IntroPtIndex> for usize {
     #[inline]
     fn from(value: IntroPtIndex) -> Self {
-        <usize as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

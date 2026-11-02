@@ -310,7 +310,6 @@ struct StatusEntry {
 
 /// The status for a single directory.
 #[derive(Clone, Debug, Default)]
-
 pub(crate) struct DirStatus {
     /// How much of the directory do we currently have?
     progress: DirProgress,

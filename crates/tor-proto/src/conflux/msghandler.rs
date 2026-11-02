@@ -349,7 +349,7 @@ impl core::fmt::Display for RemoveLegReason {
             Self::ConfluxHandshakeTimeout => {
                 formatter.write_fmt(format_args!("conflux handshake timed out"))
             }
-            Self::ConfluxHandshakeErr(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::ConfluxHandshakeErr(inner) => core::fmt::Display::fmt(inner, formatter),
             Self::ChannelClosed => formatter.write_fmt(format_args!("channel closed")),
         }
     }

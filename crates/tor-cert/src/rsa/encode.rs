@@ -25,7 +25,7 @@ pub struct EncodedRsaCrosscert(Vec<u8>);
 impl core::convert::From<EncodedRsaCrosscert> for Vec<u8> {
     #[inline]
     fn from(value: EncodedRsaCrosscert) -> Self {
-        <Vec<u8> as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

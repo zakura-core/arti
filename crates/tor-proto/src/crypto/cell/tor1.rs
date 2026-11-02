@@ -127,7 +127,6 @@ where
 
 /// An inbound relay layer, encrypting relay cells for a client.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-
 pub(crate) struct RelayInbound<SC: StreamCipher, D: Digest + Clone>(CryptState<SC, D>);
 
 impl<SC: StreamCipher, D: Digest + Clone> core::convert::From<CryptState<SC, D>>
@@ -152,7 +151,6 @@ impl<SC: StreamCipher, D: Digest + Clone> InboundRelayLayer for RelayInbound<SC,
 
 /// An outbound relay layer, decrypting relay cells from a client.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-
 pub(crate) struct RelayOutbound<SC: StreamCipher, D: Digest + Clone>(CryptState<SC, D>);
 
 impl<SC: StreamCipher, D: Digest + Clone> core::convert::From<CryptState<SC, D>>
@@ -185,7 +183,6 @@ impl<SC: StreamCipher, D: Digest + Clone> RelayLayer<RelayOutbound<SC, D>, Relay
 
 /// An outbound client layer, encrypting relay cells for a relay.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-
 pub(crate) struct ClientOutbound<SC: StreamCipher, D: Digest + Clone>(CryptState<SC, D>);
 
 impl<SC: StreamCipher, D: Digest + Clone> core::convert::From<CryptState<SC, D>>
@@ -212,7 +209,6 @@ impl<SC: StreamCipher, D: Digest + Clone> OutboundClientLayer for ClientOutbound
 
 /// An outbound client layer, decryption relay cells from a relay.
 #[cfg_attr(feature = "bench", visibility::make(pub))]
-
 pub(crate) struct ClientInbound<SC: StreamCipher, D: Digest + Clone>(CryptState<SC, D>);
 
 impl<SC: StreamCipher, D: Digest + Clone> core::convert::From<CryptState<SC, D>>

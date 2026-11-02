@@ -55,7 +55,6 @@ pub(crate) const HS_DESC_ENC_NONCE_LEN: usize = 16;
 ///
 /// This is  `N_hs_desc_enc` in the spec, where sometimes we also call it a
 /// "descriptor cookie".
-
 pub(super) struct HsDescEncNonce([u8; HS_DESC_ENC_NONCE_LEN]);
 
 impl core::convert::AsRef<[u8; HS_DESC_ENC_NONCE_LEN]> for HsDescEncNonce {

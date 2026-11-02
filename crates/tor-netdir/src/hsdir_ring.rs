@@ -69,7 +69,7 @@ impl core::convert::From<usize> for HsDirPos {
 impl core::convert::From<HsDirPos> for usize {
     #[inline]
     fn from(value: HsDirPos) -> Self {
-        <usize as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

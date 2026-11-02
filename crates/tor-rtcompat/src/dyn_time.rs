@@ -307,7 +307,6 @@ mod test {
     #[test]
     fn check_downcast_dropcount() {
         #[derive(Debug)]
-
         struct DropCounter(u32);
 
         impl core::fmt::Display for DropCounter {

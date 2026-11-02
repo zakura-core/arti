@@ -213,13 +213,12 @@ impl tor_bytes::Writeable for NumberedSubver {
 /// in a capability like `Relay=7` or `Wombat=42`,
 /// this only represents the `Relay` or `Wombat` part.
 #[derive(Eq, PartialEq, Clone, Debug, Hash, Ord, PartialOrd)]
-
 pub struct Protocol(ProtocolInner<'static>);
 
 impl core::fmt::Display for Protocol {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 
@@ -239,8 +238,8 @@ enum ProtocolInner<'s> {
 impl<'s> core::fmt::Display for ProtocolInner<'s> {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Proto(_0) => core::fmt::Display::fmt(_0, formatter),
-            Self::Unrecognized(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::Proto(inner) => core::fmt::Display::fmt(inner, formatter),
+            Self::Unrecognized(inner) => core::fmt::Display::fmt(inner, formatter),
         }
     }
 }

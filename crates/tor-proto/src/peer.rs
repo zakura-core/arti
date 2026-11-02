@@ -22,7 +22,7 @@ pub enum PeerAddr {
 impl core::fmt::Display for PeerAddr {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Direct(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::Direct(inner) => core::fmt::Display::fmt(inner, formatter),
         }
     }
 }

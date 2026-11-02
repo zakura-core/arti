@@ -264,7 +264,6 @@ use macros::derive_deftly_template_CircuitReactor;
 pub(crate) type ReactorResultChannel<T> = oneshot::Sender<crate::Result<T>>;
 
 /// A handle for interacting with a circuit reactor.
-
 pub(crate) struct CircReactorHandle<F: ForwardHandler, B: BackwardHandler> {
     /// Sender for reactor control messages.
     pub(crate) control: mpsc::UnboundedSender<CtrlMsg<F::CtrlMsg, B::CtrlMsg>>,
@@ -312,7 +311,6 @@ pub(crate) enum CtrlCmd<F, B> {
 
 /// A control message.
 #[allow(unused)] // TODO(relay)
-
 pub(crate) enum CtrlMsg<F, B> {
     /// A control message for the forward reactor.
     Forward(forward::CtrlMsg<F>),

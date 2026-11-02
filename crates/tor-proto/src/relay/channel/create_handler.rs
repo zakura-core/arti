@@ -54,7 +54,6 @@ use tor_rtcompat::{DynTimeProvider, Runtime};
 use tracing::{debug, trace};
 
 /// Everything needed to handle CREATE* messages on channels.
-
 pub struct CreateRequestHandler {
     /// Something that can launch channels. Typically the `ChanMgr`.
     chan_provider: Weak<dyn ChannelProvider<BuildSpec = OwnedChanTarget> + Send + Sync>,
@@ -583,7 +582,6 @@ impl CreateRequestHandler {
 }
 
 /// The server's RSA identity and ntor keypair.
-
 struct NtorSecretKey<'a> {
     /// The server's RSA identity.
     ident: &'a RsaIdentity,
@@ -615,7 +613,6 @@ impl<'a> NtorServerKeys for NtorSecretKey<'a> {
 }
 
 /// The server's Ed25519 identity and ntor keypair.
-
 struct NtorV3SecretKey<'a> {
     /// The server's Ed25519 identity.
     ident: &'a Ed25519Identity,

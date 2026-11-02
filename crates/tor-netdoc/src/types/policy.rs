@@ -76,7 +76,6 @@ pub enum PolicyError {
 /// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[allow(clippy::exhaustive_structs)]
-
 pub struct PortRange {
     /// The first port in this range.
     lo: u16,
@@ -87,7 +86,7 @@ pub struct PortRange {
 impl core::fmt::Debug for PortRange {
     #[inline]
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        formatter.write_fmt(format_args!("PortRange({0})", &self))
+        formatter.write_fmt(format_args!("PortRange({0})", self))
     }
 }
 

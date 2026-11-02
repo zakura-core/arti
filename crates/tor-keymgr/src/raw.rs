@@ -45,9 +45,11 @@ pub(crate) enum RawEntryId {
 impl core::fmt::Display for RawEntryId {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Path(_0) => core::fmt::Display::fmt(&(_0.display_lossy()), formatter),
+            Self::Path(inner) => core::fmt::Display::fmt(&(inner.display_lossy()), formatter),
             #[cfg(feature = "key-encoding")]
-            Self::Ephemeral(_0) => formatter.write_fmt(format_args!("{0} {1:?}", _0.0, _0.1)),
+            Self::Ephemeral(inner) => {
+                formatter.write_fmt(format_args!("{0} {1:?}", inner.0, inner.1))
+            }
         }
     }
 }

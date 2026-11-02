@@ -56,7 +56,7 @@ impl core::fmt::Display for SshKeyAlgorithm {
             Self::Rsa => formatter.write_str("Rsa"),
             Self::SkEcdsaSha2NistP256 => formatter.write_str("SkEcdsaSha2NistP256"),
             Self::SkEd25519 => formatter.write_str("SkEd25519"),
-            Self::Unknown(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::Unknown(inner) => core::fmt::Display::fmt(inner, formatter),
         }
     }
 }

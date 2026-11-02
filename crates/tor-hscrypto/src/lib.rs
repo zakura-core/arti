@@ -101,7 +101,7 @@ impl core::convert::From<u64> for RevisionCounter {
 impl core::convert::From<RevisionCounter> for u64 {
     #[inline]
     fn from(value: RevisionCounter) -> Self {
-        <u64 as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

@@ -167,7 +167,6 @@ impl From<BadSlug> for Error {
 
 /// An error that occurred while manipulating persistent state.
 #[derive(Clone, Debug)]
-
 pub struct Error {
     /// The underlying error failure.
     source: ErrorSource,

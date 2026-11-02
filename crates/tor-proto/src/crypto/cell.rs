@@ -60,7 +60,7 @@ impl core::convert::From<BoxedCellBody> for RelayCellBody {
 impl core::convert::From<RelayCellBody> for BoxedCellBody {
     #[inline]
     fn from(value: RelayCellBody) -> Self {
-        <BoxedCellBody as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

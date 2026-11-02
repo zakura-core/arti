@@ -129,7 +129,7 @@ impl core::convert::TryFrom<SocketAddr> for unix::SocketAddr {
         value: SocketAddr,
     ) -> core::result::Result<Self, tor_error::TryIntoError<SocketAddr>> {
         match value {
-            SocketAddr::Unix(__0) => core::result::Result::Ok(__0),
+            SocketAddr::Unix(inner) => core::result::Result::Ok(inner),
             _ => core::result::Result::Err(tor_error::TryIntoError::new(
                 value,
                 "Unix",
@@ -146,7 +146,7 @@ impl core::convert::TryFrom<SocketAddr> for net::SocketAddr {
         value: SocketAddr,
     ) -> core::result::Result<Self, tor_error::TryIntoError<SocketAddr>> {
         match value {
-            SocketAddr::Inet(__0) => core::result::Result::Ok(__0),
+            SocketAddr::Inet(inner) => core::result::Result::Ok(inner),
             _ => core::result::Result::Err(tor_error::TryIntoError::new(
                 value,
                 "Inet",

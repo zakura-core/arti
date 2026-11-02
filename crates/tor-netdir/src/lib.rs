@@ -133,7 +133,7 @@ impl core::convert::From<usize> for RouterStatusIdx {
 impl core::convert::From<RouterStatusIdx> for usize {
     #[inline]
     fn from(value: RouterStatusIdx) -> Self {
-        <usize as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

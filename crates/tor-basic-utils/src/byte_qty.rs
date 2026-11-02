@@ -51,7 +51,7 @@ impl core::convert::From<usize> for ByteQty {
 impl core::convert::From<ByteQty> for usize {
     #[inline]
     fn from(value: ByteQty) -> Self {
-        <usize as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

@@ -50,7 +50,7 @@ impl core::fmt::Display for HopKind {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Guard => formatter.write_str("Guard"),
-            Self::Vanguard(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::Vanguard(inner) => core::fmt::Display::fmt(inner, formatter),
             Self::Middle => formatter.write_str("Middle"),
         }
     }

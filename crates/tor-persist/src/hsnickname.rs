@@ -28,8 +28,8 @@ pub struct HsNickname(Slug);
 
 impl core::fmt::Display for HsNickname {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 
@@ -43,7 +43,7 @@ impl core::convert::From<Slug> for HsNickname {
 impl core::convert::From<HsNickname> for Slug {
     #[inline]
     fn from(value: HsNickname) -> Self {
-        <Slug as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

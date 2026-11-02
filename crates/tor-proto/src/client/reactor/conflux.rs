@@ -1276,8 +1276,8 @@ pub(super) struct NotSingleLegError(#[source] Bug);
 
 impl core::fmt::Display for NotSingleLegError {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        core::fmt::Display::fmt(_0, formatter)
+        let inner = &self.0;
+        core::fmt::Display::fmt(inner, formatter)
     }
 }
 

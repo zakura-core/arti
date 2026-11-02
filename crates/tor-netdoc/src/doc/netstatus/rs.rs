@@ -52,8 +52,8 @@ pub enum SoftwareVersion {
 impl core::fmt::Display for SoftwareVersion {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::CTor(_0) => formatter.write_fmt(format_args!("Tor {0}", _0)),
-            Self::Other(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::CTor(inner) => formatter.write_fmt(format_args!("Tor {0}", inner)),
+            Self::Other(inner) => core::fmt::Display::fmt(inner, formatter),
         }
     }
 }

@@ -23,7 +23,7 @@ pub struct EncodedEd25519Cert(Vec<u8>);
 impl core::convert::From<EncodedEd25519Cert> for Vec<u8> {
     #[inline]
     fn from(value: EncodedEd25519Cert) -> Self {
-        <Vec<u8> as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

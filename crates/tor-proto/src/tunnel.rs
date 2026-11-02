@@ -12,8 +12,8 @@ pub(crate) struct TunnelId(u64);
 
 impl core::fmt::Display for TunnelId {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let _0 = &self.0;
-        formatter.write_fmt(format_args!("Tunnel {0}", _0))
+        let inner = &self.0;
+        formatter.write_fmt(format_args!("Tunnel {0}", inner))
     }
 }
 
@@ -38,7 +38,6 @@ impl TunnelId {
 /// process-unique, but in the logs it's often useful to display the
 /// owning tunnel's ID alongside the circuit identifier.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-
 pub(crate) struct TunnelScopedCircId {
     /// The identifier of the owning tunnel
     tunnel_id: TunnelId,

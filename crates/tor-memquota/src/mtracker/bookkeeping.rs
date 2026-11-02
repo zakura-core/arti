@@ -160,7 +160,6 @@ impl core::fmt::Display for TotalQty {
 /// This is the total amount `claim`ed, plus the caches in each `Participation`.
 #[derive(Default, Debug, Deftly)]
 #[derive_deftly(BookkeptQty)]
-
 pub(super) struct ParticipQty {
     /// See [`BookkeptQty`]
     raw: Qty,

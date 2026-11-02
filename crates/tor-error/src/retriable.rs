@@ -126,7 +126,7 @@ impl core::convert::From<RetryTime> for LooseCmpRetryTime {
 impl core::convert::From<LooseCmpRetryTime> for RetryTime {
     #[inline]
     fn from(value: LooseCmpRetryTime) -> Self {
-        <RetryTime as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 

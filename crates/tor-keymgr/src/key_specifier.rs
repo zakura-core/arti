@@ -46,8 +46,8 @@ impl core::convert::From<CTorPath> for KeyPath {
 impl core::fmt::Display for KeyPath {
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Arti(_0) => core::fmt::Display::fmt(_0, formatter),
-            Self::CTor(_0) => core::fmt::Display::fmt(_0, formatter),
+            Self::Arti(inner) => core::fmt::Display::fmt(inner, formatter),
+            Self::CTor(inner) => core::fmt::Display::fmt(inner, formatter),
         }
     }
 }

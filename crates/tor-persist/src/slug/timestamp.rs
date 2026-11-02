@@ -38,7 +38,7 @@ pub struct Iso8601TimeSlug(SystemTime);
 impl core::convert::From<Iso8601TimeSlug> for SystemTime {
     #[inline]
     fn from(value: Iso8601TimeSlug) -> Self {
-        <SystemTime as core::convert::From<_>>::from(value.0)
+        value.0
     }
 }
 
