@@ -55,7 +55,6 @@ pub mod extend_builder;
 #[cfg(feature = "file-watcher")]
 #[cfg_attr(docsrs, doc(cfg(feature = "file-watcher")))]
 pub mod file_watcher;
-mod flatten;
 pub mod list_builder;
 mod listen;
 pub mod load;
@@ -72,12 +71,10 @@ pub mod deps {
     pub use itertools::Itertools;
     pub use paste::paste;
     pub use serde;
-    pub use serde_value;
     pub use tor_basic_utils::{if_empty, macro_first_nonempty};
 }
 
 pub use err::{ConfigBuildError, ReconfigureError};
-pub use flatten::{Flatten, Flattenable};
 pub use list_builder::{MultilineListBuilder, MultilineListBuilderError};
 pub use listen::*;
 pub use misc::*;
@@ -85,8 +82,6 @@ pub use mut_cfg::MutCfg;
 
 #[doc(hidden)]
 pub use derive_deftly;
-#[doc(hidden)]
-pub use flatten::flattenable_extract_fields;
 
 derive_deftly::template_export_semver_check! { "0.12.1" }
 
@@ -423,7 +418,9 @@ macro_rules! impl_standard_builder {
 
             if let Some(def) = def {
                 $( // expands iff there was $try_deserialize, which is always deserialize
-                    let empty_config = $crate::deps::serde_value::Value::Map(Default::default());
+                    let empty_config = $crate::deps::serde::de::value::MapDeserializer::<
+                        _, $crate::deps::serde::de::value::Error,
+                    >::new(::std::iter::empty::<(::std::string::String, ())>());
                     let builder = <[< $Config Builder >] as $crate::deps::serde::Deserialize>
                         ::$try_deserialize(empty_config).unwrap();
                     let from_empty = builder.build().unwrap();
@@ -479,7 +476,6 @@ mod test {
         #[derive_deftly(TorConfig)]
         #[deftly(tor_config(
             no_test_default,
-            no_flattenable_trait,
             attr = #[derive(Eq, PartialEq)]
         ))]
         struct TestConfig {

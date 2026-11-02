@@ -57,7 +57,7 @@ pub struct Config(pub(crate) IfEnabled<ConfigInner>);
 // and, doing it this way lets us write separate docs about
 // the invariants on our fields, which are not the same as those in the builder.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Default, Deftly)]
-#[derive_deftly(tor_config::Flattenable, QtySetters)]
+#[derive_deftly(QtySetters)]
 pub struct ConfigBuilder {
     /// Maximum memory usage tolerated before reclamation starts
     ///
