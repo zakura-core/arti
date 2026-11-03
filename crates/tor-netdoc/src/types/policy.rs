@@ -18,6 +18,7 @@
 
 mod addrpolicy;
 mod portpolicy;
+#[cfg(feature = "encode")]
 mod summary;
 
 use std::fmt;
@@ -29,6 +30,7 @@ use tor_basic_utils::iter_join;
 
 pub use addrpolicy::{AddrPolicy, AddrPortPattern, IpPattern};
 pub use portpolicy::PortPolicy;
+#[cfg(feature = "encode")]
 pub use summary::{PortPolicies, PortSummaryThresholds};
 
 use crate::NormalItemArgument;

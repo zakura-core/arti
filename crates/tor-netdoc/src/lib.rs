@@ -88,6 +88,7 @@ pub use util::batching_split_before;
 
 pub use err::{BuildError, Error, ExpectedConstantString, NetdocErrorKind, Pos};
 
+#[cfg(feature = "encode")]
 pub use util::rangemap_ext::rangemap_mutate_range;
 
 #[cfg(any(test, feature = "testing"))]
