@@ -68,14 +68,14 @@ mod arti_client_paths;
 #[cfg(feature = "arti-client")]
 pub use arti_client_paths::arti_client_base_resolver;
 
-/// A path in a configuration file: tilde expansion is performed, along
-/// with expansion of variables provided by a [`CfgPathResolver`].
+/// A configuration path with optional variable and tilde expansion.
 ///
-/// The tilde expansion is performed using the home directory given by the
-/// `directories` crate, which may be based on an environment variable. For more
-/// information, see [`BaseDirs::home_dir`](directories::BaseDirs::home_dir).
+/// With `expand-paths`, variables come from a [`CfgPathResolver`] and tilde
+/// expansion uses the home directory provided by the `directories` crate.
+/// System directories may depend on environment variables.
 ///
-/// Alternatively, a `CfgPath` can contain literal `PathBuf`, which will not be expanded.
+/// Without `expand-paths`, variables and home directories are rejected.
+/// Alternatively, use [`CfgPath::new_literal`] to retain an exact [`PathBuf`].
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(transparent)]
 pub struct CfgPath(PathInner);

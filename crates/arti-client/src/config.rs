@@ -161,6 +161,11 @@ fn default_dns_resolve_ptr_timeout() -> Duration {
 /// environment. Other platforms will also use suitable defaults. For more
 /// information, see the documentation for [`CfgPath`].
 ///
+/// With this crate's default features disabled, path interpolation and system
+/// directory discovery are disabled unless `tor-config-path/expand-paths` is
+/// enabled separately. Supply explicit paths with
+/// [`TorClientConfigBuilder::from_directories`] in that configuration.
+///
 /// This section is for read/write storage.
 ///
 /// You cannot change this section on a running Arti client.

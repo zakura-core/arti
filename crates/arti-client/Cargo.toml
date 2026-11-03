@@ -18,7 +18,7 @@ all-features = true
 # @@ test-all-crates conditional-option minimal --features=tokio,rustls
 
 [features]
-default = ["tokio", "rustls", "compression"]
+default = ["tokio", "rustls", "compression", "tor-config-path/expand-paths"]
 full = [
     "anyhow",
     "keymgr",
@@ -139,7 +139,7 @@ tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-uti
 tor-chanmgr = { package = "zakura-tor-chanmgr", path = "../tor-chanmgr", version = "0.47.0-zakura.1" }
 tor-circmgr = { package = "zakura-tor-circmgr", path = "../tor-circmgr", version = "0.47.0-zakura.1" }
 tor-config = { package = "zakura-tor-config", path = "../tor-config", version = "0.47.0-zakura.1", default-features = false }
-tor-config-path = { package = "zakura-tor-config-path", path = "../tor-config-path", version = "0.47.0-zakura.1", features = ["arti-client"] }
+tor-config-path = { package = "zakura-tor-config-path", path = "../tor-config-path", version = "0.47.0-zakura.1", default-features = false, features = ["arti-client"] }
 tor-dircommon = { package = "zakura-tor-dircommon", path = "../tor-dircommon", version = "0.47.0-zakura.1" }
 tor-dirmgr = { package = "zakura-tor-dirmgr", path = "../tor-dirmgr", version = "0.47.0-zakura.1", default-features = false, features = ["mmap"] }
 tor-error = { package = "zakura-tor-error", path = "../tor-error", version = "0.47.0-zakura.1", features = ["tracing"] }

@@ -20,7 +20,7 @@ full = [
     "tor-error/full",
 ]
 
-arti-client = ["expand-paths"]
+arti-client = []
 expand-paths = ["directories"]
 
 experimental = ["testing", "experimental-api"]
