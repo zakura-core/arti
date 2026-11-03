@@ -44,3 +44,22 @@ BREAKING: Remove the doc-hidden `deps::educe` re-export. The exported
 `define_map_builder!` macro now implements `Deref` and `DerefMut` directly,
 with the same target and behavior. Existing configuration traits, defaults,
 Serde support and feature availability are unchanged.
+
+BREAKING: Remove the unused listening-server configuration helper `Listen`
+and its root re-export. This removes its `new_none`, `new_localhost`,
+`new_localhost_optional`, `is_empty`, `using_auto`, `using_port_zero`,
+`ip_addrs`, `localhost_port_legacy`, `single_address_legacy`,
+`is_loopback_only` and `is_localhost_only` methods. Its `Clone`, `Hash`,
+`Debug`, `Ord`, `PartialOrd`, `Eq`, `PartialEq`, `Serialize`, `Deserialize`,
+`Default` and `Display` implementations disappear, along with conversions
+to/from its private representation. The opaque tuple field was private;
+the three named constructors and `Default` were its public constructors.
+
+Remove the root re-export and public non-exhaustive empty struct
+`ListenUnsupported`, including its `Debug`, `Clone`, `Display` and `Error`
+implementations. It had no public fields or constructor. No public constants,
+aliases, variants or crate-private declarations change, and no API is added.
+Typed outbound-client builders, storage, permissions, memory quotas, padding,
+protocol fields and persisted-state formats are unchanged. Remove the now-unused
+direct `either` dependency; other retained packages still depend on it. No Cargo
+feature is removed.
