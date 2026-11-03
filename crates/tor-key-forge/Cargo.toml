@@ -40,7 +40,7 @@ tor-llcrypto = { package = "zakura-tor-llcrypto", version = "0.47.0-zakura.1", p
 
 [dev-dependencies]
 signature = "2"
-tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1" }
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["full"] }
 tor-llcrypto = { package = "zakura-tor-llcrypto", version = "0.47.0-zakura.1", path = "../tor-llcrypto", features = ["testing"] }
 
 [package.metadata.docs.rs]

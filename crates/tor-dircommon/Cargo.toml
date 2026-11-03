@@ -53,6 +53,7 @@ tor-netdoc = { package = "zakura-tor-netdoc", path = "../tor-netdoc", version = 
 tracing = "0.1.44"
 
 [dev-dependencies]
+tor-basic-utils = { package = "zakura-tor-basic-utils", path = "../tor-basic-utils", version = "0.47.0-zakura.1", features = ["full"] }
 toml = "1.1.8"
 
 [lib]

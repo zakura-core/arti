@@ -64,6 +64,8 @@ pub mod onionperf_types;
 pub mod rand_hostname;
 pub mod rangebounds;
 pub mod retry;
+#[cfg(any(test, feature = "full"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "full")))]
 pub mod test_rng;
 pub mod token_bucket;
 
