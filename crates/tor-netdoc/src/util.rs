@@ -5,6 +5,7 @@ use derive_deftly::define_derive_deftly;
 mod system_time;
 pub(crate) use system_time::{saturating_add, saturating_sub};
 
+#[cfg(feature = "encode")]
 pub(crate) mod rangemap_ext;
 pub(crate) mod str;
 

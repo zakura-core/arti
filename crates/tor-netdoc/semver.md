@@ -101,3 +101,19 @@ No dependency edge, clock provider or platform restriction is added.
 BREAKING: Remove the doc-hidden `parse2::internal_prelude::Educe` re-export.
 The parser macros and existing trait implementations now use standard Rust
 without Educe; their trait bounds and behavior are unchanged.
+
+BREAKING: Exit-policy summary generation now requires `encode`, which is also
+included by `full`. The following public APIs retain their signatures and
+behavior when enabled, but are unavailable without that feature:
+
+- `types::policy::{PortPolicies, PortSummaryThresholds}`, their `v4`/`v6`
+  fields, struct-literal constructors, and `Debug`, `Clone`, `Eq`, `PartialEq`
+  and `Hash` implementations;
+- `PortSummaryThresholds::{from_prefix_lengths, DEFAULT}` and its `Default`
+  implementation;
+- `types::policy::AddrPolicy::summarise_precise`;
+- the root `rangemap_mutate_range` reexport.
+
+The crate-private `util::rangemap_ext` module has the same feature requirement.
+Client address/port policy parsing and exit selection are unchanged. The
+summary algorithm and range-map helper implementations are unchanged.
