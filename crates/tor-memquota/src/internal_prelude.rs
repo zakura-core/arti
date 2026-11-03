@@ -40,7 +40,6 @@ pub(crate) use std::task::Waker;
 pub(crate) use {
     derive_deftly::{Deftly, define_derive_deftly, derive_deftly_adhoc},
     dyn_clone::DynClone,
-    extend::ext,
     itertools::chain,
     paste::paste,
     pin_project::pin_project,

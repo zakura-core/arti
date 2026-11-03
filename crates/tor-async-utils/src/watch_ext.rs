@@ -1,14 +1,33 @@
 //! Extension trait for more efficient use of [`crate::watch`].
 
-use extend::ext;
 use std::ops::{Deref, DerefMut};
 use void::{ResultVoidExt as _, Void};
 
 /// Extension trait for [`crate::watch::Sender`] to provide `maybe_send`.
 ///
 /// The legacy trait name is retained for callers' imports.
-#[ext(name = PostageWatchSenderExt)]
-pub impl<T> crate::watch::Sender<T> {
+pub trait PostageWatchSenderExt<T> {
+    /// Update, by calling a fallible function, sending only if necessary
+    ///
+    /// Calls `update` on the current value in the watch, to obtain a new value.
+    /// If the new value doesn't compare equal, updates the watch, notifying
+    /// receivers.
+    fn try_maybe_send<F, E>(&mut self, update: F) -> Result<(), E>
+    where
+        T: PartialEq,
+        F: FnOnce(&T) -> Result<T, E>;
+    /// Update, by calling a function, sending only if necessary
+    ///
+    /// Calls `update` on the current value in the watch, to obtain a new value.
+    /// If the new value doesn't compare equal, updates the watch, notifying
+    /// receivers.
+    fn maybe_send<F>(&mut self, update: F)
+    where
+        T: PartialEq,
+        F: FnOnce(&T) -> T;
+}
+
+impl<T> PostageWatchSenderExt<T> for crate::watch::Sender<T> {
     /// Update, by calling a fallible function, sending only if necessary
     ///
     /// Calls `update` on the current value in the watch, to obtain a new value.

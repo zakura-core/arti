@@ -11,7 +11,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use extend::ext;
 use std::sync::LazyLock;
 
 #[cfg(all(unix, not(target_arch = "wasm32")))]
@@ -63,8 +62,28 @@ const HOME_SUBSTITUTION: &str = {
 };
 
 /// An extension trait for [`Path`].
-#[ext]
-pub impl Path {
+pub trait PathExt {
+    /// If this is a path within our home directory, try to replace the home
+    /// directory component with a symbolic reference to our home directory.
+    ///
+    /// This function can be useful for outputting paths while reducing the risk
+    /// of exposing usernames in the log.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::path::{Path,PathBuf};
+    /// use fs_mistrust::anon_home::PathExt as _;
+    ///
+    /// let path = PathBuf::from("/home/arachnidsGrip/.config/arti.toml");
+    /// assert_eq!(path.anonymize_home().to_string(),
+    ///            "${HOME}/.config/arti.toml");
+    /// panic!();
+    /// ```
+    fn anonymize_home(&self) -> AnonHomePath<'_>;
+}
+
+impl PathExt for Path {
     /// If this is a path within our home directory, try to replace the home
     /// directory component with a symbolic reference to our home directory.
     ///

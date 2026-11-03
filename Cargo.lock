@@ -886,17 +886,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "extend"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "311a6d2f1f9d60bff73d2c78a0af97ed27f79672f15c238192a5bbb64db56d00"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.119",
-]
-
-[[package]]
 name = "fallible-iterator"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3866,7 +3855,6 @@ version = "0.16.0-zakura.1"
 dependencies = [
  "assert_matches",
  "dirs-sys",
- "extend",
  "libc",
  "pwd-grp",
  "serde",
@@ -3916,7 +3904,6 @@ dependencies = [
  "criterion",
  "derive-deftly",
  "event-listener",
- "extend",
  "futures",
  "futures-await-test",
  "pin-project",
@@ -3940,7 +3927,6 @@ name = "zakura-tor-basic-utils"
 version = "0.47.0-zakura.1"
 dependencies = [
  "derive-deftly",
- "extend",
  "futures",
  "getrandom 0.4.3",
  "hex",
@@ -4151,7 +4137,6 @@ dependencies = [
  "cfg-if",
  "derive-deftly",
  "either",
- "extend",
  "futures",
  "getset",
  "humantime-serde",
@@ -4589,7 +4574,6 @@ dependencies = [
  "cfg-if",
  "derive-deftly",
  "dyn-clone",
- "extend",
  "futures",
  "itertools 0.15.0",
  "libc",
@@ -4673,7 +4657,6 @@ dependencies = [
  "cipher 0.5.2",
  "derive-deftly",
  "digest 0.10.7",
- "extend",
  "getset",
  "hex",
  "hex-literal",
@@ -4721,7 +4704,6 @@ version = "0.47.0-zakura.1"
 dependencies = [
  "anyhow",
  "derive-deftly",
- "extend",
  "filetime",
  "futures",
  "getset",

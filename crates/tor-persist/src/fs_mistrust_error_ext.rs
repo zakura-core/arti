@@ -1,6 +1,5 @@
 //! [`FsMistrustErrorExt`]
 
-use extend::ext;
 use paste::paste;
 
 use tor_error::ErrorKind;
@@ -31,8 +30,14 @@ macro_rules! accesses { {
 } => { paste!{
 
     /// Extension trait for getting a [`tor_error::ErrorKind`] from a [`fs_mistrust::Error`]
-    #[ext(name = FsMistrustErrorExt, supertraits = Sealed)]
-    pub impl fs_mistrust::Error {
+    pub trait FsMistrustErrorExt: Sealed {
+        $(
+            #[doc = concat!("The error kind if we were trying to access", $description)]
+            fn [<$kind _error_kind>](&self) -> tor_error::ErrorKind;
+        )*
+    }
+
+    impl FsMistrustErrorExt for fs_mistrust::Error {
         $(
 
             #[doc = concat!("The error kind if we were trying to access", $description)]

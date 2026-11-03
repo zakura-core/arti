@@ -14,7 +14,6 @@ repository = "https://github.com/zakura-core/arti"
 
 [dependencies]
 derive-deftly = { version = "~1.14.0", features = ["full", "beta"] }
-extend = "1.2.0"
 futures = { version = "0.3.34", default-features = false, features = ["std"] }
 hex = "0.4"
 itertools = "0.15.0"

@@ -16,8 +16,12 @@ pub(crate) trait DefaultExtTake: Default {
 ///
 /// Equivalent to [`MemoryQuotaTracker::new_noop()`]`.into()`.
 /// Provides `tor_proto::memquota::TopLevelAccount::new_noop()`
-#[ext(name = ArcMemoryQuotaTrackerExt)]
-pub impl Arc<MemoryQuotaTracker> {
+pub trait ArcMemoryQuotaTrackerExt {
+    /// Create a new dummy toplevel tracker for testing purposes
+    fn new_noop() -> Self;
+}
+
+impl ArcMemoryQuotaTrackerExt for Arc<MemoryQuotaTracker> {
     /// Create a new dummy toplevel tracker for testing purposes
     fn new_noop() -> Self {
         MemoryQuotaTracker::new_noop()
