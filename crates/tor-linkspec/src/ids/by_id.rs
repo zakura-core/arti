@@ -163,18 +163,17 @@ impl<H: HasRelayIds> ByRelayIds<H> {
     where
         T: HasRelayIds,
     {
-        use by_address::ByAddress;
-        use std::collections::HashSet;
+        use std::collections::HashMap;
 
-        let mut items: HashSet<ByAddress<&H>> = HashSet::new();
+        let mut items: HashMap<*const H, &H> = HashMap::new();
 
         for ident in key.identities() {
             if let Some(found) = self.by_id(ident) {
-                items.insert(ByAddress(found));
+                items.insert(std::ptr::from_ref(found), found);
             }
         }
 
-        items.into_iter().map(|by_addr| by_addr.0).collect()
+        items.into_values().collect()
     }
 }
 
@@ -202,50 +201,48 @@ impl<H: HasRelayIds> ListByRelayIds<H> {
 
     /// Return a reference to every element in this set that shares *any* ID with `key`.
     ///
-    /// No element is returned more than once. Equality is compared using
-    /// [`ByAddress`](by_address::ByAddress).
+    /// No element is returned more than once. Equality compares object
+    /// addresses, as with [`std::ptr::eq`].
     pub fn all_overlapping<T>(&self, key: &T) -> Vec<&H>
     where
         T: HasRelayIds,
     {
-        use by_address::ByAddress;
-        use std::collections::HashSet;
+        use std::collections::HashMap;
 
-        let mut items: HashSet<ByAddress<&H>> = HashSet::new();
+        let mut items: HashMap<*const H, &H> = HashMap::new();
 
         for ident in key.identities() {
             for found in self.by_id(ident) {
-                items.insert(ByAddress(found));
+                items.insert(std::ptr::from_ref(found), found);
             }
         }
 
-        items.into_iter().map(|by_addr| by_addr.0).collect()
+        items.into_values().collect()
     }
 
     /// Return a reference to every element in this list whose relay IDs are a subset of the relay
     /// IDs that `key` has.
     ///
-    /// No element is returned more than once. Equality is compared using
-    /// [`ByAddress`](by_address::ByAddress).
+    /// No element is returned more than once. Equality compares object
+    /// addresses, as with [`std::ptr::eq`].
     pub fn all_subset<T>(&self, key: &T) -> Vec<&H>
     where
         T: HasRelayIds,
     {
-        use by_address::ByAddress;
-        use std::collections::HashSet;
+        use std::collections::HashMap;
 
-        let mut items: HashSet<ByAddress<&H>> = HashSet::new();
+        let mut items: HashMap<*const H, &H> = HashMap::new();
 
         for ident in key.identities() {
             for found in self.by_id(ident) {
                 // if 'key's relay ids are a superset of 'found's relay ids
                 if key.has_all_relay_ids_from(found) {
-                    items.insert(ByAddress(found));
+                    items.insert(std::ptr::from_ref(found), found);
                 }
             }
         }
 
-        items.into_iter().map(|by_addr| by_addr.0).collect()
+        items.into_values().collect()
     }
 
     /// Return the values in this list that have the key `key` and where `filter` returns `true`.
@@ -519,6 +516,34 @@ mod test {
                 .rsa_identity(rsa2)
                 .build();
             assert_eq!(list.all_subset(&search), vec![&keys2]);
+        }
+    }
+
+    #[test]
+    fn list_deduplicates_addresses_not_equal_values() {
+        let rsa: RsaIdentity = (*b"12345678901234567890").into();
+        let ed: Ed25519Identity = (*b"12345678901234567890123456789012").into();
+        let key = RelayIdsBuilder::default()
+            .rsa_identity(rsa)
+            .ed_identity(ed)
+            .build();
+        let mut list = ListByRelayIds::new();
+        list.insert(key.clone());
+        list.insert(key.clone());
+
+        let stored: Vec<_> = list.by_id(&rsa).collect();
+        assert_eq!(stored.len(), 2);
+        assert_eq!(stored[0], stored[1]);
+        assert!(!std::ptr::eq(stored[0], stored[1]));
+
+        for found in [list.all_overlapping(&key), list.all_subset(&key)] {
+            // Each stored object is reached through both IDs, but must appear
+            // only once. Equal values at different addresses remain distinct.
+            assert_eq!(found.len(), 2);
+            assert!(!std::ptr::eq(found[0], found[1]));
+            for item in found {
+                assert!(stored.iter().any(|entry| std::ptr::eq(*entry, item)));
+            }
         }
     }
 
