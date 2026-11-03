@@ -4150,7 +4150,6 @@ dependencies = [
  "assert_matches",
  "cfg-if",
  "derive-deftly",
- "either",
  "extend",
  "futures",
  "getset",

@@ -56,7 +56,6 @@ pub mod extend_builder;
 #[cfg_attr(docsrs, doc(cfg(feature = "file-watcher")))]
 pub mod file_watcher;
 pub mod list_builder;
-mod listen;
 pub mod load;
 pub mod map_builder;
 mod misc;
@@ -76,7 +75,6 @@ pub mod deps {
 
 pub use err::{ConfigBuildError, ReconfigureError};
 pub use list_builder::{MultilineListBuilder, MultilineListBuilderError};
-pub use listen::*;
 pub use misc::*;
 pub use mut_cfg::MutCfg;
 
