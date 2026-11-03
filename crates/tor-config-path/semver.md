@@ -21,3 +21,12 @@ and associated types disappear with the implementations.
 This deletes only the network-address/path-expansion adapter. Filesystem
 `CfgPath`, path resolution/expansion, Serde representations and error behavior
 remain unchanged; no runtime dependency replaces the removed address edge.
+
+BREAKING: The `arti-client` feature no longer implies `expand-paths`.
+`arti_client_base_resolver` retains its signature and availability, but returns
+an empty resolver without OS-directory discovery when only `arti-client` is
+enabled. Literal paths remain supported; variable/tilde interpolation requires
+`expand-paths`. The existing public `home` function still requires
+`expand-paths`, so marker-only consumers no longer receive it implicitly.
+Standalone default and `full` builds retain expansion and all previous items.
+No public or crate-private declarations, signatures or visibility change.

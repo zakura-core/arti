@@ -41,3 +41,10 @@ runtime and `TorClient<PreferredRuntime>` APIs retain their signatures,
 identity and behavior; `TorClient::with_runtime` remains generic.
 The preferred `TorClient::{create_bootstrapped, builder}` implementations now
 require `tokio` with `rustls`, replacing the former Tokio-or-async-std gate.
+
+BREAKING: With default features disabled, configuration paths no longer
+implicitly enable `tor-config-path/expand-paths`. Supply explicit state/cache
+paths with `TorClientConfigBuilder::from_directories`, or enable the existing
+`expand-paths` dependency feature. Ordinary default and `full` builds retain
+path interpolation and OS-directory discovery. Rust signatures, visibility and
+item availability are unchanged.

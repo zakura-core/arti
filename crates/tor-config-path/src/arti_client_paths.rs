@@ -3,12 +3,14 @@
 //! Embedded clients share these base paths without depending on the
 //! `arti-client` package.
 
-use std::{borrow::Cow, path::PathBuf};
+#[cfg(feature = "expand-paths")]
+use {
+    crate::CfgPathError,
+    directories::ProjectDirs,
+    std::{borrow::Cow, path::PathBuf, sync::LazyLock},
+};
 
-use directories::ProjectDirs;
-use std::sync::LazyLock;
-
-use crate::{CfgPathError, CfgPathResolver};
+use crate::CfgPathResolver;
 
 /// A [`CfgPathResolver`] with the base variables configured for a `TorClientConfig`
 /// in `arti-client`.
@@ -20,7 +22,7 @@ use crate::{CfgPathError, CfgPathResolver};
 /// Libraries should be written in a
 /// resolver-agnostic way (shouldn't rely on resolving `ARTI_CONFIG` for example).
 ///
-/// The supported variables are:
+/// With the `expand-paths` feature, the supported variables are:
 ///   - `ARTI_CACHE`: an arti-specific cache directory.
 ///   - `ARTI_CONFIG`: an arti-specific configuration directory.
 ///   - `ARTI_SHARED_DATA`: an arti-specific directory in the user's "shared
@@ -31,36 +33,46 @@ use crate::{CfgPathError, CfgPathResolver};
 ///     See documentation for [`std::env::current_exe`] for security notes.
 ///   - `USER_HOME`: the user's home directory.
 ///
-/// These variables are implemented using the [`directories`] crate, and
+/// These variables are implemented using the `directories` crate, and
 /// so should use appropriate system-specific overrides under the
 /// hood. (Some of those overrides are based on environment variables.)
 /// For more information, see that crate's documentation.
 ///
 /// If in doubt, use `ARTI_LOCAL_DATA` rather than `ARTI_SHARED_DATA`.
 /// These are equivalent on Linux/MacOS, but are different on Windows.
-/// We should use `ARTI_LOCAL_DATA` for consistency with existing Arti config options,
-/// unless there's a specific need for roaming data on Windows.
+/// We should use `ARTI_LOCAL_DATA` for consistency with existing Arti config
+/// options, unless there's a specific need for roaming data on Windows.
+///
+/// Without `expand-paths`, this returns an empty resolver without discovering
+/// system directories. Use [`crate::CfgPath::new_literal`] for application-owned
+/// paths; interpolated variables and home directories are unsupported.
 pub fn arti_client_base_resolver() -> CfgPathResolver {
-    let arti_cache = project_dirs().map(|x| Cow::Owned(x.cache_dir().to_owned()));
-    let arti_config = project_dirs().map(|x| Cow::Owned(x.config_dir().to_owned()));
-    let arti_shared_data = project_dirs().map(|x| Cow::Owned(x.data_dir().to_owned()));
-    let arti_local_data = project_dirs().map(|x| Cow::Owned(x.data_local_dir().to_owned()));
-    let program_dir = get_program_dir().map(Cow::Owned);
-    let user_home = crate::home().map(Cow::Borrowed);
+    #[cfg(feature = "expand-paths")]
+    {
+        let arti_cache = project_dirs().map(|x| Cow::Owned(x.cache_dir().to_owned()));
+        let arti_config = project_dirs().map(|x| Cow::Owned(x.config_dir().to_owned()));
+        let arti_shared_data = project_dirs().map(|x| Cow::Owned(x.data_dir().to_owned()));
+        let arti_local_data = project_dirs().map(|x| Cow::Owned(x.data_local_dir().to_owned()));
+        let program_dir = get_program_dir().map(Cow::Owned);
+        let user_home = crate::home().map(Cow::Borrowed);
 
-    let mut resolver = CfgPathResolver::default();
+        let mut resolver = CfgPathResolver::default();
 
-    resolver.set_var("ARTI_CACHE", arti_cache);
-    resolver.set_var("ARTI_CONFIG", arti_config);
-    resolver.set_var("ARTI_SHARED_DATA", arti_shared_data);
-    resolver.set_var("ARTI_LOCAL_DATA", arti_local_data);
-    resolver.set_var("PROGRAM_DIR", program_dir);
-    resolver.set_var("USER_HOME", user_home);
+        resolver.set_var("ARTI_CACHE", arti_cache);
+        resolver.set_var("ARTI_CONFIG", arti_config);
+        resolver.set_var("ARTI_SHARED_DATA", arti_shared_data);
+        resolver.set_var("ARTI_LOCAL_DATA", arti_local_data);
+        resolver.set_var("PROGRAM_DIR", program_dir);
+        resolver.set_var("USER_HOME", user_home);
 
-    resolver
+        resolver
+    }
+    #[cfg(not(feature = "expand-paths"))]
+    CfgPathResolver::default()
 }
 
 /// Return the directory holding the currently executing program.
+#[cfg(feature = "expand-paths")]
 fn get_program_dir() -> Result<PathBuf, CfgPathError> {
     let binary = std::env::current_exe().map_err(|_| CfgPathError::NoProgramPath)?;
     let directory = binary.parent().ok_or(CfgPathError::NoProgramDir)?;
@@ -68,6 +80,7 @@ fn get_program_dir() -> Result<PathBuf, CfgPathError> {
 }
 
 /// Return a ProjectDirs object for the Arti project.
+#[cfg(feature = "expand-paths")]
 fn project_dirs() -> Result<&'static ProjectDirs, CfgPathError> {
     /// lazy lock holding the ProjectDirs object.
     static PROJECT_DIRS: LazyLock<Option<ProjectDirs>> =
@@ -76,7 +89,7 @@ fn project_dirs() -> Result<&'static ProjectDirs, CfgPathError> {
     PROJECT_DIRS.as_ref().ok_or(CfgPathError::NoProjectDirs)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "expand-paths"))]
 mod test {
     // @@ begin test lint list maintained by maint/add_warning @@
     #![allow(clippy::bool_assert_comparison)]
@@ -143,5 +156,41 @@ mod test {
 
         let p = CfgPath::new("${NOT_A_REAL_VAR}\\example".to_string());
         assert!(p.path(&path_resolver).is_err());
+    }
+}
+
+#[cfg(all(test, not(feature = "expand-paths")))]
+mod no_expansion {
+    use super::*;
+    use crate::{CfgPath, CfgPathError};
+    use std::path::PathBuf;
+
+    #[test]
+    fn marker_only_resolver_accepts_literals() {
+        let resolver = arti_client_base_resolver();
+        assert!(resolver.vars.is_empty());
+
+        for path in ["application/cache", "${ARTI_CACHE}/literal", "~/literal"] {
+            assert_eq!(
+                CfgPath::new_literal(path).path(&resolver),
+                Ok(PathBuf::from(path))
+            );
+        }
+        assert_eq!(
+            CfgPath::new("application/cache".into()).path(&resolver),
+            Ok(PathBuf::from("application/cache"))
+        );
+        assert_eq!(
+            CfgPath::new("${ARTI_CACHE}".into()).path(&resolver),
+            Err(CfgPathError::VariableInterpolationNotSupported(
+                "${ARTI_CACHE}".into()
+            ))
+        );
+        assert_eq!(
+            CfgPath::new("~/cache".into()).path(&resolver),
+            Err(CfgPathError::HomeDirInterpolationNotSupported(
+                "~/cache".into()
+            ))
+        );
     }
 }
