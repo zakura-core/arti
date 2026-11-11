@@ -23,3 +23,6 @@
 /tmp
 # test nets written from tests/chutney/
 /chutney-net
+
+# Python bytecode from maint scripts
+__pycache__/
