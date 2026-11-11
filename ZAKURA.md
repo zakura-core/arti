@@ -22,8 +22,7 @@ dependencies. Internal path dependencies retain version requirements for the
 same fork packages, so packaging cannot silently substitute upstream Arti.
 
 The initial package namespace does not itself remove dependencies. Consumer graph
-changes are measured separately. Publication and the wallet-library integration
-are separate steps; no crates.io publication is implied by this branch.
+changes are measured separately.
 
 For local validation use the pinned Rust toolchain:
 
@@ -38,3 +37,18 @@ cargo check --locked -p zakura-arti-client --no-default-features \
 
 The package namespace applies to the retained embedded workspace described in
 [EMBEDDED.md](EMBEDDED.md). Standalone application packages are omitted.
+
+## Publishing
+
+The family is on crates.io, and new versions publish through the `Publish crates`
+workflow with Trusted Publishing. Bump the versions in the manifests and
+`package-family.json`, merge to `main`, then dispatch the workflow from `main`.
+`verify` mode builds every unpublished version without credentials and checks the
+crates.io token exchange. `publish` mode runs the same build, then uploads after
+the `crates-io` environment is approved. Versions already on crates.io are
+skipped, so dispatching again after a failure publishes only what is left.
+
+crates.io limits how quickly one publisher can upload new versions of existing
+crates, and a release that bumps the whole family goes past that burst.
+`maint/zakura/publish-family.py` waits for the retry time crates.io reports and
+continues.

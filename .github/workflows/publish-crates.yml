@@ -1,0 +1,90 @@
+name: Publish crates
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Verify packages and authentication, or publish the manifest versions"
+        type: choice
+        required: true
+        default: verify
+        options: [verify, publish]
+
+permissions: {}
+
+concurrency:
+  group: arti-crates-io
+  cancel-in-progress: false
+
+jobs:
+  plan-verify:
+    name: Plan and verify crate publication
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    outputs:
+      count: ${{ steps.plan.outputs.count }}
+    steps:
+      - name: Require a main dispatch in the fork repository
+        env:
+          REPOSITORY: ${{ github.repository }}
+          SOURCE_REF: ${{ github.ref }}
+        run: |
+          if [ "$REPOSITORY" != "zakura-core/arti" ] || [ "$SOURCE_REF" != "refs/heads/main" ]; then
+            echo "Dispatch this workflow from main in zakura-core/arti." >&2
+            exit 1
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: rustup show active-toolchain
+      - name: Check the package family
+        run: python3 maint/zakura/check-package-family.py
+      - name: List unpublished family versions
+        id: plan
+        run: python3 maint/zakura/publish-family.py plan --github-output "$GITHUB_OUTPUT"
+      - name: Package and build the unpublished versions without credentials
+        if: steps.plan.outputs.count != '0'
+        run: python3 maint/zakura/publish-family.py dry-run
+
+  oidc-smoke:
+    name: Exchange and revoke the crates.io token
+    needs: plan-verify
+    if: ${{ inputs.mode == 'verify' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: crates-io
+    permissions:
+      id-token: write
+    steps:
+      # No repository code receives the token in verify mode.
+      - uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+
+  publish:
+    name: Publish the unpublished family versions
+    needs: plan-verify
+    if: ${{ inputs.mode == 'publish' && needs.plan-verify.outputs.count != '0' && github.repository == 'zakura-core/arti' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    # A Trusted Publishing token lasts 30 minutes. A rate-limited full-family
+    # release can outlast it; dispatching again publishes whatever is left.
+    timeout-minutes: 45
+    environment: crates-io
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Select the pinned toolchain before authentication
+        run: rustup show active-toolchain
+      - name: Authenticate with crates.io
+        id: auth
+        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+      - name: Publish in dependency order, waiting out rate limits
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: python3 maint/zakura/publish-family.py publish
