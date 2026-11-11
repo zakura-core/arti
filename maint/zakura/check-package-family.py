@@ -9,6 +9,8 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 FAMILY = json.loads((Path(__file__).parent / "package-family.json").read_text())
+# Published metadata can't be edited later, so every fork package names this fork.
+REPOSITORY = "https://github.com/zakura-core/arti"
 
 
 def dependencies(manifest):
@@ -38,6 +40,8 @@ def main():
             for field in ("name", "version"):
                 if package[field] != expected[field]:
                     errors.append(f"{relative}: unexpected package {field}")
+            if package.get("repository") != REPOSITORY:
+                errors.append(f"{relative}: repository does not point at {REPOSITORY}")
             if (path.parent / "src/lib.rs").exists():
                 library = manifest.get("lib", {}).get("name")
                 if library != expected["upstream_name"].replace("-", "_"):
